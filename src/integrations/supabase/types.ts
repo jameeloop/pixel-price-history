@@ -14,13 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pricing: {
+        Row: {
+          current_price: number
+          id: string
+          updated_at: string
+          upload_count: number
+        }
+        Insert: {
+          current_price?: number
+          id?: string
+          updated_at?: string
+          upload_count?: number
+        }
+        Update: {
+          current_price?: number
+          id?: string
+          updated_at?: string
+          upload_count?: number
+        }
+        Relationships: []
+      }
+      uploads: {
+        Row: {
+          caption: string
+          created_at: string
+          id: string
+          image_url: string
+          price_paid: number
+          stripe_session_id: string | null
+          upload_order: number
+          user_email: string
+        }
+        Insert: {
+          caption: string
+          created_at?: string
+          id?: string
+          image_url: string
+          price_paid: number
+          stripe_session_id?: string | null
+          upload_order: number
+          user_email: string
+        }
+        Update: {
+          caption?: string
+          created_at?: string
+          id?: string
+          image_url?: string
+          price_paid?: number
+          stripe_session_id?: string | null
+          upload_order?: number
+          user_email?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_and_increment_price: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
     }
     Enums: {
       [_ in never]: never
