@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, AlertCircle, Home, History } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { CheckCircle, Loader2, AlertCircle, Home, History, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -13,6 +14,7 @@ const Success: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string>('');
+  const [uploadData, setUploadData] = useState<any>(null);
 
   const sessionId = searchParams.get('session_id');
 
@@ -33,6 +35,7 @@ const Success: React.FC = () => {
 
         if (data.success) {
           setIsSuccess(true);
+          setUploadData(data.upload);
           toast({
             title: "Upload successful!",
             description: "Your picture has been uploaded and is now live in the gallery.",
@@ -94,25 +97,47 @@ const Success: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="glass-card max-w-md w-full glow-shadow">
+      <Card className="glass-card max-w-lg w-full glow-shadow">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
           </div>
-          <CardTitle className="text-2xl font-bold gradient-text">
+          <CardTitle className="text-xl sm:text-2xl font-bold gradient-text">
             Upload Successful!
           </CardTitle>
         </CardHeader>
-        <CardContent className="text-center space-y-6">
-          <p className="text-muted-foreground">
-            Your picture has been successfully uploaded and is now live in the gallery. 
-            Thank you for your contribution!
-          </p>
+        <CardContent className="space-y-6">
+          {uploadData && (
+            <div className="space-y-4">
+              <div className="relative">
+                <img
+                  src={uploadData.image_url}
+                  alt={uploadData.caption}
+                  className="w-full h-48 sm:h-64 object-cover rounded-lg"
+                />
+                <div className="absolute top-2 left-2 flex gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    #{uploadData.upload_order}
+                  </Badge>
+                  <Badge variant="outline" className="bg-background/80 text-xs">
+                    £{(uploadData.price_paid / 100).toFixed(2)}
+                  </Badge>
+                </div>
+              </div>
+              
+              <div className="text-center space-y-2">
+                <h3 className="font-semibold text-lg">{uploadData.caption}</h3>
+                <p className="text-sm text-muted-foreground">
+                  Your picture is now live in the gallery!
+                </p>
+              </div>
+            </div>
+          )}
           
           <div className="space-y-3">
             <Button onClick={() => navigate('/')} className="w-full glow-shadow">
               <Home className="w-4 h-4 mr-2" />
-              Back to Home
+              Upload Another
             </Button>
             <Button 
               variant="outline" 

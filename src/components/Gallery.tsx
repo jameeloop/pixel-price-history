@@ -28,7 +28,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
       const { data, error } = await supabase
         .from('uploads')
         .select('*')
-        .order('upload_order', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching uploads:', error);
@@ -61,8 +61,8 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
 
   const formatEmail = (email: string) => {
     const [username, domain] = email.split('@');
-    if (username.length <= 3) return email;
-    return `${username.substring(0, 3)}***@${domain}`;
+    if (username.length <= 3) return `Anonymous User`;
+    return `${username.substring(0, 2)}***`;
   };
 
   if (isLoading) {
@@ -96,38 +96,38 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       {uploads.map((upload, index) => (
-        <Card key={upload.id} className="glass-card hover:glow-shadow transition-all duration-300">
-          <CardContent className="p-4">
-            <div className="relative mb-4">
+        <Card key={upload.id} className="glass-card hover:glow-shadow transition-all duration-300 group">
+          <CardContent className="p-3 sm:p-4">
+            <div className="relative mb-3 sm:mb-4">
               <img
                 src={upload.image_url}
                 alt={upload.caption}
-                className="w-full h-48 object-cover rounded-lg"
+                className="w-full h-40 sm:h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
               />
-              <div className="absolute top-2 left-2 flex gap-2">
-                <Badge variant="secondary" className="font-semibold">
+              <div className="absolute top-2 left-2 flex flex-col sm:flex-row gap-1 sm:gap-2">
+                <Badge variant="secondary" className="font-semibold text-xs">
                   #{uploads.length - index}
                 </Badge>
-                <Badge variant="outline" className="bg-background/80">
+                <Badge variant="outline" className="bg-background/90 text-xs">
                   {formatPrice(upload.price_paid)}
                 </Badge>
               </div>
             </div>
             
-            <div className="space-y-3">
-              <p className="text-sm font-medium line-clamp-2">
+            <div className="space-y-2 sm:space-y-3">
+              <p className="text-xs sm:text-sm font-medium line-clamp-2 min-h-[2.5rem] sm:min-h-[3rem]">
                 {upload.caption}
               </p>
               
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs text-muted-foreground">
                 <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  {formatDate(upload.created_at)}
+                  <Calendar className="w-3 h-3 flex-shrink-0" />
+                  <span className="truncate">{formatDate(upload.created_at)}</span>
                 </div>
-                <span>{formatEmail(upload.user_email)}</span>
+                <span className="text-xs font-medium text-primary/80">{formatEmail(upload.user_email)}</span>
               </div>
             </div>
           </CardContent>
