@@ -13,10 +13,51 @@ serve(async (req) => {
   }
 
   try {
+    // Create Supabase client with anon key for authentication
+    const supabaseClient = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    // Authenticate user
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Authentication required");
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
+    
+    if (authError || !user?.email) {
+      throw new Error("Invalid authentication");
+    }
+
     const { email, imageFile, caption } = await req.json();
+    
+    // Validate user email matches authenticated user
+    if (email !== user.email) {
+      throw new Error("Email mismatch with authenticated user");
+    }
     
     if (!email || !imageFile || !caption) {
       throw new Error("Missing required fields: email, imageFile, caption");
+    }
+
+    // Server-side validation
+    if (!email.includes('@') || email.length > 254) {
+      throw new Error("Invalid email format");
+    }
+    
+    if (caption.length > 500) {
+      throw new Error("Caption too long (max 500 characters)");
+    }
+    
+    if (!imageFile.type.startsWith('image/')) {
+      throw new Error("Invalid file type");
+    }
+    
+    if (imageFile.data.length > 10 * 1024 * 1024) { // ~7MB base64 limit for 5MB file
+      throw new Error("File too large");
     }
 
     // Initialize Stripe

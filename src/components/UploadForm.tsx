@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 interface UploadFormProps {
   currentPrice: number;
@@ -20,7 +21,7 @@ interface ImageFile {
 }
 
 const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }) => {
-  const [email, setEmail] = useState('');
+  const { user } = useAuth();
   const [caption, setCaption] = useState('');
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
@@ -66,7 +67,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !caption || !imageFile) {
+    if (!user?.email || !caption || !imageFile) {
       toast({
         title: "Missing information",
         description: "Please fill in all fields and select an image",
@@ -79,7 +80,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
 
     try {
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { email, caption, imageFile },
+        body: { email: user.email, caption, imageFile },
       });
 
       if (error) throw error;
@@ -125,15 +126,14 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
-              Email Address
+              Email Address (from your account)
             </label>
             <Input
               id="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your.email@example.com"
-              required
+              value={user?.email || ''}
+              disabled
+              className="bg-muted"
             />
           </div>
 
@@ -197,7 +197,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
             type="submit"
             size="lg"
             className="w-full glow-shadow"
-            disabled={isLoading || !email || !caption || !imageFile}
+            disabled={isLoading || !user?.email || !caption || !imageFile}
           >
             {isLoading ? (
               <>

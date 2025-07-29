@@ -1,19 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { History, Camera, TrendingUp } from 'lucide-react';
+import { History, Camera, TrendingUp, LogOut, User, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 import UploadForm from '@/components/UploadForm';
 import PricingDisplay from '@/components/PricingDisplay';
 import Gallery from '@/components/Gallery';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, isLoading, signOut } = useAuth();
   const [currentPrice, setCurrentPrice] = useState(50);
   const [refreshGallery, setRefreshGallery] = useState(0);
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      navigate('/auth');
+    }
+  }, [isLoading, user, navigate]);
 
   const handleUploadSuccess = () => {
     setRefreshGallery(prev => prev + 1);
   };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-6 h-6 animate-spin" />
+          <span>Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to auth
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,14 +58,24 @@ const Index = () => {
                 <p className="text-xs text-muted-foreground">Dynamic pricing picture uploads</p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/history')}
-              className="flex items-center gap-2"
-            >
-              <History className="w-4 h-4" />
-              Gallery
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/history')}
+                className="flex items-center gap-2"
+              >
+                <History className="w-4 h-4" />
+                Gallery
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
+            </div>
           </div>
         </div>
       </header>
