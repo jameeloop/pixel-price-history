@@ -35,69 +35,6 @@ export type Database = {
         }
         Relationships: []
       }
-      profiles: {
-        Row: {
-          created_at: string
-          display_name: string | null
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          display_name?: string | null
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          display_name?: string | null
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      upload_sessions: {
-        Row: {
-          caption: string
-          created_at: string
-          expires_at: string
-          id: string
-          image_data: string
-          image_name: string
-          image_type: string
-          price_paid: number | null
-          stripe_session_id: string | null
-          user_id: string
-        }
-        Insert: {
-          caption: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          image_data: string
-          image_name: string
-          image_type: string
-          price_paid?: number | null
-          stripe_session_id?: string | null
-          user_id: string
-        }
-        Update: {
-          caption?: string
-          created_at?: string
-          expires_at?: string
-          id?: string
-          image_data?: string
-          image_name?: string
-          image_type?: string
-          price_paid?: number | null
-          stripe_session_id?: string | null
-          user_id?: string
-        }
-        Relationships: []
-      }
       uploads: {
         Row: {
           caption: string
@@ -108,7 +45,7 @@ export type Database = {
           stripe_session_id: string | null
           upload_order: number
           user_email: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           caption: string
@@ -119,7 +56,7 @@ export type Database = {
           stripe_session_id?: string | null
           upload_order: number
           user_email: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           caption?: string
@@ -130,7 +67,7 @@ export type Database = {
           stripe_session_id?: string | null
           upload_order?: number
           user_email?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }

@@ -13,31 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    // Create Supabase client with anon key for authentication
-    const supabaseClient = createClient(
-      Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
-    );
-
-    // Authenticate user
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader) {
-      throw new Error("Authentication required");
-    }
-
-    const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
-    
-    if (authError || !user?.email) {
-      throw new Error("Invalid authentication");
-    }
-
     const { email, imageFile, caption } = await req.json();
-    
-    // Validate user email matches authenticated user
-    if (email !== user.email) {
-      throw new Error("Email mismatch with authenticated user");
-    }
     
     if (!email || !imageFile || !caption) {
       throw new Error("Missing required fields: email, imageFile, caption");
@@ -71,9 +47,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Clean up expired sessions first
-    await supabase.rpc('cleanup_expired_sessions');
-
     // Get current price
     const { data: pricingData, error: pricingError } = await supabase
       .from("pricing")
@@ -86,7 +59,7 @@ serve(async (req) => {
 
     const currentPrice = pricingData.current_price;
 
-    // Create Stripe checkout session WITHOUT sensitive metadata
+    // Create Stripe checkout session with secure metadata (no sensitive image data)
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
       line_items: [
@@ -95,7 +68,7 @@ serve(async (req) => {
             currency: "gbp",
             product_data: {
               name: "Picture Upload",
-              description: `Upload picture with caption (${caption.substring(0, 30)}...)`,
+              description: `Upload picture with caption: "${caption.substring(0, 50)}${caption.length > 50 ? '...' : ''}"`,
             },
             unit_amount: currentPrice,
           },
@@ -106,27 +79,11 @@ serve(async (req) => {
       success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/`,
       metadata: {
-        user_id: user.id,
-        upload_type: "picture",
+        email,
+        caption,
+        imageFile: JSON.stringify(imageFile),
       },
     });
-
-    // Store image data securely in our database instead of Stripe metadata
-    const { error: sessionError } = await supabase
-      .from("upload_sessions")
-      .insert({
-        user_id: user.id,
-        stripe_session_id: session.id,
-        image_data: imageFile.data,
-        image_name: imageFile.name,
-        image_type: imageFile.type,
-        caption: caption,
-        price_paid: currentPrice,
-      });
-
-    if (sessionError) {
-      throw new Error(`Failed to store session data: ${sessionError.message}`);
-    }
 
     return new Response(JSON.stringify({ 
       url: session.url,

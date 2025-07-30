@@ -25,38 +25,16 @@ const Success: React.FC = () => {
       return;
     }
 
-    const confirmUpload = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('confirm-upload', {
-          body: { session_id: sessionId },
-        });
-
-        if (error) throw error;
-
-        if (data.success) {
-          setIsSuccess(true);
-          setUploadData(data.upload);
-          toast({
-            title: "Upload successful!",
-            description: "Your picture has been uploaded and is now live in the gallery.",
-          });
-        } else {
-          throw new Error('Upload confirmation failed');
-        }
-      } catch (error: any) {
-        console.error('Upload confirmation error:', error);
-        setError(error.message || 'Failed to confirm upload');
-        toast({
-          title: "Upload failed",
-          description: error.message || "There was an error processing your upload.",
-          variant: "destructive",
-        });
-      } finally {
-        setIsProcessing(false);
-      }
-    };
-
-    confirmUpload();
+    // Since we're using webhooks, we don't need to confirm upload here
+    // Just show success and let the webhook handle the processing
+    setTimeout(() => {
+      setIsProcessing(false);
+      setIsSuccess(true);
+      toast({
+        title: "Payment successful!",
+        description: "Your upload is being processed. You'll receive an email confirmation shortly.",
+      });
+    }, 2000);
   }, [sessionId, toast]);
 
   if (isProcessing) {
@@ -81,7 +59,7 @@ const Success: React.FC = () => {
         <Card className="glass-card max-w-md w-full">
           <CardContent className="p-8 text-center">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-destructive" />
-            <h2 className="text-xl font-semibold mb-2">Upload Failed</h2>
+            <h2 className="text-xl font-semibold mb-2">Something went wrong</h2>
             <p className="text-muted-foreground mb-6">{error}</p>
             <div className="space-y-3">
               <Button onClick={() => navigate('/')} className="w-full">
@@ -103,41 +81,31 @@ const Success: React.FC = () => {
             <CheckCircle className="w-16 h-16 text-green-500 mx-auto" />
           </div>
           <CardTitle className="text-xl sm:text-2xl font-bold gradient-text">
-            Upload Successful!
+            Payment Successful!
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {uploadData && (
-            <div className="space-y-4">
-              <div className="relative">
-                <img
-                  src={uploadData.image_url}
-                  alt={uploadData.caption}
-                  className="w-full h-48 sm:h-64 object-cover rounded-lg"
-                />
-                <div className="absolute top-2 left-2 flex gap-2">
-                  <Badge variant="secondary" className="text-xs">
-                    #{uploadData.upload_order}
-                  </Badge>
-                  <Badge variant="outline" className="bg-background/80 text-xs">
-                    £{(uploadData.price_paid / 100).toFixed(2)}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div className="text-center space-y-2">
-                <h3 className="font-semibold text-lg">{uploadData.caption}</h3>
-                <p className="text-sm text-muted-foreground">
-                  Your picture is now live in the gallery!
-                </p>
-              </div>
+          <div className="text-center space-y-3">
+            <div className="bg-muted/50 p-4 rounded-lg">
+              <ImageIcon className="w-8 h-8 mx-auto mb-2 text-primary" />
+              <h3 className="font-semibold">Your upload is being processed</h3>
+              <p className="text-sm text-muted-foreground mt-2">
+                You'll receive an email confirmation with your upload details shortly. 
+                Your picture will appear in the gallery once processing is complete.
+              </p>
             </div>
-          )}
+            
+            <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                💡 <strong>Next upload price increased!</strong> The next person will pay 1p more.
+              </p>
+            </div>
+          </div>
           
           <div className="space-y-3">
             <Button onClick={() => navigate('/')} className="w-full glow-shadow">
               <Home className="w-4 h-4 mr-2" />
-              Upload Another
+              Upload Another Picture
             </Button>
             <Button 
               variant="outline" 

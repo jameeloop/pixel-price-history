@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
 
 interface UploadFormProps {
   currentPrice: number;
@@ -21,7 +20,7 @@ interface ImageFile {
 }
 
 const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }) => {
-  const { user } = useAuth();
+  const [email, setEmail] = useState('');
   const [caption, setCaption] = useState('');
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
@@ -67,7 +66,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user?.email || !caption || !imageFile) {
+    if (!email || !caption || !imageFile) {
       toast({
         title: "Missing information",
         description: "Please fill in all fields and select an image",
@@ -80,7 +79,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
 
     try {
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { email: user.email, caption, imageFile },
+        body: { email, caption, imageFile },
       });
 
       if (error) throw error;
@@ -126,14 +125,15 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
-              Email Address (from your account)
+              Email Address
             </label>
             <Input
               id="email"
               type="email"
-              value={user?.email || ''}
-              disabled
-              className="bg-muted"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="your.email@example.com"
+              required
             />
           </div>
 
@@ -197,7 +197,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
             type="submit"
             size="lg"
             className="w-full glow-shadow"
-            disabled={isLoading || !user?.email || !caption || !imageFile}
+            disabled={isLoading || !email || !caption || !imageFile}
           >
             {isLoading ? (
               <>
