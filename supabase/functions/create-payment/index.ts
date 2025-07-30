@@ -71,6 +71,9 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    // Clean up expired sessions first
+    await supabase.rpc('cleanup_expired_sessions');
+
     // Get current price
     const { data: pricingData, error: pricingError } = await supabase
       .from("pricing")
@@ -83,7 +86,7 @@ serve(async (req) => {
 
     const currentPrice = pricingData.current_price;
 
-    // Create Stripe checkout session
+    // Create Stripe checkout session WITHOUT sensitive metadata
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
       line_items: [
@@ -92,7 +95,7 @@ serve(async (req) => {
             currency: "gbp",
             product_data: {
               name: "Picture Upload",
-              description: `Upload your picture with caption: "${caption.substring(0, 50)}${caption.length > 50 ? '...' : ''}"`,
+              description: `Upload picture with caption (${caption.substring(0, 30)}...)`,
             },
             unit_amount: currentPrice,
           },
@@ -103,11 +106,27 @@ serve(async (req) => {
       success_url: `${req.headers.get("origin")}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/`,
       metadata: {
-        email,
-        caption,
-        imageFile: JSON.stringify(imageFile),
+        user_id: user.id,
+        upload_type: "picture",
       },
     });
+
+    // Store image data securely in our database instead of Stripe metadata
+    const { error: sessionError } = await supabase
+      .from("upload_sessions")
+      .insert({
+        user_id: user.id,
+        stripe_session_id: session.id,
+        image_data: imageFile.data,
+        image_name: imageFile.name,
+        image_type: imageFile.type,
+        caption: caption,
+        price_paid: currentPrice,
+      });
+
+    if (sessionError) {
+      throw new Error(`Failed to store session data: ${sessionError.message}`);
+    }
 
     return new Response(JSON.stringify({ 
       url: session.url,

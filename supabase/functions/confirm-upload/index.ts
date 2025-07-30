@@ -37,18 +37,34 @@ serve(async (req) => {
       throw new Error("Payment not completed");
     }
 
-    // Get metadata from session
-    const email = session.metadata?.email;
-    const caption = session.metadata?.caption;
-    const imageFileData = session.metadata?.imageFile;
+    // Verify this session hasn't been processed before (prevent replay attacks)
+    const { data: existingUpload } = await supabase
+      .from("uploads")
+      .select("id")
+      .eq("stripe_session_id", session_id)
+      .single();
 
-    if (!email || !caption || !imageFileData) {
-      throw new Error("Missing metadata from session");
+    if (existingUpload) {
+      throw new Error("Session already processed");
     }
 
-    const imageFile = JSON.parse(imageFileData);
+    // Get secure session data from our database
+    const { data: sessionData, error: sessionDataError } = await supabase
+      .from("upload_sessions")
+      .select("*")
+      .eq("stripe_session_id", session_id)
+      .single();
 
-    // Get and increment the price (this also increments the upload count)
+    if (sessionDataError || !sessionData) {
+      throw new Error("Session data not found or expired");
+    }
+
+    // Validate user from Stripe metadata matches session data
+    if (session.metadata?.user_id !== sessionData.user_id) {
+      throw new Error("User validation failed");
+    }
+
+    // Get and increment the price
     const { data: priceData, error: priceError } = await supabase
       .rpc("get_and_increment_price");
 
@@ -58,18 +74,18 @@ serve(async (req) => {
 
     const pricePaid = priceData;
 
-    // Upload image to Supabase storage
-    const fileExt = imageFile.name.split('.').pop();
+    // Upload image to Supabase storage using session data
+    const fileExt = sessionData.image_name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     
     // Convert base64 to blob
-    const base64Data = imageFile.data.split(',')[1];
+    const base64Data = sessionData.image_data.split(',')[1];
     const imageBlob = new Uint8Array(atob(base64Data).split('').map(char => char.charCodeAt(0)));
 
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("uploads")
       .upload(fileName, imageBlob, {
-        contentType: imageFile.type,
+        contentType: sessionData.image_type,
       });
 
     if (uploadError) {
@@ -87,13 +103,20 @@ serve(async (req) => {
       .select("upload_count")
       .single();
 
+    // Get user email for upload record
+    const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(sessionData.user_id);
+    if (userError || !user) {
+      throw new Error("Failed to get user data");
+    }
+
     // Save upload record
     const { data: uploadRecord, error: insertError } = await supabase
       .from("uploads")
       .insert({
-        user_email: email,
+        user_id: sessionData.user_id,
+        user_email: user.email!,
         image_url: publicUrl,
-        caption: caption,
+        caption: sessionData.caption,
         price_paid: pricePaid,
         upload_order: uploadCountData?.upload_count || 1,
         stripe_session_id: session_id,
@@ -104,6 +127,12 @@ serve(async (req) => {
     if (insertError) {
       throw new Error(`Failed to save upload: ${insertError.message}`);
     }
+
+    // Clean up session data after successful upload
+    await supabase
+      .from("upload_sessions")
+      .delete()
+      .eq("stripe_session_id", session_id);
 
     return new Response(JSON.stringify({ 
       success: true,

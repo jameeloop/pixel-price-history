@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface Upload {
   id: string;
+  user_id: string;
   user_email: string;
   image_url: string;
   caption: string;

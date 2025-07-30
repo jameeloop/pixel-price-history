@@ -59,6 +59,45 @@ export type Database = {
         }
         Relationships: []
       }
+      upload_sessions: {
+        Row: {
+          caption: string
+          created_at: string
+          expires_at: string
+          id: string
+          image_data: string
+          image_name: string
+          image_type: string
+          price_paid: number | null
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          caption: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          image_data: string
+          image_name: string
+          image_type: string
+          price_paid?: number | null
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          caption?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          image_data?: string
+          image_name?: string
+          image_type?: string
+          price_paid?: number | null
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       uploads: {
         Row: {
           caption: string
@@ -100,6 +139,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_and_increment_price: {
         Args: Record<PropertyKey, never>
         Returns: number
