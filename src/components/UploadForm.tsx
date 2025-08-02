@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -25,26 +25,15 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   const [imageFile, setImageFile] = useState<ImageFile | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
+  const processFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
       toast({
         title: "Invalid file type",
         description: "Please select an image file",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      toast({
-        title: "File too large",
-        description: "Please select an image smaller than 5MB",
         variant: "destructive",
       });
       return;
@@ -62,6 +51,56 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
     };
     reader.readAsDataURL(file);
   };
+
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    processFile(file);
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    
+    const files = e.dataTransfer.files;
+    if (files && files[0]) {
+      processFile(files[0]);
+    }
+  };
+
+  const handlePaste = (e: ClipboardEvent) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type.indexOf('image') !== -1) {
+        const file = item.getAsFile();
+        if (file) {
+          processFile(file);
+        }
+        break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener('paste', handlePaste);
+    return () => {
+      document.removeEventListener('paste', handlePaste);
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,7 +197,15 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
             <div className="space-y-4">
               <div
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-border rounded-lg p-8 text-center cursor-pointer hover:border-primary transition-colors"
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                  dragActive 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-border hover:border-primary'
+                }`}
               >
                 {imagePreview ? (
                   <div className="space-y-4">
@@ -175,9 +222,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
                   <div className="space-y-4">
                     <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
                     <div>
-                      <p className="text-lg font-medium">Click to upload image</p>
+                      <p className="text-lg font-medium">Click, drag & drop, or paste image</p>
                       <p className="text-sm text-muted-foreground">
-                        PNG, JPG, GIF up to 5MB
+                        PNG, JPG, GIF supported
                       </p>
                     </div>
                   </div>
