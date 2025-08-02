@@ -48,8 +48,8 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
     fetchUploads();
   }, [refreshTrigger]);
 
-  const formatPrice = (pence: number) => {
-    return `£${(pence / 100).toFixed(2)}`;
+  const formatPrice = (cents: number) => {
+    return `$${(cents / 100).toFixed(2)}`;
   };
 
   const formatDate = (dateString: string) => {

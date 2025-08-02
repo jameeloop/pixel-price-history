@@ -48,8 +48,8 @@ const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const formatPrice = (pence: number) => {
-    return `£${(pence / 100).toFixed(2)}`;
+  const formatPrice = (cents: number) => {
+    return `$${(cents / 100).toFixed(2)}`;
   };
 
   const nextPrice = pricingData.current_price + 1;
