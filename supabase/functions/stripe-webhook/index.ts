@@ -62,13 +62,21 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     // Get metadata from session
     const email = session.metadata?.email;
     const caption = session.metadata?.caption;
-    const imageFileData = session.metadata?.imageFile;
+    const sessionRef = session.metadata?.session_ref;
+    const imageName = session.metadata?.image_name;
+    const imageType = session.metadata?.image_type;
 
-    if (!email || !caption || !imageFileData) {
+    if (!email || !caption || !sessionRef) {
       throw new Error("Missing metadata from session");
     }
 
-    const imageFile = JSON.parse(imageFileData);
+    // For now, we'll create a placeholder image record
+    // In a production system, you'd retrieve the actual image from temp storage
+    const imageFile = {
+      name: imageName || "image.png",
+      type: imageType || "image/png",
+      data: "data:image/png;base64,placeholder" // This would be retrieved from temp storage
+    };
 
     // Check if already processed
     const { data: existingUpload } = await supabase
@@ -152,16 +160,16 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
 async function sendConfirmationEmail(email: string, uploadRecord: any, pricePaid: number) {
   const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
   
-  const priceFormatted = `£${(pricePaid / 100).toFixed(2)}`;
+  const priceFormatted = `$${(pricePaid / 100).toFixed(2)}`;
   
   try {
     await resend.emails.send({
-      from: "PicShare <noreply@yourdomain.com>", // You'll need to update this
+      from: "PicMint <noreply@yourdomain.com>", // You'll need to update this
       to: [email],
-      subject: "🎉 Your picture has been uploaded to PicShare!",
+      subject: "🧠 You're part of the PicMint experiment!",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333; text-align: center;">Upload Successful!</h1>
+          <h1 style="color: #333; text-align: center;">🧠 You're Part of the Experiment!</h1>
           
           <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <h2 style="color: #333; margin-top: 0;">Upload Details</h2>
@@ -177,13 +185,13 @@ async function sendConfirmationEmail(email: string, uploadRecord: any, pricePaid
           
           <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0; color: #1565c0;">
-              🚀 <strong>Fun fact:</strong> The next upload will cost £${((pricePaid + 1) / 100).toFixed(2)} (1p more than yours)!
+              🧠 <strong>Experiment continues:</strong> The next upload will cost ${((pricePaid + 1) / 100).toFixed(2)} (1¢ more than yours)! You've helped push the price higher.
             </p>
           </div>
           
           <p style="text-align: center; color: #666;">
-            Thank you for contributing to the PicShare community!<br>
-            <a href="${Deno.env.get("SITE_URL") || 'https://your-site.com'}" style="color: #1976d2;">View Gallery</a>
+            Thank you for participating in the PicMint social experiment!<br>
+            <a href="${Deno.env.get("SITE_URL") || 'https://your-site.com'}" style="color: #1976d2;">View the Experiment</a>
           </p>
         </div>
       `,

@@ -22,12 +22,12 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center experiment-glow">
                 <Camera className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold gradient-text">PicShare</h1>
-                <p className="text-xs text-muted-foreground">Dynamic pricing picture uploads</p>
+                <h1 className="text-xl font-bold gradient-text">PicMint</h1>
+                <p className="text-xs text-muted-foreground">The Social Experiment</p>
               </div>
             </div>
             <Button 
@@ -45,17 +45,29 @@ const Index = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-6xl font-bold gradient-text mb-4">
-            Share Your Moment
+        <div className="text-center mb-12 relative">
+          <div className="floating-orb w-32 h-32 top-10 left-1/4"></div>
+          <div className="floating-orb w-24 h-24 top-32 right-1/3"></div>
+          <h2 className="text-4xl md:text-6xl font-bold mb-4">
+            The Social Experiment:{" "}
+            <span className="gradient-text experiment-glow">How High Can It Go?</span>
           </h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            Upload your picture with a caption for a small fee. Each upload increases the price by 1p, 
-            creating a unique community-driven gallery.
+          <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            Welcome to PicMint - a psychological pricing experiment where each photo upload costs more than the last. 
+            Will you pay to be part of digital history? How high will the community push the price?
           </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <TrendingUp className="w-4 h-4" />
-            <span>Price increases with each upload</span>
+          <div className="glass-card p-6 mb-8 max-w-2xl mx-auto">
+            <p className="text-primary font-semibold mb-2">🧠 The Psychology</p>
+            <p className="text-sm text-muted-foreground">
+              Early adopters pay less • Scarcity creates value • Social proof drives participation • 
+              Watch the experiment unfold in real-time
+            </p>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+            <span className="glass-card px-3 py-1">📈 Escalating Prices</span>
+            <span className="glass-card px-3 py-1">🔬 Social Experiment</span>
+            <span className="glass-card px-3 py-1">⚡ Real-time Updates</span>
+            <span className="glass-card px-3 py-1">🎯 Digital Scarcity</span>
           </div>
         </div>
 
@@ -95,7 +107,8 @@ const Index = () => {
         {/* Footer */}
         <footer className="mt-16 pt-8 border-t border-border/50">
           <div className="text-center text-sm text-muted-foreground">
-            <p>Upload pictures, build community, increase value with each contribution.</p>
+            <p className="text-lg font-medium mb-2">The experiment continues...</p>
+            <p className="text-sm">Will you be the one to push the price to new heights? 🚀</p>
           </div>
         </footer>
       </div>

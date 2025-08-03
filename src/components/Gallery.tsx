@@ -99,7 +99,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
       {uploads.map((upload, index) => (
-        <Card key={upload.id} className="glass-card hover:glow-shadow transition-all duration-300 group">
+        <Card key={upload.id} className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group" onClick={() => window.location.href = `/post/${upload.id}`}>
           <CardContent className="p-3 sm:p-4">
             <div className="relative mb-3 sm:mb-4">
               <img
@@ -109,10 +109,10 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
                 loading="lazy"
               />
               <div className="absolute top-2 left-2 flex flex-col sm:flex-row gap-1 sm:gap-2">
-                <Badge variant="secondary" className="font-semibold text-xs">
+                <Badge variant="secondary" className="font-semibold text-xs price-ticker">
                   #{uploads.length - index}
                 </Badge>
-                <Badge variant="outline" className="bg-background/90 text-xs">
+                <Badge variant="outline" className="bg-background/90 text-xs price-ticker">
                   {formatPrice(upload.price_paid)}
                 </Badge>
               </div>

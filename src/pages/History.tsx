@@ -21,15 +21,15 @@ const History: React.FC = () => {
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Picture Gallery</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold gradient-text">PicMint Gallery</h1>
               <p className="text-sm sm:text-base text-muted-foreground">
-                Latest uploads, sorted by newest first
+                The experiment archive - watch prices climb with each upload
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Camera className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium">Live Gallery</span>
+          <div className="flex items-center gap-2 self-start sm:self-auto glass-card px-3 py-2">
+            <Camera className="w-5 h-5 text-primary experiment-glow" />
+            <span className="text-sm font-medium">Live Experiment</span>
           </div>
         </div>
 

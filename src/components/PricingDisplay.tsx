@@ -72,58 +72,39 @@ const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <Card className="glass-card">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Camera className="w-4 h-4 text-primary" />
-            Current Price
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-2xl font-bold gradient-text">
+    <Card className="glass-card experiment-glow text-center p-6">
+      <h3 className="text-xl font-semibold mb-2">The Experiment Status</h3>
+      <p className="text-sm text-muted-foreground mb-4">How high will the community push it? 🚀</p>
+      
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm text-muted-foreground">Current Price</p>
+          <p className="text-4xl font-bold gradient-text price-ticker">
             {formatPrice(pricingData.current_price)}
-          </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Pay this amount to upload now
           </p>
-        </CardContent>
-      </Card>
-
-      <Card className="glass-card">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-primary" />
-            Next Price
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-2xl font-bold">
-            {formatPrice(nextPrice)}
+          <p className="text-xs text-muted-foreground mt-1">and climbing...</p>
+        </div>
+        
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="glass-card p-3">
+            <p className="text-muted-foreground">Next Victim Pays</p>
+            <p className="font-semibold text-accent">
+              {formatPrice(nextPrice)}
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Price after next upload
-          </p>
-        </CardContent>
-      </Card>
-
-      <Card className="glass-card">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <Users className="w-4 h-4 text-primary" />
-            Total Uploads
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <div className="text-2xl font-bold">
-            {pricingData.upload_count}
+          <div className="glass-card p-3">
+            <p className="text-muted-foreground">Participants</p>
+            <p className="font-semibold text-accent">
+              {pricingData.upload_count}
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Pictures uploaded so far
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+        
+        <div className="text-xs text-muted-foreground border-t border-border pt-3">
+          <p>💡 Each upload increases the price by $0.01</p>
+        </div>
+      </div>
+    </Card>
   );
 };
 

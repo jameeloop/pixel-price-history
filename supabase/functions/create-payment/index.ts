@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { storeImageData } from "./temp-storage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,15 +60,19 @@ serve(async (req) => {
 
     const currentPrice = pricingData.current_price;
 
-    // Create Stripe checkout session with secure metadata (no sensitive image data)
+    // Store image data temporarily with session reference
+    const sessionRef = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    storeImageData(sessionRef, imageFile);
+
+    // Create Stripe checkout session with minimal metadata (image stored separately)
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
       line_items: [
         {
           price_data: {
-            currency: "gbp",
+            currency: "usd",
             product_data: {
-              name: "Picture Upload",
+              name: "PicMint Upload",
               description: `Upload picture with caption: "${caption.substring(0, 50)}${caption.length > 50 ? '...' : ''}"`,
             },
             unit_amount: currentPrice,
@@ -80,8 +85,10 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/`,
       metadata: {
         email,
-        caption,
-        imageFile: JSON.stringify(imageFile),
+        caption: caption.substring(0, 400), // Keep under 500 char limit
+        image_name: imageFile.name || "image",
+        image_type: imageFile.type || "image/png",
+        session_ref: sessionRef,
       },
     });
 
