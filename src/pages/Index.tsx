@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import UploadForm from '@/components/UploadForm';
 import PricingDisplay from '@/components/PricingDisplay';
 import Gallery from '@/components/Gallery';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -43,36 +45,25 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Hero Section */}
-        <div className="text-center mb-12 relative">
-          <div className="floating-orb w-32 h-32 top-10 left-1/4"></div>
-          <div className="floating-orb w-24 h-24 top-32 right-1/3"></div>
-          <h2 className="text-4xl md:text-6xl font-bold mb-4">
+      <div className="container mx-auto px-4 py-4">
+        {/* Hero Section - Condensed for viewport fit */}
+        <div className="text-center mb-6 relative">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3">
             The Social Experiment:{" "}
             <span className="gradient-text experiment-glow">How High Can It Go?</span>
           </h2>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Welcome to PicMint - a psychological pricing experiment where each photo upload costs more than the last. 
-            Will you pay to be part of digital history? How high will the community push the price?
+          <p className="text-base text-muted-foreground mb-4 max-w-2xl mx-auto">
+            Welcome to PicMint - a psychological pricing experiment where each photo upload costs more than the last.
           </p>
-          <div className="glass-card p-6 mb-8 max-w-2xl mx-auto">
-            <p className="text-primary font-semibold mb-2">🧠 The Psychology</p>
-            <p className="text-sm text-muted-foreground">
-              Early adopters pay less • Scarcity creates value • Social proof drives participation • 
-              Watch the experiment unfold in real-time
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
-            <span className="glass-card px-3 py-1">📈 Escalating Prices</span>
-            <span className="glass-card px-3 py-1">🔬 Social Experiment</span>
-            <span className="glass-card px-3 py-1">⚡ Real-time Updates</span>
-            <span className="glass-card px-3 py-1">🎯 Digital Scarcity</span>
+          <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground mb-4">
+            <span className="glass-card px-2 py-1">📈 Escalating Prices</span>
+            <span className="glass-card px-2 py-1">🔬 Social Experiment</span>
+            <span className="glass-card px-2 py-1">⚡ Real-time Updates</span>
           </div>
         </div>
 
         {/* Pricing Display */}
-        <div className="mb-8">
+        <div className="mb-6">
           <PricingDisplay onPriceUpdate={setCurrentPrice} />
         </div>
 
@@ -104,8 +95,51 @@ const Index = () => {
           </div>
         </div>
 
+        {/* FAQ Section */}
+        <div className="mt-12 mb-8">
+          <Card className="glass-card">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl gradient-text">Frequently Asked Questions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="item-1">
+                  <AccordionTrigger>How does the pricing experiment work?</AccordionTrigger>
+                  <AccordionContent>
+                    PicMint starts at $0.50 for the first upload. Each time someone uploads a photo, the price increases by $0.01 for the next person. This creates an escalating cost structure that tests social psychology and digital scarcity.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-2">
+                  <AccordionTrigger>What happens after I upload a photo?</AccordionTrigger>
+                  <AccordionContent>
+                    Your photo will be processed and added to the public gallery. You'll receive an email confirmation and a unique link to share your contribution. The price automatically increases for the next participant.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-3">
+                  <AccordionTrigger>Is my email address kept private?</AccordionTrigger>
+                  <AccordionContent>
+                    Yes! Your email is only used for confirmation and processing. In the gallery, we show only the first two letters followed by asterisks to maintain privacy while ensuring transparency.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-4">
+                  <AccordionTrigger>Can I upload multiple photos?</AccordionTrigger>
+                  <AccordionContent>
+                    Absolutely! You can upload as many photos as you want, but each upload will cost the current price at that moment. The more you participate, the higher the price goes for everyone.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-5">
+                  <AccordionTrigger>What's the psychology behind this experiment?</AccordionTrigger>
+                  <AccordionContent>
+                    This experiment explores digital scarcity, social proof, and FOMO (fear of missing out). Early adopters get "cheaper" participation, while later participants pay more but join a more exclusive group. It's fascinating to see how high the community will push the price!
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Footer */}
-        <footer className="mt-16 pt-8 border-t border-border/50">
+        <footer className="mt-8 pt-8 border-t border-border/50">
           <div className="text-center text-sm text-muted-foreground">
             <p className="text-lg font-medium mb-2">The experiment continues...</p>
             <p className="text-sm">Will you be the one to push the price to new heights? 🚀</p>
