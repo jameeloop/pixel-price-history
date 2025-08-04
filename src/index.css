@@ -83,7 +83,7 @@
     overflow-x: hidden;
   }
   
-  /* Animated background effects */
+  /* Optimized background effects */
   body::before {
     content: '';
     position: fixed;
@@ -93,19 +93,8 @@
     height: 100%;
     background: var(--gradient-experiment);
     z-index: -1;
+    will-change: transform;
     animation: float var(--float-duration) ease-in-out infinite;
-  }
-  
-  body::after {
-    content: '';
-    position: fixed;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, hsl(236 72% 79% / 0.1) 0%, transparent 50%);
-    animation: pulse var(--pulse-duration) ease-in-out infinite alternate;
-    z-index: -1;
   }
 }
 
