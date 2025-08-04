@@ -83,19 +83,7 @@
     overflow-x: hidden;
   }
   
-  /* Optimized background effects */
-  body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: var(--gradient-experiment);
-    z-index: -1;
-    will-change: transform;
-    animation: float var(--float-duration) ease-in-out infinite;
-  }
+  /* Simple background - no animations */
 }
 
 @layer components {
@@ -118,55 +106,12 @@
   }
   
   .experiment-glow {
-    box-shadow: var(--shadow-experiment);
-    animation: experiment-pulse 3s ease-in-out infinite alternate;
-  }
-  
-  .floating-orb {
-    position: fixed;
-    border-radius: 50%;
-    background: var(--gradient-glow);
-    filter: blur(40px);
-    animation: float-orb 8s ease-in-out infinite;
-    z-index: -1;
+    box-shadow: 0 0 20px hsl(236 72% 79% / 0.3);
   }
   
   .price-ticker {
     background: var(--gradient-primary);
-    background-size: 200% 200%;
-    animation: gradient-shift 3s ease infinite;
   }
 }
 
-/* Enhanced keyframes */
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-20px) rotate(2deg); }
-}
-
-@keyframes pulse {
-  0% { opacity: 0.3; transform: scale(1); }
-  100% { opacity: 0.1; transform: scale(1.1); }
-}
-
-@keyframes experiment-pulse {
-  0% { 
-    box-shadow: 0 0 20px hsl(236 72% 79% / 0.3);
-    transform: scale(1);
-  }
-  100% { 
-    box-shadow: 0 0 80px hsl(236 72% 79% / 0.6), 0 0 120px hsl(268 83% 87% / 0.4);
-    transform: scale(1.02);
-  }
-}
-
-@keyframes float-orb {
-  0%, 100% { transform: translate(0px, 0px) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
-}
-
-@keyframes gradient-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
+/* Removed heavy animations for better performance */
