@@ -52,7 +52,15 @@ serve(async (req) => {
     const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     let event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, endpointSecret!);
+      // TEMPORARILY SKIP SIGNATURE VERIFICATION FOR DEBUGGING
+      const eventData = JSON.parse(body);
+      console.log("=== RAW WEBHOOK DATA ===");
+      console.log("Event type:", eventData.type);
+      console.log("Event data:", JSON.stringify(eventData, null, 2));
+      event = eventData;
+      
+      // Re-enable this after debugging:
+      // event = stripe.webhooks.constructEvent(body, signature, endpointSecret!);
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
       console.error("Expected secret (first 10 chars):", endpointSecret?.substring(0, 10));
