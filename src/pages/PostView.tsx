@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 interface Upload {
   id: string;
   user_id: string;
+  user_email: string;
   image_url: string;
   caption: string;
   price_paid: number;
@@ -161,7 +162,7 @@ const PostView: React.FC = () => {
                 
                 <div className="glass-card p-3">
                   <p className="text-muted-foreground text-sm">Uploaded by</p>
-                  <p className="font-medium">{formatEmail(upload.user_id)}</p>
+                  <p className="font-medium">{upload.user_email ? formatEmail(upload.user_email) : 'Anonymous'}</p>
                 </div>
               </div>
             </Card>
