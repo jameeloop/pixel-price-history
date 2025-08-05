@@ -112,7 +112,7 @@ const CurrentUploadHero: React.FC = () => {
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-yellow-500" />
-            <h2 className="text-xl font-bold gradient-text">Currently Owning PixPeriment</h2>
+            <h2 className="text-xl font-bold gradient-text">Featured Upload</h2>
           </div>
           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
             Latest Upload
@@ -195,8 +195,8 @@ const CurrentUploadHero: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-          <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
+        <div className="mt-4 p-3 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30 rounded-lg shadow-lg">
+          <p className="text-sm text-purple-200 text-center font-medium">
             🧠 <strong>Featured upload!</strong> This photo claimed the main space by paying {formatPrice(currentUpload.price_paid)}. Upload yours to take over!
           </p>
         </div>

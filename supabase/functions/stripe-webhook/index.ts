@@ -154,53 +154,60 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
 
     const pricePaid = priceData;
 
-    // Generate an AI image based on the caption since we can't store full images in Stripe metadata
-    console.log("Generating AI image for caption:", caption);
+    // Try to get image data from Stripe metadata
+    const imageDataPreview = session.metadata?.image_data_preview;
+    const imageName = session.metadata?.image_name || 'upload.png';
+    const imageType = session.metadata?.image_type || 'image/png';
+    
+    console.log("Processing actual user upload:", {
+      hasImageData: !!imageDataPreview,
+      imageName,
+      imageType,
+      dataLength: imageDataPreview?.length
+    });
     
     let imageBlob: Uint8Array;
     let fileName: string;
     let contentType: string;
 
-    try {
-      // Generate image using OpenAI
-      const openaiResponse = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        },
-        body: JSON.stringify({
-          model: 'gpt-image-1',
-          prompt: `Create a creative, artistic image based on this description: ${caption}. Make it visually interesting and unique.`,
-          size: '1024x1024',
-          quality: 'high',
-          output_format: 'png'
-        }),
-      });
-
-      if (openaiResponse.ok) {
-        const openaiData = await openaiResponse.json();
-        const base64Image = openaiData.data[0].b64_json;
-        
-        imageBlob = new Uint8Array(atob(base64Image).split('').map(char => char.charCodeAt(0)));
-        fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.png`;
-        contentType = "image/png";
-        
-        console.log("Successfully generated AI image");
-      } else {
-        throw new Error('OpenAI API failed');
+    // Check if we have actual image data (even if truncated)
+    if (imageDataPreview && imageDataPreview.startsWith('data:image')) {
+      console.log("Found image data in metadata, using it");
+      try {
+        const base64Data = imageDataPreview.split(',')[1];
+        imageBlob = new Uint8Array(atob(base64Data).split('').map(char => char.charCodeAt(0)));
+        fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${imageType.split('/')[1] || 'png'}`;
+        contentType = imageType;
+      } catch (error) {
+        console.error("Failed to process image data:", error);
+        throw new Error("Failed to process uploaded image");
       }
-    } catch (error) {
-      console.error("Failed to generate AI image, using placeholder:", error);
-      // Fallback to placeholder
-      const placeholderImageData = "data:image/svg+xml;base64," + btoa(`
-        <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="300" fill="#f0f0f0"/>
-          <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#666">
-            ${caption}
+    } else {
+      // Create a nice placeholder that shows the caption
+      console.log("No image data found, creating visual placeholder");
+      const placeholderSvg = `
+        <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+            </linearGradient>
+          </defs>
+          <rect width="800" height="600" fill="url(#grad1)"/>
+          <rect x="50" y="50" width="700" height="500" fill="rgba(255,255,255,0.1)" rx="20"/>
+          <text x="400" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white" font-weight="bold">
+            PixPeriment Upload
+          </text>
+          <text x="400" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.9)">
+            ${caption.length > 100 ? caption.substring(0, 100) + '...' : caption}
+          </text>
+          <text x="400" y="400" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.7)">
+            PixPeriment Upload • $${((pricePaid || 50) / 100).toFixed(2)}
           </text>
         </svg>
-      `);
+      `;
+      
+      const placeholderImageData = "data:image/svg+xml;base64," + btoa(placeholderSvg);
       fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.svg`;
       imageBlob = new Uint8Array(atob(placeholderImageData.split(',')[1]).split('').map(char => char.charCodeAt(0)));
       contentType = "image/svg+xml";

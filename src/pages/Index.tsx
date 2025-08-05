@@ -170,6 +170,18 @@ const Index = () => {
                     This experiment explores digital scarcity, social proof, and FOMO (fear of missing out). Early adopters get "cheaper" participation, while later participants pay more but join a more exclusive group. It's fascinating to see how high the community will push the price!
                   </AccordionContent>
                 </AccordionItem>
+                <AccordionItem value="item-6">
+                  <AccordionTrigger>Can I upload anything I want?</AccordionTrigger>
+                  <AccordionContent>
+                    Yes! Whether it's art, memes, personal photos, social media content, or business promotions - all posts are welcome as long as they follow our content guidelines. Express yourself however you'd like!
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-7">
+                  <AccordionTrigger>Is NSFW content allowed?</AccordionTrigger>
+                  <AccordionContent>
+                    No, NSFW (Not Safe For Work) content is strictly prohibited. All uploads are public and should be appropriate for all audiences. Any inappropriate content will be removed and may result in account restrictions.
+                  </AccordionContent>
+                </AccordionItem>
               </Accordion>
             </CardContent>
           </Card>

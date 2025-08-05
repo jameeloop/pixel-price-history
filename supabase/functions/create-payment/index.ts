@@ -85,8 +85,8 @@ serve(async (req) => {
         caption: caption.substring(0, 400), // Keep under 500 char limit
         image_name: imageFile.name || "image",
         image_type: imageFile.type || "image/png",
-        // Store small image data (truncated for metadata limits)
-        image_data_preview: imageFile.data.substring(0, 200),
+        // Store more image data - Stripe allows up to 500 chars per field, so let's use more
+        image_data_preview: imageFile.data.substring(0, 450), // Increased from 200 to 450
       },
     });
 
