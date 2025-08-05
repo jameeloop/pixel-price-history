@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { History, Camera, TrendingUp } from 'lucide-react';
+import { History, Camera, TrendingUp, Instagram, Music, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import UploadForm from '@/components/UploadForm';
 import PricingDisplay from '@/components/PricingDisplay';
@@ -32,14 +32,42 @@ const Index = () => {
                 <p className="text-xs text-muted-foreground">The Social Experiment</p>
               </div>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate('/history')}
-              className="flex items-center gap-2"
-            >
-              <History className="w-4 h-4" />
-              Gallery
-            </Button>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => window.open('https://instagram.com/pixperiment', '_blank')}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <Instagram className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => window.open('https://tiktok.com/@pixperiment', '_blank')}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <Music className="w-4 h-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => window.open('mailto:hello@pixperiment.com', '_blank')}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <Mail className="w-4 h-4" />
+                </Button>
+              </div>
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/history')}
+                className="flex items-center gap-2"
+              >
+                <History className="w-4 h-4" />
+                Gallery
+              </Button>
+            </div>
           </div>
         </div>
       </header>
