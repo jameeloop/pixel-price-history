@@ -61,7 +61,32 @@ serve(async (req) => {
 
     console.log("Creating payment session for:", email, "Price:", currentPrice);
 
-    // Create Stripe checkout session with minimal metadata (image stored separately)
+    // First, upload the image to storage before creating the payment session
+    // This ensures we have the full image data available after payment
+    const imageDataB64 = imageFile.data.split(',')[1]; // Remove data:image/...;base64, prefix
+    const imageBytes = Uint8Array.from(atob(imageDataB64), c => c.charCodeAt(0));
+    
+    // Create unique filename
+    const fileExtension = imageFile.type.split('/')[1] || 'png';
+    const tempFileName = `temp-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+    
+    console.log("Uploading temp image:", tempFileName, "Size:", imageBytes.length, "bytes");
+    
+    // Upload to storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("uploads")
+      .upload(tempFileName, imageBytes, {
+        contentType: imageFile.type,
+      });
+
+    if (uploadError) {
+      console.error("Failed to upload temp image:", uploadError);
+      throw new Error(`Failed to upload image: ${uploadError.message}`);
+    }
+
+    console.log("Temp image uploaded successfully:", uploadData.path);
+
+    // Create Stripe checkout session with the temp filename in metadata
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
       line_items: [
@@ -85,8 +110,7 @@ serve(async (req) => {
         caption: caption.substring(0, 400), // Keep under 500 char limit
         image_name: imageFile.name || "image",
         image_type: imageFile.type || "image/png",
-        // Store more image data - Stripe allows up to 500 chars per field, so let's use more
-        image_data_preview: imageFile.data.substring(0, 450), // Increased from 200 to 450
+        temp_file_path: tempFileName, // Store the temp file path
       },
     });
 

@@ -148,37 +148,69 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
 
     const pricePaid = priceData;
 
-    // Try to get image data from Stripe metadata
-    const imageDataPreview = session.metadata?.image_data_preview;
+    // Get temp file path from Stripe metadata
+    const tempFilePath = session.metadata?.temp_file_path;
     const imageName = session.metadata?.image_name || 'upload.png';
     const imageType = session.metadata?.image_type || 'image/png';
     
-    console.log("Processing actual user upload:", {
-      hasImageData: !!imageDataPreview,
+    console.log("Processing payment with temp file:", {
+      tempFilePath,
       imageName,
-      imageType,
-      dataLength: imageDataPreview?.length
+      imageType
     });
     
-    let imageBlob: Uint8Array;
+    let finalImageUrl: string;
     let fileName: string;
-    let contentType: string;
 
-    // Check if we have actual image data (even if truncated)
-    if (imageDataPreview && imageDataPreview.startsWith('data:image')) {
-      console.log("Found image data in metadata, using it");
-      try {
-        const base64Data = imageDataPreview.split(',')[1];
-        imageBlob = new Uint8Array(atob(base64Data).split('').map(char => char.charCodeAt(0)));
-        fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${imageType.split('/')[1] || 'png'}`;
-        contentType = imageType;
-      } catch (error) {
-        console.error("Failed to process image data:", error);
-        throw new Error("Failed to process uploaded image");
+    if (tempFilePath) {
+      console.log("Moving temp file to permanent location");
+      
+      // Download the temp file
+      const { data: tempFileData, error: downloadError } = await supabase.storage
+        .from("uploads")
+        .download(tempFilePath);
+
+      if (downloadError) {
+        console.error("Failed to download temp file:", downloadError);
+        throw new Error(`Failed to process uploaded image: ${downloadError.message}`);
       }
+
+      // Create permanent filename
+      const fileExtension = imageType.split('/')[1] || 'png';
+      fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+      
+      // Upload to permanent location
+      const { error: permanentUploadError } = await supabase.storage
+        .from("uploads")
+        .upload(fileName, tempFileData, {
+          contentType: imageType,
+        });
+
+      if (permanentUploadError) {
+        console.error("Failed to upload permanent file:", permanentUploadError);
+        throw new Error(`Failed to save uploaded image: ${permanentUploadError.message}`);
+      }
+
+      // Delete temp file
+      const { error: deleteError } = await supabase.storage
+        .from("uploads")
+        .remove([tempFilePath]);
+
+      if (deleteError) {
+        console.error("Failed to delete temp file:", deleteError);
+        // Don't throw here, the main upload worked
+      }
+
+      // Get public URL for permanent file
+      const { data: { publicUrl } } = supabase.storage
+        .from("uploads")
+        .getPublicUrl(fileName);
+
+      finalImageUrl = publicUrl;
+      console.log("Successfully moved temp file to permanent location:", fileName);
     } else {
-      // Create a nice placeholder that shows the caption
-      console.log("No image data found, creating visual placeholder");
+      console.log("No temp file found, creating placeholder");
+      // Fallback to placeholder if no temp file
       const placeholderSvg = `
         <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -203,26 +235,24 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
       
       const placeholderImageData = "data:image/svg+xml;base64," + btoa(placeholderSvg);
       fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.svg`;
-      imageBlob = new Uint8Array(atob(placeholderImageData.split(',')[1]).split('').map(char => char.charCodeAt(0)));
-      contentType = "image/svg+xml";
+      const imageBlob = new Uint8Array(atob(placeholderImageData.split(',')[1]).split('').map(char => char.charCodeAt(0)));
+      
+      const { error: uploadError } = await supabase.storage
+        .from("uploads")
+        .upload(fileName, imageBlob, {
+          contentType: "image/svg+xml",
+        });
+
+      if (uploadError) {
+        throw new Error(`Failed to upload placeholder: ${uploadError.message}`);
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from("uploads")
+        .getPublicUrl(fileName);
+
+      finalImageUrl = publicUrl;
     }
-
-    console.log("Creating placeholder image:", fileName);
-
-    const { error: uploadError } = await supabase.storage
-      .from("uploads")
-      .upload(fileName, imageBlob, {
-        contentType: contentType,
-      });
-
-    if (uploadError) {
-      throw new Error(`Failed to upload image: ${uploadError.message}`);
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from("uploads")
-      .getPublicUrl(fileName);
 
     // Get current upload count for ordering
     const { data: uploadCountData } = await supabase
@@ -235,7 +265,7 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
       .from("uploads")
       .insert({
         user_email: email,
-        image_url: publicUrl,
+        image_url: finalImageUrl,
         caption: caption,
         price_paid: pricePaid,
         upload_order: uploadCountData?.upload_count || 1,
