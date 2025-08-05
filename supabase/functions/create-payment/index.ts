@@ -1,7 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { storeImageData } from "./temp-storage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -60,9 +59,7 @@ serve(async (req) => {
 
     const currentPrice = pricingData.current_price;
 
-    // Store image data temporarily with session reference
-    const sessionRef = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    storeImageData(sessionRef, imageFile);
+    console.log("Creating payment session for:", email, "Price:", currentPrice);
 
     // Create Stripe checkout session with minimal metadata (image stored separately)
     const session = await stripe.checkout.sessions.create({
@@ -88,7 +85,8 @@ serve(async (req) => {
         caption: caption.substring(0, 400), // Keep under 500 char limit
         image_name: imageFile.name || "image",
         image_type: imageFile.type || "image/png",
-        session_ref: sessionRef,
+        // Store small image data (truncated for metadata limits)
+        image_data_preview: imageFile.data.substring(0, 200),
       },
     });
 
