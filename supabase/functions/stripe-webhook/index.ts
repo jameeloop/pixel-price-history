@@ -52,7 +52,8 @@ serve(async (req) => {
     const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     let event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, endpointSecret!);
+      // Use async webhook verification to avoid SubtleCryptoProvider issues
+      event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret!);
       console.log("Webhook signature verified successfully");
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
