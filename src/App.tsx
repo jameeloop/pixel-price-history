@@ -8,6 +8,7 @@ import History from "./pages/History";
 import Success from "./pages/Success";
 import PostView from "./pages/PostView";
 import NotFound from "./pages/NotFound";
+import ControlPanel from "./pages/ControlPanel";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/history" element={<History />} />
           <Route path="/success" element={<Success />} />
           <Route path="/post/:id" element={<PostView />} />
+          <Route path="/control" element={<ControlPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

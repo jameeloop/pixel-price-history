@@ -60,14 +60,23 @@ const Index = () => {
                   <Mail className="w-4 h-4" />
                 </Button>
               </div>
-              <Button 
-                variant="outline" 
-                onClick={() => navigate('/history')}
-                className="flex items-center gap-2"
-              >
-                <History className="w-4 h-4" />
-                Gallery
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/history')}
+                  className="flex items-center gap-2"
+                >
+                  <History className="w-4 h-4" />
+                  Gallery
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/control')}
+                  className="flex items-center gap-2"
+                >
+                  Control
+                </Button>
+              </div>
             </div>
           </div>
         </div>

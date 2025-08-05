@@ -112,7 +112,7 @@ const CurrentUploadHero: React.FC = () => {
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Crown className="w-5 h-5 text-yellow-500" />
-            <h2 className="text-xl font-bold gradient-text">Featured Upload</h2>
+            <h2 className="text-lg sm:text-xl font-bold gradient-text">Featured Upload</h2>
           </div>
           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
             Latest Upload
@@ -149,7 +149,7 @@ const CurrentUploadHero: React.FC = () => {
           {/* Content */}
           <div className="space-y-4">
             <div>
-              <p className="text-lg font-medium mb-3 line-clamp-3 break-words">
+              <p className="text-sm sm:text-lg font-medium mb-3 line-clamp-3 break-words">
                 "{currentUpload.caption}"
               </p>
             </div>
@@ -157,7 +157,7 @@ const CurrentUploadHero: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div className="glass-card p-3">
                 <p className="text-muted-foreground text-xs">Price Paid</p>
-                <p className="text-lg font-bold text-primary price-ticker">
+                <p className="text-base sm:text-lg font-bold text-primary price-ticker">
                   {formatPrice(currentUpload.price_paid)}
                 </p>
               </div>
