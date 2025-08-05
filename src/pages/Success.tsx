@@ -33,7 +33,7 @@ const Success: React.FC = () => {
           .from('uploads')
           .select('*')
           .eq('stripe_session_id', sessionId)
-          .single();
+          .maybeSingle();
 
         if (data) {
           setUploadData(data);

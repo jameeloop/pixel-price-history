@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
+import { getImageData } from "../create-payment/temp-storage.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -70,13 +71,13 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
       throw new Error("Missing metadata from session");
     }
 
-    // For now, we'll create a placeholder image record
-    // In a production system, you'd retrieve the actual image from temp storage
-    const imageFile = {
-      name: imageName || "image.png",
-      type: imageType || "image/png",
-      data: "data:image/png;base64,placeholder" // This would be retrieved from temp storage
-    };
+    // Retrieve the actual image from temp storage
+    const imageFile = getImageData(sessionRef);
+    if (!imageFile) {
+      throw new Error("Image data not found in temp storage");
+    }
+
+    console.log("Retrieved image from temp storage:", imageName);
 
     // Check if already processed
     const { data: existingUpload } = await supabase
@@ -101,12 +102,14 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     const pricePaid = priceData;
 
     // Upload image to Supabase storage
-    const fileExt = imageFile.name.split('.').pop();
+    const fileExt = imageFile.name.split('.').pop() || 'png';
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
     
     // Convert base64 to blob
     const base64Data = imageFile.data.split(',')[1];
     const imageBlob = new Uint8Array(atob(base64Data).split('').map(char => char.charCodeAt(0)));
+
+    console.log("Uploading image to storage:", fileName);
 
     const { error: uploadError } = await supabase.storage
       .from("uploads")
