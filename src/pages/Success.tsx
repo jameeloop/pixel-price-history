@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, Loader2, AlertCircle, Home, History, ImageIcon } from 'lucide-react';
+import { CheckCircle, Loader2, AlertCircle, Home, History, ImageIcon, Share2, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import QRCode from 'qrcode';
 
 const Success: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -11,6 +13,9 @@ const Success: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string>('');
+  const [uploadData, setUploadData] = useState<any>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [copied, setCopied] = useState(false);
 
   const sessionId = searchParams.get('session_id');
 
@@ -21,7 +26,29 @@ const Success: React.FC = () => {
       return;
     }
 
-    setTimeout(() => {
+    const fetchUploadData = async () => {
+      try {
+        // Fetch upload data using session ID
+        const { data, error } = await supabase
+          .from('uploads')
+          .select('*')
+          .eq('stripe_session_id', sessionId)
+          .single();
+
+        if (data) {
+          setUploadData(data);
+          // Generate QR code for the post URL
+          const postUrl = `${window.location.origin}/post/${data.id}`;
+          const qrCode = await QRCode.toDataURL(postUrl);
+          setQrCodeUrl(qrCode);
+        }
+      } catch (error) {
+        console.error('Error fetching upload data:', error);
+      }
+    };
+
+    setTimeout(async () => {
+      await fetchUploadData();
       setIsProcessing(false);
       setIsSuccess(true);
       toast.success("You're part of the experiment! Payment successful.");
@@ -72,14 +99,57 @@ const Success: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="text-center space-y-3">
-            <div className="glass-card p-4">
-              <ImageIcon className="w-8 h-8 mx-auto mb-2 text-primary" />
-              <h3 className="font-semibold">Your upload is being processed</h3>
-              <p className="text-sm text-muted-foreground mt-2">
-                You'll receive an email confirmation shortly. Your picture will appear in the gallery once processing is complete.
-              </p>
-            </div>
+          <div className="text-center space-y-4">
+            {uploadData && (
+              <div className="glass-card p-4 space-y-3">
+                <img
+                  src={uploadData.image_url}
+                  alt={uploadData.caption}
+                  className="w-full max-w-sm mx-auto rounded-lg"
+                />
+                <div>
+                  <h3 className="font-semibold">"{uploadData.caption}"</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Price paid: ${(uploadData.price_paid / 100).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+            )}
+            
+            {uploadData && qrCodeUrl && (
+              <div className="glass-card p-4 space-y-3">
+                <h3 className="font-semibold">Share Your Post</h3>
+                <img
+                  src={qrCodeUrl}
+                  alt="QR Code"
+                  className="w-32 h-32 mx-auto"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const postUrl = `${window.location.origin}/post/${uploadData.id}`;
+                    const shareText = `Check out my post on PicMint! ${postUrl}`;
+                    navigator.clipboard.writeText(shareText);
+                    setCopied(true);
+                    toast.success('Link copied to clipboard!');
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="w-full"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Share2 className="w-4 h-4 mr-2" />
+                      Copy Share Link
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
             
             <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
               <p className="text-sm text-blue-700 dark:text-blue-300">

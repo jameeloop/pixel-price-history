@@ -123,14 +123,9 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
 
       if (error) throw error;
 
-      // Open Stripe checkout in new tab
+      // Redirect to Stripe checkout
       if (data.url) {
-        window.open(data.url, '_blank');
-        
-        toast({
-          title: "Payment page opened",
-          description: "Complete your payment to upload your picture",
-        });
+        window.location.href = data.url;
       }
     } catch (error: any) {
       console.error('Payment error:', error);
