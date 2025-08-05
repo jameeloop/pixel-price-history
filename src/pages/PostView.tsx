@@ -61,7 +61,14 @@ const PostView: React.FC = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
   };
 
   const formatEmail = (email: string) => {
@@ -141,11 +148,22 @@ const PostView: React.FC = () => {
                   src={upload.image_url} 
                   alt={upload.caption}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    console.error('Image failed to load:', upload.image_url);
+                    e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
+                      <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="400" height="400" fill="#f3f4f6"/>
+                        <text x="200" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">
+                          Image not available
+                        </text>
+                      </svg>
+                    `);
+                  }}
                 />
               </div>
               
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold">{upload.caption}</h2>
+                <h2 className="text-xl font-semibold break-words">{upload.caption}</h2>
                 
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div className="glass-card p-3">
@@ -155,7 +173,7 @@ const PostView: React.FC = () => {
                     </p>
                   </div>
                   <div className="glass-card p-3">
-                    <p className="text-muted-foreground">Upload Date</p>
+                    <p className="text-muted-foreground">Upload Date & Time</p>
                     <p className="font-medium">{formatDate(upload.created_at)}</p>
                   </div>
                 </div>
