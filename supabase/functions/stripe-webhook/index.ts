@@ -17,15 +17,36 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Webhook received:", req.method, req.url);
+    
     const signature = req.headers.get("stripe-signature");
+    console.log("Stripe signature:", signature ? "present" : "missing");
+    
     if (!signature) {
-      throw new Error("No signature provided");
+      console.log("No signature provided - returning 400");
+      return new Response(JSON.stringify({ error: "No signature provided" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const body = await req.text();
+    console.log("Body received:", body.length, "characters");
+    
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2023-10-16",
     });
+
+    const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    console.log("Webhook secret:", webhookSecret ? "present" : "missing");
+    
+    if (!webhookSecret) {
+      console.log("No webhook secret configured - returning 500");
+      return new Response(JSON.stringify({ error: "Webhook secret not configured" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     // Verify webhook signature
     const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
