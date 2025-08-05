@@ -85,6 +85,11 @@ serve(async (req) => {
 });
 
 async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
+  console.log("=== PROCESSING PAYMENT START ===");
+  console.log("Session ID:", session.id);
+  console.log("Payment status:", session.payment_status);
+  console.log("Customer email:", session.customer_email);
+  
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
