@@ -165,7 +165,7 @@ const Index = () => {
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-5">
-                  <AccordionTrigger>What's the psychology behind this experiment?</AccordionTrigger>
+                  <AccordionTrigger className="text-left">What's the psychology behind this experiment?</AccordionTrigger>
                   <AccordionContent className="text-left">
                     This experiment explores digital scarcity, social proof, and FOMO (fear of missing out). Early adopters get "cheaper" participation, while later participants pay more but join a more exclusive group. It's fascinating to see how high the community will push the price!
                   </AccordionContent>

@@ -119,7 +119,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
               <img
                 src={upload.image_url}
                 alt={upload.caption}
-                className="w-full h-40 sm:h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                className="w-full max-h-80 object-contain rounded-lg group-hover:scale-105 transition-transform duration-300"
                 loading="lazy"
                 onError={(e) => {
                   e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
