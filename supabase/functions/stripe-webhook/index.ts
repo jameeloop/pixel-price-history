@@ -71,10 +71,20 @@ serve(async (req) => {
     // Handle checkout.session.completed event
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+      console.log("=== CHECKOUT SESSION COMPLETED ===");
+      console.log("Session ID:", session.id);
+      console.log("Payment status:", session.payment_status);
+      console.log("Customer email:", session.customer_email);
+      console.log("Session metadata:", JSON.stringify(session.metadata, null, 2));
       
       if (session.payment_status === "paid") {
+        console.log("Payment confirmed, processing...");
         await processSuccessfulPayment(session);
+      } else {
+        console.log("Payment not confirmed, status:", session.payment_status);
       }
+    } else {
+      console.log("Unhandled event type:", event.type);
     }
 
     return new Response("Webhook processed", { status: 200 });
