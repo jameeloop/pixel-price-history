@@ -98,7 +98,10 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     const imageName = session.metadata?.image_name;
     const imageType = session.metadata?.image_type;
 
-    if (!email || !caption || !sessionRef) {
+    console.log("Session metadata:", session.metadata);
+
+    if (!email || !caption) {
+      console.log("Missing required metadata - email:", !!email, "caption:", !!caption);
       throw new Error("Missing metadata from session");
     }
 
