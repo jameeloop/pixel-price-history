@@ -154,26 +154,44 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
 
     const pricePaid = priceData;
 
-    // Create a simple placeholder image for now
-    // In production, you'd want to handle actual image upload differently
-    const placeholderImageData = "data:image/svg+xml;base64," + btoa(`
-      <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-        <rect width="400" height="300" fill="#f0f0f0"/>
-        <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#666">
-          ${caption}
-        </text>
-      </svg>
-    `);
+    // Get image data from metadata
+    const imageDataPreview = session.metadata?.image_data_preview;
+    const imageName = session.metadata?.image_name || 'upload.png';
+    const imageType = session.metadata?.image_type || 'image/png';
     
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.svg`;
-    const imageBlob = new Uint8Array(atob(placeholderImageData.split(',')[1]).split('').map(char => char.charCodeAt(0)));
+    let imageBlob: Uint8Array;
+    let fileName: string;
+    let contentType: string;
+
+    if (imageDataPreview && imageDataPreview.startsWith('data:image')) {
+      // Use actual uploaded image
+      console.log("Using uploaded image data");
+      const base64Data = imageDataPreview.split(',')[1];
+      imageBlob = new Uint8Array(atob(base64Data).split('').map(char => char.charCodeAt(0)));
+      fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${imageType.split('/')[1]}`;
+      contentType = imageType;
+    } else {
+      // Fallback to placeholder
+      console.log("Using placeholder image");
+      const placeholderImageData = "data:image/svg+xml;base64," + btoa(`
+        <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+          <rect width="400" height="300" fill="#f0f0f0"/>
+          <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#666">
+            ${caption}
+          </text>
+        </svg>
+      `);
+      fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.svg`;
+      imageBlob = new Uint8Array(atob(placeholderImageData.split(',')[1]).split('').map(char => char.charCodeAt(0)));
+      contentType = "image/svg+xml";
+    }
 
     console.log("Creating placeholder image:", fileName);
 
     const { error: uploadError } = await supabase.storage
       .from("uploads")
       .upload(fileName, imageBlob, {
-        contentType: "image/svg+xml",
+        contentType: contentType,
       });
 
     if (uploadError) {
