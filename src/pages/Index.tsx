@@ -88,18 +88,20 @@ const Index = () => {
       <div className="container mx-auto px-4 py-3">
         {/* Hero Section - Much more compact */}
         <div className="text-center mb-4">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">
             <span className="gradient-text experiment-glow">The Social Experiment: How High Can It Go? 🚀</span>
           </h2>
-          <p className="text-sm text-muted-foreground mb-2 max-w-xl mx-auto">
+          <p className="text-sm text-muted-foreground mb-4 max-w-xl mx-auto">
             A psychological pricing experiment where each photo upload costs more than the last 📈
           </p>
-          <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-            <span>💰 Price increases with each upload</span>
-            <span>•</span>
-            <span>🧠 Testing social psychology</span>
-            <span>•</span>
-            <span>🎯 Digital scarcity experiment</span>
+          <div className="glass-card max-w-2xl mx-auto p-3 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30">
+            <div className="flex flex-wrap justify-center gap-4 text-xs text-purple-200">
+              <span className="flex items-center gap-1">💰 Price increases with each upload</span>
+              <span className="hidden sm:inline text-purple-400">•</span>
+              <span className="flex items-center gap-1">🧠 Testing social psychology</span>
+              <span className="hidden sm:inline text-purple-400">•</span>
+              <span className="flex items-center gap-1">🎯 Digital scarcity experiment</span>
+            </div>
           </div>
         </div>
 
