@@ -114,18 +114,17 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
   );
 
   try {
-    // Get metadata from session
-    const email = session.metadata?.email;
-    const caption = session.metadata?.caption;
-    const sessionRef = session.metadata?.session_ref;
-    const imageName = session.metadata?.image_name;
-    const imageType = session.metadata?.image_type;
+    // Get metadata from session  
+    const email = session.customer_email || session.metadata?.email;
+    const caption = session.metadata?.caption || "Default upload";
 
     console.log("Session metadata:", session.metadata);
+    console.log("Extracted - email:", email, "caption:", caption);
 
-    if (!email || !caption) {
-      console.log("Missing required metadata - email:", !!email, "caption:", !!caption);
-      throw new Error("Missing metadata from session");
+    if (!email) {
+      console.log("No email found in session");
+      // Use customer email from session instead
+      throw new Error("No email found in session");
     }
 
     // Since we can't access temp storage across functions, we'll create a placeholder
