@@ -128,7 +128,7 @@ const Success: React.FC = () => {
                   variant="outline"
                   onClick={() => {
                     const postUrl = `${window.location.origin}/post/${uploadData.id}`;
-                    const shareText = `Check out my post on PicMint! ${postUrl}`;
+                    const shareText = `Check out my post on PixPeriment! ${postUrl}`;
                     navigator.clipboard.writeText(shareText);
                     setCopied(true);
                     toast.success('Link copied to clipboard!');

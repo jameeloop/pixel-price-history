@@ -76,7 +76,7 @@ const PostView: React.FC = () => {
   };
 
   const shareToTwitter = () => {
-    const text = `Check out this post on PicMint - The Social Experiment! Price paid: ${upload ? formatPrice(upload.price_paid) : ''} 🚀`;
+    const text = `Check out this post on PixPeriment - The Social Experiment! Price paid: ${upload ? formatPrice(upload.price_paid) : ''} 🚀`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(window.location.href)}`);
   };
 
@@ -124,7 +124,7 @@ const PostView: React.FC = () => {
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold gradient-text">PicMint Post</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold gradient-text">PixPeriment Post</h1>
             <p className="text-sm sm:text-base text-muted-foreground">
               Part of the social experiment
             </p>
@@ -217,7 +217,7 @@ const PostView: React.FC = () => {
             <Card className="glass-card p-6">
               <h3 className="text-lg font-bold mb-3 gradient-text">About the Experiment</h3>
               <div className="space-y-2 text-sm text-muted-foreground">
-                <p>🔬 This post is part of PicMint's social pricing experiment</p>
+                <p>🔬 This post is part of PixPeriment's social pricing experiment</p>
                 <p>📈 Each upload costs more than the previous one</p>
                 <p>🎯 Testing how high the community will push the price</p>
                 <p>⚡ Real-time price increases with every new upload</p>

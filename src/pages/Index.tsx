@@ -28,7 +28,7 @@ const Index = () => {
                 <Camera className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-bold gradient-text">PicMint</h1>
+                <h1 className="text-xl font-bold gradient-text">PixPeriment</h1>
                 <p className="text-xs text-muted-foreground">The Social Experiment</p>
               </div>
             </div>
@@ -53,7 +53,7 @@ const Index = () => {
             <span className="gradient-text experiment-glow">How High Can It Go?</span>
           </h2>
           <p className="text-base text-muted-foreground mb-4 max-w-2xl mx-auto">
-            Welcome to PicMint - a psychological pricing experiment where each photo upload costs more than the last.
+            Welcome to PixPeriment - a psychological pricing experiment where each photo upload costs more than the last.
           </p>
           <div className="flex flex-wrap justify-center gap-2 text-xs text-muted-foreground mb-4">
             <span className="glass-card px-2 py-1">📈 Escalating Prices</span>
@@ -106,7 +106,7 @@ const Index = () => {
                 <AccordionItem value="item-1">
                   <AccordionTrigger>How does the pricing experiment work?</AccordionTrigger>
                   <AccordionContent>
-                    PicMint starts at $0.50 for the first upload. Each time someone uploads a photo, the price increases by $0.01 for the next person. This creates an escalating cost structure that tests social psychology and digital scarcity.
+                    PixPeriment starts at $0.50 for the first upload. Each time someone uploads a photo, the price increases by $0.01 for the next person. This creates an escalating cost structure that tests social psychology and digital scarcity.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2">
