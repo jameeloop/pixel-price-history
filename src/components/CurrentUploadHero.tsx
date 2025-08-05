@@ -197,7 +197,7 @@ const CurrentUploadHero: React.FC = () => {
 
         <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
           <p className="text-sm text-blue-700 dark:text-blue-300 text-center">
-            🎯 <strong>This upload owns the website until someone pays more!</strong> Upload your own to claim this space.
+            🧠 <strong>Featured upload!</strong> This photo claimed the main space by paying {formatPrice(currentUpload.price_paid)}. Upload yours to take over!
           </p>
         </div>
       </CardContent>

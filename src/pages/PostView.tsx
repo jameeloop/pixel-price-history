@@ -120,41 +120,42 @@ const PostView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+      <div className="container mx-auto px-4 py-4">
+        {/* Header - Compact */}
+        <div className="flex items-center gap-3 mb-4">
           <Button 
             variant="outline" 
-            size="icon"
+            size="sm"
             onClick={() => navigate('/')}
             className="shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold gradient-text">PixPeriment Post</h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <h1 className="text-lg sm:text-xl font-bold gradient-text">PixPeriment Post</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Part of the social experiment
             </p>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Main Post Card */}
-          <div className="space-y-6">
-            <Card className="glass-card p-6 experiment-glow">
-              <div className="aspect-square rounded-lg overflow-hidden mb-4">
+        <div className="grid lg:grid-cols-2 gap-4">
+          {/* Main Post Card - Smaller */}
+          <div className="space-y-4">
+            <Card className="glass-card p-4 experiment-glow">
+              <div className="aspect-square max-w-md mx-auto rounded-lg overflow-hidden mb-3">
                 <img 
                   src={upload.image_url} 
                   alt={upload.caption}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   onError={(e) => {
                     console.error('Image failed to load:', upload.image_url);
+                    console.log('Attempting to load fallback image...');
                     e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
                       <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
                         <rect width="400" height="400" fill="#f3f4f6"/>
                         <text x="200" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">
-                          Image not available
+                          ${upload.caption || 'Image not available'}
                         </text>
                       </svg>
                     `);
@@ -162,69 +163,69 @@ const PostView: React.FC = () => {
                 />
               </div>
               
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold break-words">{upload.caption}</h2>
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold break-words">{upload.caption}</h2>
                 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="glass-card p-3">
-                    <p className="text-muted-foreground">Price Paid</p>
-                    <p className="text-lg font-bold text-primary price-ticker">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="glass-card p-2">
+                    <p className="text-muted-foreground text-xs">Price Paid</p>
+                    <p className="text-base font-bold text-primary price-ticker">
                       {formatPrice(upload.price_paid)}
                     </p>
                   </div>
-                  <div className="glass-card p-3">
-                    <p className="text-muted-foreground">Upload Date & Time</p>
-                    <p className="font-medium">{formatDate(upload.created_at)}</p>
+                  <div className="glass-card p-2">
+                    <p className="text-muted-foreground text-xs">Upload Date & Time</p>
+                    <p className="font-medium text-xs">{formatDate(upload.created_at)}</p>
                   </div>
                 </div>
                 
-                <div className="glass-card p-3">
-                  <p className="text-muted-foreground text-sm">Uploaded by</p>
-                  <p className="font-medium">{upload.user_email ? formatEmail(upload.user_email) : 'Anonymous'}</p>
+                <div className="glass-card p-2">
+                  <p className="text-muted-foreground text-xs">Uploaded by</p>
+                  <p className="font-medium text-sm">{upload.user_email ? formatEmail(upload.user_email) : 'Anonymous'}</p>
                 </div>
               </div>
             </Card>
           </div>
 
-          {/* Sharing Panel */}
-          <div className="space-y-6">
-            <Card className="glass-card p-6">
-              <h3 className="text-xl font-bold mb-4 gradient-text">Share This Post</h3>
+          {/* Sharing Panel - Compact */}
+          <div className="space-y-4">
+            <Card className="glass-card p-4">
+              <h3 className="text-lg font-bold mb-3 gradient-text">Share This Post</h3>
               
-              {/* QR Code */}
-              <div className="text-center mb-6">
-                <div className="inline-block p-4 bg-white rounded-lg">
-                  <img src={qrCode} alt="QR Code" className="w-48 h-48 mx-auto" />
+              {/* QR Code - Smaller */}
+              <div className="text-center mb-4">
+                <div className="inline-block p-2 bg-white rounded-lg">
+                  <img src={qrCode} alt="QR Code" className="w-32 h-32 mx-auto" />
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">Scan to view this post</p>
+                <p className="text-xs text-muted-foreground mt-1">Scan to view this post</p>
               </div>
 
-              {/* Copy Link */}
-              <div className="mb-6">
+              {/* Copy Link - Compact */}
+              <div className="mb-4">
                 <Button 
                   onClick={copyToClipboard}
                   variant="outline" 
                   className="w-full"
-                  size="lg"
+                  size="sm"
                 >
                   {copySuccess ? <CheckCircle className="w-4 h-4 mr-2" /> : <Copy className="w-4 h-4 mr-2" />}
                   {copySuccess ? 'Copied!' : 'Copy Link'}
                 </Button>
               </div>
 
-              {/* Social Sharing */}
-              <div className="space-y-3">
-                <h4 className="font-medium">Share on Social Media</h4>
-                <div className="grid grid-cols-1 gap-3">
-                  <Button onClick={shareToTwitter} variant="outline" className="w-full">
+              {/* Social Sharing - Compact */}
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm">Share on Social Media</h4>
+                <div className="grid grid-cols-1 gap-2">
+                  <Button onClick={shareToTwitter} variant="outline" className="w-full" size="sm">
                     <Share2 className="w-4 h-4 mr-2" />
                     Share on Twitter
                   </Button>
-                  <Button onClick={shareToFacebook} variant="outline" className="w-full">
+                  <Button onClick={shareToFacebook} variant="outline" className="w-full" size="sm">
                     <Share2 className="w-4 h-4 mr-2" />
                     Share on Facebook
                   </Button>
-                  <Button onClick={shareToLinkedIn} variant="outline" className="w-full">
+                  <Button onClick={shareToLinkedIn} variant="outline" className="w-full" size="sm">
                     <Share2 className="w-4 h-4 mr-2" />
                     Share on LinkedIn
                   </Button>
@@ -232,19 +233,20 @@ const PostView: React.FC = () => {
               </div>
             </Card>
 
-            {/* Experiment Info */}
-            <Card className="glass-card p-6">
-              <h3 className="text-lg font-bold mb-3 gradient-text">About the Experiment</h3>
-              <div className="space-y-2 text-sm text-muted-foreground">
-                <p>🔬 This post is part of PixPeriment's social pricing experiment</p>
+            {/* Experiment Info - Compact */}
+            <Card className="glass-card p-4">
+              <h3 className="text-base font-bold mb-2 gradient-text">About the Experiment</h3>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <p>🔬 Part of PixPeriment's social pricing experiment</p>
                 <p>📈 Each upload costs more than the previous one</p>
                 <p>🎯 Testing how high the community will push the price</p>
                 <p>⚡ Real-time price increases with every new upload</p>
               </div>
               <Button 
                 onClick={() => navigate('/')} 
-                className="w-full mt-4"
+                className="w-full mt-3"
                 variant="default"
+                size="sm"
               >
                 Join the Experiment
               </Button>

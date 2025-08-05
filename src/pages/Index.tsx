@@ -78,10 +78,10 @@ const Index = () => {
         {/* Hero Section - Much more compact */}
         <div className="text-center mb-4">
           <h2 className="text-2xl md:text-3xl font-bold mb-2">
-            <span className="gradient-text experiment-glow">Who Owns PixPeriment Right Now?</span>
+            <span className="gradient-text experiment-glow">The Social Experiment: How High Can It Go?</span>
           </h2>
           <p className="text-sm text-muted-foreground mb-3 max-w-xl mx-auto">
-            Each upload "rents" the main space until someone pays more. The experiment continues...
+            A psychological pricing experiment where each photo upload costs more than the last.
           </p>
         </div>
 
@@ -99,8 +99,8 @@ const Index = () => {
           <div className="lg:col-span-2">
             <Card className="glass-card">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Claim This Space</CardTitle>
-                <p className="text-sm text-muted-foreground">Upload your photo to own the website!</p>
+                <CardTitle className="text-lg">Join the Experiment</CardTitle>
+                <p className="text-sm text-muted-foreground">Upload your photo to participate in the social experiment!</p>
               </CardHeader>
               <CardContent className="pt-0">
                 <UploadForm 
@@ -115,7 +115,7 @@ const Index = () => {
           <div className="lg:col-span-3">
             <div className="mb-3">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold">Previous Owners Archive</h3>
+                <h3 className="text-lg font-bold">Experiment Archive</h3>
                 <Button 
                   variant="ghost" 
                   size="sm"
@@ -132,43 +132,54 @@ const Index = () => {
           </div>
         </div>
 
-        {/* FAQ Section - Compact */}
+        {/* FAQ Section - Full version restored */}
         <div className="mt-8 mb-6">
           <Card className="glass-card">
-            <CardHeader className="text-center pb-3">
-              <CardTitle className="text-lg gradient-text">How It Works</CardTitle>
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-xl gradient-text">Frequently Asked Questions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 gap-4 text-sm">
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-semibold text-primary mb-1">🏆 Claim Ownership</h4>
-                    <p className="text-muted-foreground">Upload a photo to feature prominently on the main site</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-primary mb-1">📈 Price Increases</h4>
-                    <p className="text-muted-foreground">Each upload costs $0.01 more than the previous</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <h4 className="font-semibold text-primary mb-1">⏰ Temporary Fame</h4>
-                    <p className="text-muted-foreground">Own the space until someone pays more</p>
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-primary mb-1">🗄️ Archive Forever</h4>
-                    <p className="text-muted-foreground">All uploads preserved in the gallery</p>
-                  </div>
-                </div>
-              </div>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="item-1">
+                  <AccordionTrigger>How does the pricing experiment work?</AccordionTrigger>
+                  <AccordionContent>
+                    PixPeriment starts at $0.50 for the first upload. Each time someone uploads a photo, the price increases by $0.01 for the next person. This creates an escalating cost structure that tests social psychology and digital scarcity.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-2">
+                  <AccordionTrigger>What happens after I upload a photo?</AccordionTrigger>
+                  <AccordionContent>
+                    Your photo will be processed and added to the public gallery. You'll receive an email confirmation and a unique link to share your contribution. The price automatically increases for the next participant.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-3">
+                  <AccordionTrigger>Is my email address kept private?</AccordionTrigger>
+                  <AccordionContent>
+                    Yes! Your email is only used for confirmation and processing. In the gallery, we show only the first two letters followed by asterisks to maintain privacy while ensuring transparency.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-4">
+                  <AccordionTrigger>Can I upload multiple photos?</AccordionTrigger>
+                  <AccordionContent>
+                    Absolutely! You can upload as many photos as you want, but each upload will cost the current price at that moment. The more you participate, the higher the price goes for everyone.
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="item-5">
+                  <AccordionTrigger>What's the psychology behind this experiment?</AccordionTrigger>
+                  <AccordionContent>
+                    This experiment explores digital scarcity, social proof, and FOMO (fear of missing out). Early adopters get "cheaper" participation, while later participants pay more but join a more exclusive group. It's fascinating to see how high the community will push the price!
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
             </CardContent>
           </Card>
         </div>
 
-        {/* Footer - Compact */}
+        {/* Footer */}
         <footer className="mt-6 pt-4 border-t border-border/50">
           <div className="text-center text-sm text-muted-foreground">
-            <p className="font-medium">The experiment continues... 🚀</p>
+            <p className="font-medium mb-1">The experiment continues...</p>
+            <p className="text-xs">Will you be the one to push the price to new heights? 🚀</p>
           </div>
         </footer>
       </div>
