@@ -93,24 +93,22 @@ serve(async (req) => {
     });
     console.log('Clients initialized');
 
-    console.log('=== GETTING CURRENT PRICE (NO INCREMENT) ===');
-    // Get current price WITHOUT incrementing - increment only happens on successful webhook
-    const { data: priceData, error: priceError } = await supabase
-      .from('pricing')
-      .select('current_price')
-      .single();
+    console.log('=== GETTING NEXT PRICE ===');
+    // Get next price using the simplified function
+    const { data: nextPriceData, error: priceError } = await supabase
+      .rpc('get_next_upload_price');
     
-    console.log('Price query result:', { priceData, priceError });
+    console.log('Price query result:', { nextPriceData, priceError });
     
     if (priceError) {
       console.error('Database error getting price:', priceError);
       return new Response(
-        JSON.stringify({ error: 'Failed to get current price' }), 
+        JSON.stringify({ error: 'Failed to get next price' }), 
         { status: 500, headers: corsHeaders }
       );
     }
     
-    const priceInCents = priceData?.current_price;
+    const priceInCents = nextPriceData;
     if (!priceInCents || typeof priceInCents !== 'number' || priceInCents < 1) {
       console.error('Invalid price returned:', priceInCents);
       return new Response(

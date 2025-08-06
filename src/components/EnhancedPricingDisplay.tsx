@@ -40,13 +40,11 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
 
   const fetchData = async () => {
     try {
-      // Fetch pricing data
-      const { data: pricing, error: pricingError } = await supabase
-        .from('pricing')
-        .select('current_price, upload_count')
-        .single();
+      // Get next price from the function
+      const { data: nextPrice, error: priceError } = await supabase
+        .rpc('get_next_upload_price');
 
-      if (pricingError) throw pricingError;
+      if (priceError) throw priceError;
 
       // Calculate total spent and get last upload time
       const { data: uploads, error: uploadsError } = await supabase
@@ -60,11 +58,11 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
 
       const total = uploads?.reduce((sum, upload) => sum + (upload.price_paid || 0), 0) || 0;
       const lastUpload = uploads?.[0]?.created_at || null;
+      const uploadCount = uploads?.length || 0;
 
-      if (pricing) {
-        setPricingData(pricing);
-        onPriceUpdate(pricing.current_price);
-      }
+      const currentPrice = nextPrice - 1; // Current price is one less than next price
+      setPricingData({ current_price: currentPrice, upload_count: uploadCount });
+      onPriceUpdate(currentPrice);
       setTotalSpent(total);
       setLastUploadTime(lastUpload);
     } catch (error) {

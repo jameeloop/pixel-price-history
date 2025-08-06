@@ -46,16 +46,14 @@ const LiveFeed: React.FC = () => {
 
       if (uploadsError) throw uploadsError;
 
-      // Fetch current price
-      const { data: pricing, error: pricingError } = await supabase
-        .from('pricing')
-        .select('current_price')
-        .single();
+      // Get next price from the function
+      const { data: nextPrice, error: priceError } = await supabase
+        .rpc('get_next_upload_price');
 
-      if (pricingError) throw pricingError;
+      if (priceError) throw priceError;
 
       setRecentUploads(uploads || []);
-      setCurrentPrice(pricing?.current_price || 50);
+      setCurrentPrice((nextPrice || 50) - 1); // Current price is one less than next price
     } catch (error) {
       console.error('Error fetching live feed data:', error);
     }

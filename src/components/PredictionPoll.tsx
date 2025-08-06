@@ -42,25 +42,23 @@ const PredictionPoll: React.FC = () => {
 
   const fetchCurrentPrice = async () => {
     try {
-      const { data, error } = await supabase
-        .from('pricing')
-        .select('current_price')
-        .single();
+      const { data: nextPrice, error } = await supabase
+        .rpc('get_next_upload_price');
 
       if (error) throw error;
       
-      if (data) {
-        setCurrentPrice(data.current_price);
-        // Generate prediction options as price windows/ranges based on current price
-        const basePrice = data.current_price;
-        const options = [
-          { value: basePrice + 25, label: `${formatPrice(basePrice + 1)} - ${formatPrice(basePrice + 50)}` },
-          { value: basePrice + 75, label: `${formatPrice(basePrice + 51)} - ${formatPrice(basePrice + 100)}` },  
-          { value: basePrice + 150, label: `${formatPrice(basePrice + 101)} - ${formatPrice(basePrice + 200)}` },
-          { value: basePrice + 300, label: `${formatPrice(basePrice + 201)} - ${formatPrice(basePrice + 400)}` }
-        ];
-        setPredictionOptions(options);
-      }
+      const currentPrice = (nextPrice || 50) - 1; // Current price is one less than next price
+      setCurrentPrice(currentPrice);
+      
+      // Generate prediction options as price windows/ranges based on current price
+      const basePrice = currentPrice;
+      const options = [
+        { value: basePrice + 25, label: `${formatPrice(basePrice + 1)} - ${formatPrice(basePrice + 50)}` },
+        { value: basePrice + 75, label: `${formatPrice(basePrice + 51)} - ${formatPrice(basePrice + 100)}` },  
+        { value: basePrice + 150, label: `${formatPrice(basePrice + 101)} - ${formatPrice(basePrice + 200)}` },
+        { value: basePrice + 300, label: `${formatPrice(basePrice + 201)} - ${formatPrice(basePrice + 400)}` }
+      ];
+      setPredictionOptions(options);
     } catch (error) {
       console.error('Error fetching current price:', error);
       // Fallback options if price fetch fails - using windows

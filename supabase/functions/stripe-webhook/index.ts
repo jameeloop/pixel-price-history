@@ -148,18 +148,20 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     
     console.log("Final image URL:", finalImageUrl);
 
-    // Get current upload count for ordering and increment price atomically
-    // This ensures price only increases when uploads are actually successful
-    console.log("Getting current upload count and incrementing price");
-    const currentPriceResult = await supabase.rpc('get_and_increment_price');
-    
-    if (currentPriceResult.error) {
-      console.error("Failed to increment price:", currentPriceResult.error);
-      throw new Error(`Failed to increment price: ${currentPriceResult.error.message}`);
+    // Calculate chronological pricing - simple count + 50 cents
+    console.log("Calculating chronological pricing");
+    const { data: uploadCountData, error: countError } = await supabase
+      .from('uploads')
+      .select('id', { count: 'exact' });
+
+    if (countError) {
+      console.error('Error getting upload count:', countError);
+      throw new Error(`Failed to get upload count: ${countError.message}`);
     }
-    
-    const currentUploadOrder = currentPriceResult.data;
-    console.log("Successfully incremented price. Upload order:", currentUploadOrder);
+
+    const currentUploadOrder = (uploadCountData?.length || 0) + 1;
+    const chronologicalPrice = currentUploadOrder + 49; // 50 cents for first, 51 for second, etc.
+    console.log("Upload order:", currentUploadOrder, "Chronological price:", chronologicalPrice);
 
     // Save upload record
     const { data: uploadRecord, error: insertError } = await supabase
@@ -168,7 +170,7 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
         user_email: email,
         image_url: finalImageUrl,
         caption: caption,
-        price_paid: pricePaid,
+        price_paid: chronologicalPrice, // Use calculated chronological price
         upload_order: currentUploadOrder,
         stripe_session_id: session.id,
       })

@@ -76,18 +76,24 @@ const ControlPanel: React.FC = () => {
         setUploads(uploadsData || []);
       }
 
-      // Fetch pricing
-      const { data: pricingData, error: pricingError } = await supabase
-        .from('pricing')
-        .select('*')
-        .single();
+      // Get next price from the function  
+      const { data: nextPrice, error: priceError } = await supabase
+        .rpc('get_next_upload_price');
 
-      if (pricingError) {
-        console.error('Error fetching pricing:', pricingError);
+      if (priceError) {
+        console.error('Error fetching pricing:', priceError);
         toast.error('Failed to fetch pricing data');
       } else {
+        const currentPrice = (nextPrice || 50) - 1;
+        const uploadCount = uploadsData?.length || 0;
+        const pricingData = { 
+          id: 'system', 
+          current_price: currentPrice, 
+          upload_count: uploadCount,
+          updated_at: new Date().toISOString()
+        };
         setPricing(pricingData);
-        setNewPrice((pricingData.current_price / 100).toString());
+        setNewPrice((currentPrice / 100).toString());
       }
     } catch (error) {
       console.error('Error:', error);

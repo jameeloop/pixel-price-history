@@ -19,20 +19,24 @@ const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
 
   const fetchPricing = async () => {
     try {
-      const { data, error } = await supabase
-        .from('pricing')
-        .select('current_price, upload_count')
-        .single();
+      const { data: nextPrice, error } = await supabase
+        .rpc('get_next_upload_price');
 
       if (error) {
         console.error('Error fetching pricing:', error);
         return;
       }
 
-      if (data) {
-        setPricingData(data);
-        onPriceUpdate(data.current_price);
-      }
+      // Get upload count from uploads_public
+      const { data: uploads } = await supabase
+        .from('uploads_public')
+        .select('id');
+
+      const currentPrice = (nextPrice || 50) - 1; // Current price is one less than next price
+      const uploadCount = uploads?.length || 0;
+      
+      setPricingData({ current_price: currentPrice, upload_count: uploadCount });
+      onPriceUpdate(currentPrice);
     } catch (error) {
       console.error('Error:', error);
     } finally {
