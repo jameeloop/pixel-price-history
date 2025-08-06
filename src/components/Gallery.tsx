@@ -184,69 +184,76 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
         </div>
       )}
       
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {displayUploads.map((upload, index) => (
           <Card 
             key={upload.id} 
-            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group h-64 sm:h-72 hover:shadow-2xl hover:shadow-primary/20 overflow-hidden" 
+            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group hover:shadow-2xl hover:shadow-primary/20 overflow-hidden" 
             onClick={() => handlePostClick(upload.id)}
           >
-            <CardContent className="p-3 sm:p-4 h-full flex flex-col">
-              <div className="relative mb-3 sm:mb-4 flex-shrink-0">
-                <img
-                  src={upload.image_url}
-                  alt={upload.caption}
-                  className="w-full h-32 sm:h-36 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                  onClick={(e) => handleImageClick(e, upload)}
-                onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
-                    <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="400" height="300" fill="#f3f4f6"/>
-                      <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">
-                        Image not available
-                      </text>
-                    </svg>
-                  `);
-                }}
-              />
-              <div className="absolute top-2 left-2 flex flex-col gap-1">
-                <Badge variant="secondary" className="font-semibold text-xs price-ticker">
-                  #{uploads.findIndex(u => u.id === upload.id) + 1}
-                </Badge>
-                <Badge variant="outline" className="bg-background/90 text-xs price-ticker">
-                  {formatPrice(upload.price_paid)}
-                </Badge>
-              </div>
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div className="bg-black/60 text-white p-1 rounded text-xs flex items-center gap-1">
-                  <Eye className="w-3 h-3" />
-                  Preview
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex-1 flex flex-col justify-between min-h-0">
-              <div className="flex-1 mb-3">
-                <p className="text-xs sm:text-sm font-medium leading-relaxed break-words overflow-hidden display-text">
-                  {truncateCaption(upload.caption, 60)}
-                </p>
-              </div>
-              
-              <div className="space-y-2 flex-shrink-0">
-                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">{formatDate(upload.created_at)}</span>
+            <CardContent className="p-4">
+              <div className="flex gap-3">
+                {/* Image Column */}
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={upload.image_url}
+                    alt={upload.caption}
+                    className="w-24 h-24 sm:w-32 sm:h-32 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    onClick={(e) => handleImageClick(e, upload)}
+                    onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
+                        <svg width="128" height="128" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="128" height="128" fill="#f3f4f6"/>
+                          <text x="64" y="64" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#6b7280">
+                            Image not available
+                          </text>
+                        </svg>
+                      `);
+                    }}
+                  />
+                  <div className="absolute top-1 left-1 flex flex-col gap-1">
+                    <Badge variant="secondary" className="font-semibold text-xs price-ticker">
+                      #{uploads.findIndex(u => u.id === upload.id) + 1}
+                    </Badge>
+                    <Badge variant="outline" className="bg-background/90 text-xs price-ticker">
+                      {formatPrice(upload.price_paid)}
+                    </Badge>
                   </div>
-                  <span className="text-xs font-medium text-primary/80 truncate max-w-[60px]">{formatEmail(upload.user_email)}</span>
+                  <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="bg-black/60 text-white p-1 rounded text-xs flex items-center gap-1">
+                      <Eye className="w-3 h-3" />
+                    </div>
+                  </div>
                 </div>
-                
-                <div onClick={(e) => e.stopPropagation()}>
-                  <LikeButton uploadId={upload.id} />
+
+                {/* Content and Voting Column */}
+                <div className="flex-1 flex">
+                  {/* Content */}
+                  <div className="flex-1 flex flex-col justify-between min-w-0 mr-2">
+                    <div className="mb-2">
+                      <p className="text-sm font-medium leading-relaxed break-words overflow-hidden display-text">
+                        {truncateCaption(upload.caption, 80)}
+                      </p>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{formatDate(upload.created_at)}</span>
+                        </div>
+                        <span className="text-xs font-medium text-primary/80 truncate max-w-[60px]">{formatEmail(upload.user_email)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Voting Column */}
+                  <div onClick={(e) => e.stopPropagation()} className="flex-shrink-0">
+                    <LikeButton uploadId={upload.id} orientation="vertical" />
+                  </div>
                 </div>
               </div>
-            </div>
             </CardContent>
           </Card>
         ))}

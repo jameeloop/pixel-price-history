@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -8,12 +9,14 @@ interface LikeButtonProps {
   uploadId: string;
   initialLikes?: number;
   initialDislikes?: number;
+  orientation?: 'horizontal' | 'vertical';
 }
 
 const LikeButton: React.FC<LikeButtonProps> = ({ 
   uploadId, 
   initialLikes = 0, 
-  initialDislikes = 0 
+  initialDislikes = 0,
+  orientation = 'horizontal'
 }) => {
   const { toast } = useToast();
   const [likes, setLikes] = useState(initialLikes);
@@ -116,6 +119,52 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   const totalVotes = likes + dislikes;
   const likePercentage = totalVotes > 0 ? (likes / totalVotes) * 100 : 50;
 
+  if (orientation === 'vertical') {
+    return (
+      <div className="flex flex-col items-center gap-1 min-w-[32px]">
+        <Button
+          variant={userVote === 'like' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => handleVote('like')}
+          disabled={isLoading}
+          className="w-8 h-8 p-0 rounded-md"
+        >
+          <ChevronUp className="w-4 h-4" />
+        </Button>
+        
+        <span className="text-xs font-medium py-1">{likes}</span>
+        
+        <Button
+          variant={userVote === 'dislike' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => handleVote('dislike')}
+          disabled={isLoading}
+          className="w-8 h-8 p-0 rounded-md"
+        >
+          <ChevronDown className="w-4 h-4" />
+        </Button>
+        
+        <span className="text-xs font-medium">{dislikes}</span>
+        
+        {/* Simplified Ratio Bar */}
+        {totalVotes > 0 && (
+          <div className="w-full mt-2">
+            <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+              <span>{Math.round(likePercentage)}%</span>
+              <span>{Math.round(100 - likePercentage)}%</span>
+            </div>
+            <div className="w-full h-1 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-green-500 dark:bg-green-400 transition-all duration-300 rounded-full"
+                style={{ width: `${likePercentage}%` }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2 min-h-[60px]">
       <div className="flex items-center gap-2">
@@ -126,7 +175,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
           disabled={isLoading}
           className="flex items-center gap-1 text-xs h-7 px-2"
         >
-          <ThumbsUp className="w-3 h-3" />
+          <ChevronUp className="w-3 h-3" />
           <span>{likes}</span>
         </Button>
         <Button
@@ -136,17 +185,17 @@ const LikeButton: React.FC<LikeButtonProps> = ({
           disabled={isLoading}
           className="flex items-center gap-1 text-xs h-7 px-2"
         >
-          <ThumbsDown className="w-3 h-3" />
+          <ChevronDown className="w-3 h-3" />
           <span>{dislikes}</span>
         </Button>
       </div>
       
-      {/* Like/Dislike Ratio Bar */}
+      {/* Simplified Like/Dislike Ratio Bar */}
       {totalVotes > 0 && (
         <div className="w-full">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1 px-1">
-            <span className="font-medium">{Math.round(likePercentage)}% likes</span>
-            <span className="font-medium">{Math.round(100 - likePercentage)}% dislikes</span>
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span className="font-medium">{Math.round(likePercentage)}%</span>
+            <span className="font-medium">{Math.round(100 - likePercentage)}%</span>
           </div>
           <div className="w-full h-1.5 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
             <div 
