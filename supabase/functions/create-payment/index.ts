@@ -109,15 +109,19 @@ serve(async (req) => {
       );
     }
 
-    // Security logging
-    await supabase.rpc('log_security_event', {
-      event_type: 'PAYMENT_ATTEMPT',
-      table_name: 'uploads',
-      record_id: null,
-      ip_address: clientIP,
-      user_agent: userAgent,
-      additional_data: { email, caption: sanitizedCaption }
-    }).catch(console.error);
+    // Security logging - fixed the .catch() issue
+    try {
+      await supabase.rpc('log_security_event', {
+        event_type: 'PAYMENT_ATTEMPT',
+        table_name: 'uploads',
+        record_id: null,
+        ip_address: clientIP,
+        user_agent: userAgent,
+        additional_data: { email, caption: sanitizedCaption }
+      });
+    } catch (logError) {
+      console.error('Security logging failed:', logError);
+    }
 
     // Get current price with atomic increment
     const { data: priceInCents, error: priceError } = await supabase.rpc('get_and_increment_price');

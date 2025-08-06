@@ -123,7 +123,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   // Compact version for experiment archive
   if (compact) {
     return (
-      <div className="flex gap-1">
+      <div className="flex flex-col gap-1">
         <Button
           variant={userVote === 'like' ? 'default' : 'outline'}
           size="sm"

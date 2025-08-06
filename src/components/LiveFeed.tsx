@@ -37,9 +37,9 @@ const LiveFeed: React.FC = () => {
 
   const fetchRecentData = async () => {
     try {
-      // Fetch recent uploads
+      // Fetch recent uploads from public view
       const { data: uploads, error: uploadsError } = await supabase
-        .from('uploads')
+        .from('uploads_public')
         .select('user_email, price_paid, created_at, caption')
         .order('created_at', { ascending: false })
         .limit(5);
