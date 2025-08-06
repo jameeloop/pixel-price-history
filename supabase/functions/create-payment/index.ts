@@ -93,9 +93,13 @@ serve(async (req) => {
     });
     console.log('Clients initialized');
 
-    console.log('=== GETTING PRICE FROM DATABASE ===');
-    const { data: priceInCents, error: priceError } = await supabase.rpc('get_and_increment_price');
-    console.log('Price query result:', { priceInCents, priceError });
+    console.log('=== GETTING CURRENT PRICE (WITHOUT INCREMENT) ===');
+    const { data: priceData, error: priceError } = await supabase
+      .from('pricing')
+      .select('current_price')
+      .single();
+    
+    console.log('Price query result:', { priceData, priceError });
     
     if (priceError) {
       console.error('Database error getting price:', priceError);
@@ -105,6 +109,7 @@ serve(async (req) => {
       );
     }
     
+    const priceInCents = priceData?.current_price;
     if (!priceInCents || typeof priceInCents !== 'number' || priceInCents < 1) {
       console.error('Invalid price returned:', priceInCents);
       return new Response(
