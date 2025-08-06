@@ -5,6 +5,11 @@ import { encode as encodeBase64 } from "https://deno.land/std@0.190.0/encoding/b
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Content-Security-Policy': "default-src 'self'; script-src 'none'; object-src 'none';",
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
 };
 
 // Rate limiting map (in production, use Redis or database)
@@ -12,8 +17,14 @@ const loginAttempts = new Map();
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
 
-const ADMIN_PASSWORD_HASH = Deno.env.get('ADMIN_PASSWORD_HASH') || '';
+const ADMIN_PASSWORD_HASH = Deno.env.get('ADMIN_PASSWORD_HASH');
 const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes
+
+// Validate critical environment variables
+if (!ADMIN_PASSWORD_HASH) {
+  console.error('ADMIN_PASSWORD_HASH environment variable not set');
+  throw new Error('Server configuration error');
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -48,7 +59,13 @@ serve(async (req) => {
       }
     }
     
-    if (!password || typeof password !== 'string' || password.length > 100) {
+    // Enhanced input validation
+    if (!password || typeof password !== 'string' || password.length > 100 || password.length < 1) {
+      throw new Error('Invalid password format');
+    }
+    
+    // Check for null bytes and other dangerous characters
+    if (password.includes('\0') || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(password)) {
       throw new Error('Invalid password format');
     }
 

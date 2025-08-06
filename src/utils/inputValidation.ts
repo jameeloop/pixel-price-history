@@ -26,7 +26,12 @@ export const validateCaption = (caption: string): { isValid: boolean; error?: st
   if (caption.length > 500) {
     return { isValid: false, error: 'Caption must be less than 500 characters' };
   }
-  
+
+  // Check for null bytes and control characters
+  if (caption.includes('\0') || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(caption)) {
+    return { isValid: false, error: 'Caption contains invalid characters' };
+  }
+
   // Enhanced XSS prevention - comprehensive dangerous pattern detection
   const dangerousPatterns = [
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
@@ -43,6 +48,10 @@ export const validateCaption = (caption: string): { isValid: boolean; error?: st
     /expression\s*\(/gi,
     /url\s*\(/gi,
     /@import/gi,
+    /eval\s*\(/gi,
+    /Function\s*\(/gi,
+    /setTimeout\s*\(/gi,
+    /setInterval\s*\(/gi,
   ];
   
   for (const pattern of dangerousPatterns) {

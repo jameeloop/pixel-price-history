@@ -4,6 +4,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Content-Security-Policy': "default-src 'self'; script-src 'none'; object-src 'none';",
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'X-XSS-Protection': '1; mode=block',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
 };
 
 // Rate limiting
@@ -11,14 +16,25 @@ const requestCounts = new Map();
 const MAX_REQUESTS_PER_MINUTE = 10;
 
 const validateInput = (input: string, maxLength: number = 500): boolean => {
-  if (!input || input.length > maxLength) return false;
+  if (!input || input.length > maxLength || input.length === 0) return false;
   
-  // Basic XSS prevention
+  // Check for null bytes and control characters
+  if (input.includes('\0') || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(input)) return false;
+  
+  // Enhanced XSS prevention
   const dangerousPatterns = [
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    /javascript:/gi,
-    /on\w+\s*=/gi,
     /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
+    /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
+    /<embed\b[^>]*>/gi,
+    /<link\b[^>]*>/gi,
+    /<meta\b[^>]*>/gi,
+    /javascript:/gi,
+    /vbscript:/gi,
+    /data:text\/html/gi,
+    /on\w+\s*=/gi,
+    /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+    /expression\s*\(/gi,
   ];
   
   return !dangerousPatterns.some(pattern => pattern.test(input));
@@ -83,8 +99,16 @@ serve(async (req) => {
       });
     }
 
-    // Validate and sanitize session token
+    // Enhanced session token validation
     if (!validateInput(sessionToken, 100)) {
+      return new Response(JSON.stringify({ valid: false, error: 'Invalid session token format' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    // Validate session token format (base64 pattern expected)
+    if (!/^[A-Za-z0-9+/]+=*$/.test(sessionToken)) {
       return new Response(JSON.stringify({ valid: false, error: 'Invalid session token format' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

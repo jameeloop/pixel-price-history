@@ -14,11 +14,11 @@ export const generateSecureUserId = (): string => {
 
 export const getOrCreateSecureUserId = (): string => {
   const storageKey = 'pixperiment_secure_user_id';
-  let userId = localStorage.getItem(storageKey);
+  let userId = sessionStorage.getItem(storageKey); // Use sessionStorage instead of localStorage
   
-  if (!userId) {
+  if (!userId || !validateUserId(userId)) {
     userId = generateSecureUserId();
-    localStorage.setItem(storageKey, userId);
+    sessionStorage.setItem(storageKey, userId);
   }
   
   return userId;
