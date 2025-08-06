@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Calendar, Share2, ExternalLink, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import LikeButton from '@/components/LikeButton';
 
 interface Upload {
   id: string;
@@ -22,10 +23,17 @@ const CurrentUploadHero: React.FC = () => {
   const navigate = useNavigate();
   const [currentUpload, setCurrentUpload] = useState<Upload | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [likeCount, setLikeCount] = useState(0);
 
   useEffect(() => {
     fetchCurrentUpload();
   }, []);
+
+  useEffect(() => {
+    if (currentUpload) {
+      fetchLikeCount();
+    }
+  }, [currentUpload]);
 
   const fetchCurrentUpload = async () => {
     try {
@@ -46,6 +54,22 @@ const CurrentUploadHero: React.FC = () => {
       console.error('Error:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchLikeCount = async () => {
+    if (!currentUpload) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('likes')
+        .select('like_type')
+        .eq('upload_id', currentUpload.id);
+
+      if (error) throw error;
+      setLikeCount(data?.length || 0);
+    } catch (error) {
+      console.error('Error fetching like count:', error);
     }
   };
 
@@ -107,21 +131,21 @@ const CurrentUploadHero: React.FC = () => {
   }
 
   return (
-    <Card className="glass-card experiment-glow mb-8 border-primary/20">
-      <CardContent className="p-8">
-        <div className="mb-6 flex items-center justify-between">
+    <Card className="glass-card experiment-glow border-primary/20">
+      <CardContent className="p-6">
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Crown className="w-6 h-6 text-yellow-500" />
-            <h2 className="text-xl sm:text-2xl font-bold gradient-text">Featured Upload</h2>
+            <Crown className="w-5 h-5 text-yellow-500" />
+            <h2 className="text-xl font-bold gradient-text">Featured Upload</h2>
           </div>
-          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+          <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
             Latest Upload
           </Badge>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-6">
           {/* Image and Buttons */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="relative">
               <div className="aspect-video rounded-lg overflow-hidden bg-muted">
                 <img
@@ -147,62 +171,72 @@ const CurrentUploadHero: React.FC = () => {
               </div>
             </div>
 
-            {/* Buttons moved under image */}
-            <div className="flex gap-3">
-              <Button
-                onClick={() => navigate(`/post/${currentUpload.id}`)}
-                variant="outline"
-                size="default"
-                className="flex-1"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Full Post
-              </Button>
-              <Button
-                onClick={shareCurrentUpload}
-                variant="outline"
-                size="default"
-                className="flex-1"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
+            {/* Buttons and Like Count */}
+            <div className="space-y-3">
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => navigate(`/post/${currentUpload.id}`)}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  View Post
+                </Button>
+                <Button
+                  onClick={shareCurrentUpload}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+              </div>
+              
+              {/* Like functionality */}
+              <div className="flex items-center justify-between">
+                <LikeButton uploadId={currentUpload.id} />
+                <span className="text-sm text-muted-foreground">
+                  {likeCount} total {likeCount === 1 ? 'vote' : 'votes'}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Content - More compact now */}
-          <div className="space-y-6">
+          <div className="space-y-4">
             <div>
-              <p className="text-base sm:text-xl font-medium mb-4 break-words leading-relaxed">
+              <p className="text-base font-medium mb-3 break-words leading-relaxed">
                 "{currentUpload.caption}"
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div className="glass-card p-4">
-                <p className="text-muted-foreground text-sm">Price Paid</p>
-                <p className="text-lg sm:text-2xl font-bold text-primary price-ticker">
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="glass-card p-3">
+                <p className="text-muted-foreground text-xs">Price Paid</p>
+                <p className="text-lg font-bold text-primary price-ticker">
                   {formatPrice(currentUpload.price_paid)}
                 </p>
               </div>
-              <div className="glass-card p-4">
-                <p className="text-muted-foreground text-sm">Uploaded</p>
-                <p className="font-medium text-base">{formatDate(currentUpload.created_at)}</p>
+              <div className="glass-card p-3">
+                <p className="text-muted-foreground text-xs">Uploaded</p>
+                <p className="font-medium text-sm">{formatDate(currentUpload.created_at)}</p>
               </div>
             </div>
 
-            <div className="glass-card p-4">
-              <p className="text-muted-foreground text-sm">Owner</p>
-              <p className="font-medium text-lg">{formatEmail(currentUpload.user_email)}</p>
+            <div className="glass-card p-3">
+              <p className="text-muted-foreground text-xs">Owner</p>
+              <p className="font-medium text-base">{formatEmail(currentUpload.user_email)}</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30 rounded-lg shadow-lg relative overflow-hidden">
+        <div className="mt-4 p-3 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30 rounded-lg shadow-lg relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-purple-600/10 animate-pulse"></div>
-          <p className="text-base text-purple-200 text-center font-medium relative z-10">
+          <p className="text-sm text-purple-200 text-center font-medium relative z-10">
             🌟 <strong>Want your post here?</strong> This photo claimed the featured space by paying {formatPrice(currentUpload.price_paid)}. 
-            <span className="block mt-1 text-purple-300 animate-bounce">Upload yours to take over! 👑</span>
+            <span className="block mt-1 text-purple-300 animate-bounce text-xs">Upload yours to take over! 👑</span>
           </p>
         </div>
       </CardContent>

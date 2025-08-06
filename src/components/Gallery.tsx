@@ -186,10 +186,10 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
         {displayUploads.map((upload, index) => (
           <Card 
             key={upload.id} 
-            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group flex flex-col h-64 sm:h-72 hover:shadow-2xl hover:shadow-primary/20" 
+            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group flex flex-col h-64 sm:h-72 hover:shadow-2xl hover:shadow-primary/20 overflow-hidden" 
             onClick={() => handlePostClick(upload.id)}
           >
-            <CardContent className="p-3 sm:p-4 h-full flex flex-col">
+            <CardContent className="p-3 sm:p-4 h-full flex flex-col overflow-hidden">
               <div className="relative mb-3 sm:mb-4 flex-shrink-0">
                 <img
                   src={upload.image_url}

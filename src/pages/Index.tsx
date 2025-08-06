@@ -98,16 +98,16 @@ const Index = () => {
       </header>
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-3">
+      <div className="container mx-auto px-4 py-2">
         {/* Hero Section - Much more compact */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">
+        <div className="text-center mb-4">
+          <h2 className="text-2xl md:text-3xl font-bold mb-2">
             <span className="gradient-text experiment-glow">The Social Experiment: How High Can It Go? 🚀</span>
           </h2>
-          <p className="text-sm text-muted-foreground mb-4 max-w-xl mx-auto">
+          <p className="text-sm text-muted-foreground mb-3 max-w-xl mx-auto">
             A psychological pricing experiment where each photo upload costs more than the last 📈
           </p>
-          <div className="glass-card max-w-2xl mx-auto p-3 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30">
+          <div className="glass-card max-w-2xl mx-auto p-2 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30">
             <div className="flex flex-wrap justify-center gap-4 text-xs text-purple-200">
               <span className="flex items-center gap-1">💰 Price increases with each upload</span>
               <span className="hidden sm:inline text-purple-400">•</span>
@@ -119,7 +119,7 @@ const Index = () => {
         </div>
 
         {/* Swapped Layout: Featured Upload left, Experiment Status right */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           <div className="lg:col-span-2 lg:order-1">
             <CurrentUploadHero />
           </div>
@@ -129,16 +129,32 @@ const Index = () => {
         </div>
 
         {/* Psychology Facts Box - Separate from Experiment Status */}
-        <div className="mb-6">
+        <div className="mb-4">
           <PsychologyFactsBox />
         </div>
 
-        {/* Upload Form - Moved up for better accessibility */}
-        <div className="mb-6">
+        {/* Experiment Archive - Moved up */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold gradient-text">Experiment Archive 📚</h3>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/history')}
+              className="text-primary hover:text-primary/80"
+            >
+              View All →
+            </Button>
+          </div>
+          <Gallery refreshTrigger={refreshGallery} limitResults={4} />
+        </div>
+
+        {/* Upload Form */}
+        <div className="mb-4">
           <Card className="glass-card border-2 border-primary/20 bg-gradient-to-r from-purple-50/5 to-purple-100/5" id="upload-form">
-            <CardHeader className="pb-3 text-center">
-              <CardTitle className="text-xl gradient-text">🎨 Join the Experiment</CardTitle>
-              <p className="text-sm text-muted-foreground">Upload your photo to participate in the social experiment! ✨</p>
+            <CardHeader className="pb-2 text-center">
+              <CardTitle className="text-lg gradient-text">🎨 Join the Experiment</CardTitle>
+              <p className="text-xs text-muted-foreground">Upload your photo to participate in the social experiment! ✨</p>
             </CardHeader>
             <CardContent className="pt-0">
               <UploadForm 
@@ -150,12 +166,12 @@ const Index = () => {
         </div>
 
         {/* Progress Milestones - Made smaller */}
-        <div className="mb-4">
+        <div className="mb-3">
           <ProgressMilestones currentPrice={currentPrice} />
         </div>
 
         {/* Live Feed and Prediction Poll - Made smaller */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
           <div className="lg:col-span-1">
             <LiveFeed />
           </div>
@@ -164,29 +180,9 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Archive Preview - Simplified */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold gradient-text">Experiment Archive 📚</h3>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/history')}
-              className="text-primary hover:text-primary/80"
-            >
-              View All →
-            </Button>
-          </div>
-          <div className="max-h-80 overflow-y-auto relative">
-            <Gallery refreshTrigger={refreshGallery} limitResults={4} />
-            <div className="md:hidden absolute bottom-2 right-2 animate-bounce">
-              <ArrowDownCircle className="w-5 h-5 text-muted-foreground/50" />
-            </div>
-          </div>
-        </div>
 
         {/* FAQ Section - Made more compact */}
-        <div className="mt-6 mb-6">
+        <div className="mt-4 mb-4">
           <Card className="glass-card">
             <CardHeader className="text-center pb-3">
               <CardTitle className="text-lg gradient-text">FAQ 💭</CardTitle>
