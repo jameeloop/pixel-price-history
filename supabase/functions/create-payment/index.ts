@@ -2,12 +2,14 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
+const getCorsHeaders = (origin: string | null) => ({
+  "Access-Control-Allow-Origin": origin || "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+});
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req.headers.get("origin"));
+  
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -19,17 +21,22 @@ serve(async (req) => {
       throw new Error("Missing required fields: email, imageFile, caption");
     }
 
-    // Server-side validation
-    if (!email.includes('@') || email.length > 254) {
+    // Enhanced email validation
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(email) || email.length > 254) {
       throw new Error("Invalid email format");
     }
     
-    if (caption.length > 500) {
-      throw new Error("Caption too long (max 500 characters)");
+    // Enhanced caption validation and sanitization
+    const sanitizedCaption = caption.trim().replace(/[<>]/g, '');
+    if (sanitizedCaption.length > 500 || sanitizedCaption.length < 1) {
+      throw new Error("Caption must be between 1 and 500 characters");
     }
     
-    if (!imageFile.type.startsWith('image/')) {
-      throw new Error("Invalid file type");
+    // Enhanced file type validation
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(imageFile.type)) {
+      throw new Error("Invalid file type. Only JPEG, PNG, GIF, and WebP are allowed");
     }
     
     if (imageFile.data.length > 10 * 1024 * 1024) { // ~7MB base64 limit for 5MB file
@@ -127,7 +134,7 @@ serve(async (req) => {
       cancel_url: `${req.headers.get("origin")}/`,
       metadata: {
         email,
-        caption: caption.substring(0, 400), // Keep under 500 char limit
+        caption: sanitizedCaption.substring(0, 400), // Keep under 500 char limit
         image_name: imageFile.name || "image",
         image_type: imageFile.type || "image/png",
         temp_file_path: tempFileName, // Store the temp file path

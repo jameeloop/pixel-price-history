@@ -20,13 +20,13 @@ export const useSecureControlAuth = () => {
 
   const checkAuthSession = async () => {
     try {
-      const stored = localStorage.getItem(SESSION_KEY);
+      const stored = sessionStorage.getItem(SESSION_KEY);
       if (stored) {
         const session: AdminSession = JSON.parse(stored);
         
         // Check if session is expired
         if (new Date(session.expiresAt) <= new Date()) {
-          localStorage.removeItem(SESSION_KEY);
+          sessionStorage.removeItem(SESSION_KEY);
           setIsAuthenticated(false);
           setSessionToken(null);
           setIsLoading(false);
@@ -39,7 +39,7 @@ export const useSecureControlAuth = () => {
         });
 
         if (error || !data?.valid) {
-          localStorage.removeItem(SESSION_KEY);
+          sessionStorage.removeItem(SESSION_KEY);
           setIsAuthenticated(false);
           setSessionToken(null);
         } else {
@@ -49,7 +49,7 @@ export const useSecureControlAuth = () => {
       }
     } catch (error) {
       console.error('Error checking auth session:', error);
-      localStorage.removeItem(SESSION_KEY);
+      sessionStorage.removeItem(SESSION_KEY);
       setIsAuthenticated(false);
       setSessionToken(null);
     }
@@ -72,7 +72,8 @@ export const useSecureControlAuth = () => {
         expiresAt: data.expiresAt
       };
 
-      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      // Use sessionStorage for better security (session dies when browser closes)
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
       setIsAuthenticated(true);
       setSessionToken(data.sessionToken);
       toast.success('Access granted! 🔓');
@@ -85,7 +86,7 @@ export const useSecureControlAuth = () => {
   };
 
   const logout = () => {
-    localStorage.removeItem(SESSION_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
     setIsAuthenticated(false);
     setSessionToken(null);
     toast.success('Logged out successfully 👋');

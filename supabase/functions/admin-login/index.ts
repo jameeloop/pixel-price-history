@@ -7,7 +7,12 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const ADMIN_PASSWORD_HASH = '2212fe46729ca6d25f28cad6fe0f3a11f12642c4b4c255cd285d1b5a1ae7a413';
+// Rate limiting map (in production, use Redis or database)
+const loginAttempts = new Map();
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_TIME = 15 * 60 * 1000; // 15 minutes
+
+const ADMIN_PASSWORD_HASH = Deno.env.get('ADMIN_PASSWORD_HASH') || '';
 const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes
 
 serve(async (req) => {
@@ -22,6 +27,30 @@ serve(async (req) => {
 
   try {
     const { password } = await req.json();
+    
+    // Get client IP for rate limiting
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    
+    // Check rate limiting
+    const attemptKey = `login_${clientIP}`;
+    const attempts = loginAttempts.get(attemptKey) || { count: 0, lastAttempt: 0 };
+    
+    if (attempts.count >= MAX_ATTEMPTS) {
+      const timeSinceLastAttempt = Date.now() - attempts.lastAttempt;
+      if (timeSinceLastAttempt < LOCKOUT_TIME) {
+        return new Response(JSON.stringify({ error: 'Too many login attempts. Please try again later.' }), {
+          status: 429,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      } else {
+        // Reset attempts after lockout period
+        loginAttempts.delete(attemptKey);
+      }
+    }
+    
+    if (!password || typeof password !== 'string' || password.length > 100) {
+      throw new Error('Invalid password format');
+    }
 
     // Hash the provided password
     const encoder = new TextEncoder();
@@ -31,11 +60,22 @@ serve(async (req) => {
     const hashedInput = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
     if (hashedInput !== ADMIN_PASSWORD_HASH) {
+      // Record failed attempt
+      attempts.count++;
+      attempts.lastAttempt = Date.now();
+      loginAttempts.set(attemptKey, attempts);
+      
+      console.log(`Failed login attempt from ${clientIP}. Attempts: ${attempts.count}`);
+      
       return new Response(JSON.stringify({ error: 'Invalid password' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+    
+    // Clear successful login attempts
+    loginAttempts.delete(attemptKey);
+    console.log(`Successful admin login from ${clientIP}`);
 
     // Generate secure session token
     const sessionToken = encodeBase64(crypto.getRandomValues(new Uint8Array(32)));
