@@ -120,33 +120,57 @@ const CurrentUploadHero: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Image */}
-          <div className="relative">
-            <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-              <img
-                src={currentUpload.image_url}
-                alt={currentUpload.caption}
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                onError={(e) => {
-                  e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
-                    <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-                      <rect width="400" height="300" fill="#f3f4f6"/>
-                      <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">
-                        Featured Upload
-                      </text>
-                    </svg>
-                  `);
-                }}
-              />
+          {/* Image and Buttons */}
+          <div className="space-y-4">
+            <div className="relative">
+              <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+                <img
+                  src={currentUpload.image_url}
+                  alt={currentUpload.caption}
+                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
+                      <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="400" height="300" fill="#f3f4f6"/>
+                        <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">
+                          Featured Upload
+                        </text>
+                      </svg>
+                    `);
+                  }}
+                />
+              </div>
+              <div className="absolute top-3 left-3">
+                <Badge variant="secondary" className="font-semibold bg-yellow-500/20 text-yellow-700 border-yellow-500/20">
+                  #{currentUpload.upload_order}
+                </Badge>
+              </div>
             </div>
-            <div className="absolute top-3 left-3">
-              <Badge variant="secondary" className="font-semibold bg-yellow-500/20 text-yellow-700 border-yellow-500/20">
-                #{currentUpload.upload_order}
-              </Badge>
+
+            {/* Buttons moved under image */}
+            <div className="flex gap-3">
+              <Button
+                onClick={() => navigate(`/post/${currentUpload.id}`)}
+                variant="outline"
+                size="default"
+                className="flex-1"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Full Post
+              </Button>
+              <Button
+                onClick={shareCurrentUpload}
+                variant="outline"
+                size="default"
+                className="flex-1"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
             </div>
           </div>
 
-          {/* Content */}
+          {/* Content - More compact now */}
           <div className="space-y-6">
             <div>
               <p className="text-base sm:text-xl font-medium mb-4 break-words leading-relaxed">
@@ -170,27 +194,6 @@ const CurrentUploadHero: React.FC = () => {
             <div className="glass-card p-4">
               <p className="text-muted-foreground text-sm">Owner</p>
               <p className="font-medium text-lg">{formatEmail(currentUpload.user_email)}</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                onClick={() => navigate(`/post/${currentUpload.id}`)}
-                variant="outline"
-                size="default"
-                className="flex-1"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Full Post
-              </Button>
-              <Button
-                onClick={shareCurrentUpload}
-                variant="outline"
-                size="default"
-                className="flex-1"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
             </div>
           </div>
         </div>
