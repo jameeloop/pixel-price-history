@@ -81,63 +81,31 @@ const LikeButton: React.FC<LikeButtonProps> = ({
 
   const handleVote = async (voteType: 'like' | 'dislike') => {
     if (isLoading) return;
+    
     setIsLoading(true);
-
+    
     try {
-      const userIP = await getUserIP();
-
-      if (userVote === voteType) {
-        // Remove vote
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('upload_id', uploadId)
-          .eq('ip_address', userIP);
-
-        if (error) throw error;
-
-        setUserVote(null);
-        if (voteType === 'like') {
-          setLikes(prev => prev - 1);
-        } else {
-          setDislikes(prev => prev - 1);
+      const { data, error } = await supabase.functions.invoke('create-like', {
+        body: {
+          uploadId,
+          likeType: voteType
         }
-      } else {
-        // Add or update vote
-        const { error } = await supabase
-          .from('likes')
-          .upsert({
-            upload_id: uploadId,
-            ip_address: userIP,
-            like_type: voteType
-          }, {
-            onConflict: 'upload_id,ip_address'
-          });
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // Update counts
-        if (userVote === 'like' && voteType === 'dislike') {
-          setLikes(prev => prev - 1);
-          setDislikes(prev => prev + 1);
-        } else if (userVote === 'dislike' && voteType === 'like') {
-          setDislikes(prev => prev - 1);
-          setLikes(prev => prev + 1);
-        } else if (!userVote) {
-          if (voteType === 'like') {
-            setLikes(prev => prev + 1);
-          } else {
-            setDislikes(prev => prev + 1);
-          }
-        }
-
-        setUserVote(voteType);
-      }
+      // Refresh vote counts and user vote status
+      await Promise.all([fetchLikeCounts(), checkUserVote()]);
+      
+      toast({
+        title: "Success",
+        description: `Vote ${data.action} successfully!`,
+      });
     } catch (error) {
       console.error('Error voting:', error);
       toast({
-        title: "Error",
-        description: "Failed to submit vote. Please try again.",
+        title: "Error", 
+        description: "Failed to record your vote. Please try again.",
         variant: "destructive",
       });
     } finally {

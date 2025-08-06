@@ -91,28 +91,20 @@ const PredictionPoll: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const userIP = await getUserIP();
-      const weekEnding = getNextSunday();
-
-      const { error } = await supabase
-        .from('predictions')
-        .upsert({
-          ip_address: userIP,
-          predicted_price: price,
-          week_ending: weekEnding
-        }, {
-          onConflict: 'ip_address,week_ending'
-        });
+      const { data, error } = await supabase.functions.invoke('create-prediction', {
+        body: {
+          predictedPrice: price
+        }
+      });
 
       if (error) throw error;
-
-      setSelectedPrediction(price);
-      setHasVoted(true);
-      fetchPredictions();
-
+      
+      // Refresh predictions and user vote status
+      await Promise.all([fetchPredictions(), checkUserVote()]);
+      
       toast({
-        title: "Vote submitted!",
-        description: `You predicted the price will reach ${formatPrice(price)} by Sunday.`,
+        title: "Success!",
+        description: `Your prediction has been ${data.action}!`,
       });
     } catch (error) {
       console.error('Error submitting prediction:', error);

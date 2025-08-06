@@ -27,12 +27,22 @@ export const validateCaption = (caption: string): { isValid: boolean; error?: st
     return { isValid: false, error: 'Caption must be less than 500 characters' };
   }
   
-  // Basic XSS prevention - remove/escape dangerous characters
+  // Enhanced XSS prevention - comprehensive dangerous pattern detection
   const dangerousPatterns = [
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    /javascript:/gi,
-    /on\w+\s*=/gi,
     /<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi,
+    /<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi,
+    /<embed\b[^>]*>/gi,
+    /<link\b[^>]*>/gi,
+    /<meta\b[^>]*>/gi,
+    /javascript:/gi,
+    /vbscript:/gi,
+    /data:text\/html/gi,
+    /on\w+\s*=/gi,
+    /<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi,
+    /expression\s*\(/gi,
+    /url\s*\(/gi,
+    /@import/gi,
   ];
   
   for (const pattern of dangerousPatterns) {

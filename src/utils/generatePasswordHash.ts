@@ -9,9 +9,4 @@ export const generatePasswordHash = async (password: string): Promise<string> =>
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 };
 
-// Example usage:
-// generatePasswordHash('admin').then(hash => console.log('Hash for "admin":', hash));
-// Hash for "admin": 8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
-
-// For development purposes only - generate hashes as needed
-// Never store actual password hashes in production code
+// Development utility only - do not include sensitive examples in production
