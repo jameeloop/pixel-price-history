@@ -23,8 +23,9 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useControlAuth } from '@/hooks/useControlAuth';
+import { useSecureControlAuth } from '@/hooks/useSecureControlAuth';
 import ControlLogin from '@/components/ControlLogin';
+import MaskedEmail from '@/components/MaskedEmail';
 
 interface Upload {
   id: string;
@@ -44,7 +45,7 @@ interface PricingData {
 }
 
 const ControlPanel: React.FC = () => {
-  const { isAuthenticated, isLoading: authLoading, login, logout } = useControlAuth();
+  const { isAuthenticated, isLoading: authLoading, login, logout, deleteUpload: secureDeleteUpload, updatePricing: secureUpdatePricing } = useSecureControlAuth();
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [pricing, setPricing] = useState<PricingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,74 +100,31 @@ const ControlPanel: React.FC = () => {
       return;
     }
 
-    try {
-      const priceInCents = Math.round(Number(newPrice) * 100);
-      
-      // Note: This will fail due to RLS policies, but shows the intended functionality
-      const { error } = await supabase
-        .from('pricing')
-        .update({ current_price: priceInCents })
-        .eq('id', pricing?.id);
-
-      if (error) {
-        console.error('Error updating price:', error);
-        toast.error('Failed to update price - Admin privileges required');
-      } else {
-        toast.success('Price updated successfully');
-        fetchData();
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to update price');
+    const priceInCents = Math.round(Number(newPrice) * 100);
+    const success = await secureUpdatePricing(priceInCents);
+    if (success) {
+      setPricing(prev => prev ? { ...prev, current_price: priceInCents } : null);
+      await fetchData(); // Refresh data
     }
   };
 
   const deleteUpload = async (uploadId: string) => {
     if (!confirm('Are you sure you want to delete this upload?')) return;
-
-    try {
-      // Note: This will fail due to RLS policies, but shows the intended functionality
-      const { error } = await supabase
-        .from('uploads')
-        .delete()
-        .eq('id', uploadId);
-
-      if (error) {
-        console.error('Error deleting upload:', error);
-        toast.error('Failed to delete upload - Admin privileges required');
-      } else {
-        toast.success('Upload deleted successfully');
-        fetchData();
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to delete upload');
+    
+    const success = await secureDeleteUpload(uploadId);
+    if (success) {
+      setUploads(uploads.filter(upload => upload.id !== uploadId));
     }
   };
 
   const resetPricing = async () => {
     if (!confirm('⚠️ Reset pricing to $0.50 and upload count to 0? This cannot be undone!')) return;
 
-    try {
-      const { error } = await supabase
-        .from('pricing')
-        .update({ 
-          current_price: 50, // $0.50 in cents
-          upload_count: 0,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', pricing?.id);
-
-      if (error) {
-        console.error('Error resetting pricing:', error);
-        toast.error('Failed to reset pricing - Admin privileges required');
-      } else {
-        toast.success('Pricing reset successfully! 🔄');
-        fetchData();
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Failed to reset pricing');
+    const success = await secureUpdatePricing(50); // $0.50 in cents
+    if (success) {
+      setPricing(prev => prev ? { ...prev, current_price: 50, upload_count: 0 } : null);
+      setNewPrice('0.50');
+      await fetchData(); // Refresh data
     }
   };
 
@@ -334,7 +292,9 @@ const ControlPanel: React.FC = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium truncate">{upload.caption}</p>
-                        <p className="text-sm text-muted-foreground">{upload.user_email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          <MaskedEmail email={upload.user_email} />
+                        </p>
                         <div className="flex items-center gap-4 mt-1">
                           <Badge variant="outline">#{upload.upload_order}</Badge>
                           <span className="text-sm text-primary font-medium">

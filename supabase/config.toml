@@ -8,3 +8,15 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.admin-login]
+verify_jwt = false
+
+[functions.admin-verify]
+verify_jwt = false
+
+[functions.admin-delete-upload]
+verify_jwt = false
+
+[functions.admin-update-pricing]
+verify_jwt = false
