@@ -143,63 +143,15 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     
     console.log("Price paid for this upload:", pricePaid);
 
-    // Get image data from Stripe metadata
-    const imageUrl = session.metadata?.image_url;
+    // Image data cannot be stored in Stripe metadata due to size limits
+    // Will create placeholder image since we cannot access the original
     const imageName = session.metadata?.fileName || 'upload.png';
-    const imageType = 'image/png'; // Default type
     
-    console.log("Processing payment with image data:", {
-      imageUrl: imageUrl ? 'present' : 'missing',
-      imageName,
-      imageType
-    });
+    console.log("No image data available - will create placeholder");
     
-    let finalImageUrl: string;
-    let fileName: string;
-
-    if (imageUrl && imageUrl.startsWith('data:image/')) {
-      console.log("Processing base64 image data");
-      
-      try {
-        // Extract image data and type from data URL
-        const [header, base64Data] = imageUrl.split(',');
-        const mimeType = header.match(/data:(.+);base64/)?.[1] || 'image/png';
-        
-        // Convert base64 to blob
-        const imageBlob = new Uint8Array(atob(base64Data).split('').map(char => char.charCodeAt(0)));
-        
-        // Create permanent filename
-        const fileExtension = mimeType.split('/')[1] || 'png';
-        fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
-        
-        // Upload to permanent location
-        const { error: uploadError } = await supabase.storage
-          .from("uploads")
-          .upload(fileName, imageBlob, {
-            contentType: mimeType,
-          });
-
-        if (uploadError) {
-          console.error("Failed to upload image:", uploadError);
-          throw new Error(`Failed to save uploaded image: ${uploadError.message}`);
-        }
-
-        // Get public URL for permanent file
-        const { data: { publicUrl } } = supabase.storage
-          .from("uploads")
-          .getPublicUrl(fileName);
-
-        finalImageUrl = publicUrl;
-        console.log("Successfully uploaded image to permanent location:", fileName);
-      } catch (error) {
-        console.error("Failed to process image data:", error);
-        // Fall back to placeholder
-        finalImageUrl = await createPlaceholderImage(caption, pricePaid, supabase);
-      }
-    } else {
-      console.log("No image data found, creating placeholder");
-      finalImageUrl = await createPlaceholderImage(caption, pricePaid, supabase);
-    }
+    // Since we cannot store large image data in Stripe metadata,
+    // we'll create a placeholder image for now
+    const finalImageUrl = await createPlaceholderImage(caption, pricePaid, supabase);
 
     // Get current upload count for ordering
     const { data: uploadCountData } = await supabase

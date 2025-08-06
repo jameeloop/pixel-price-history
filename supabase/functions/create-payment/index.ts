@@ -143,8 +143,9 @@ serve(async (req) => {
         caption: caption.trim().substring(0, 400), // Limit caption to 400 chars
         fileName: fileName || 'upload.jpg',
         uploadOrder: priceInCents.toString(),
-        price_paid: priceInCents.toString(),
-        image_url: imageUrl // Store for webhook processing
+        price_paid: priceInCents.toString()
+        // Note: Cannot store imageUrl in metadata due to 500 char limit
+        // Image will be processed via alternative method in webhook
       },
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     });
