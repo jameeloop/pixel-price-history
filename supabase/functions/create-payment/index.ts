@@ -137,10 +137,10 @@ serve(async (req) => {
       customer_email: email,
       metadata: {
         email,
-        caption: caption.trim(),
-        imageUrl,
+        caption: caption.trim().substring(0, 400), // Limit caption to 400 chars
         fileName: fileName || 'upload.jpg',
         uploadOrder: priceInCents.toString()
+        // Removed imageUrl as it's too large for Stripe metadata (500 char limit)
       },
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     });
