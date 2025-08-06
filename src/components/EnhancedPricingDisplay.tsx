@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { TrendingUp, Users, DollarSign, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import RotatingPsychologyFacts from './RotatingPsychologyFacts';
 
 interface PricingData {
   current_price: number;
@@ -151,6 +151,36 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
               {formatTimeAgo(lastUploadTime)}
             </p>
             <p className="text-[10px] text-muted-foreground">Last Upload</p>
+          </div>
+        </div>
+        
+        {/* Price Milestones - Subtle version without buttons */}
+        <div className="mt-4 pt-4 border-t border-border/30">
+          <div className="space-y-3">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Progress to milestones</span>
+            </div>
+            
+            <div className="space-y-2">
+              {[100, 500, 1000, 2000, 5000].map((milestone) => {
+                const isReached = pricingData.current_price >= milestone;
+                const isNext = !isReached && pricingData.current_price < milestone && 
+                  (milestone === 100 || pricingData.current_price >= [0, 100, 500, 1000, 2000][Math.max(0, [100, 500, 1000, 2000, 5000].indexOf(milestone) - 1)]);
+                
+                return (
+                  <div key={milestone} className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${
+                      isReached ? 'bg-primary' : isNext ? 'bg-accent/50' : 'bg-muted'
+                    }`} />
+                    <span className={`text-xs ${
+                      isReached ? 'text-primary font-medium' : isNext ? 'text-accent' : 'text-muted-foreground'
+                    }`}>
+                      ${(milestone / 100).toFixed(2)} {isReached ? '✓' : isNext ? `(${((milestone - pricingData.current_price) / 100).toFixed(2)} to go)` : ''}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </CardContent>

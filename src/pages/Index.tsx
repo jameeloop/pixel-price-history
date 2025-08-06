@@ -166,10 +166,6 @@ const Index = () => {
           <Gallery refreshTrigger={refreshGallery} limitResults={4} />
         </div>
 
-        {/* Progress Milestones - Made smaller */}
-        <div className="mb-3">
-          <ProgressMilestones currentPrice={currentPrice} />
-        </div>
 
         {/* Live Feed and Prediction Poll - Made smaller */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">

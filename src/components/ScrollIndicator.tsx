@@ -6,27 +6,31 @@ const ScrollIndicator: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Hide indicator after user scrolls down 100px
-      if (window.scrollY > 100) {
-        setShowIndicator(false);
-      } else {
-        setShowIndicator(true);
+      // Check if upload form is visible on screen
+      const uploadForm = document.getElementById('upload-form');
+      if (uploadForm) {
+        const rect = uploadForm.getBoundingClientRect();
+        // Hide indicator when upload form is in view
+        if (rect.top <= window.innerHeight) {
+          setShowIndicator(false);
+        } else {
+          setShowIndicator(true);
+        }
       }
     };
 
     window.addEventListener('scroll', handleScroll);
+    // Check initially
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   if (!showIndicator) return null;
 
   return (
-    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-10 animate-bounce">
-      <div className="flex flex-col items-center space-y-1">
-        <div className="bg-primary/10 backdrop-blur-sm rounded-full p-2 border border-primary/20">
-          <ChevronDown className="w-6 h-6 text-primary animate-pulse" />
-        </div>
-        <span className="text-xs text-muted-foreground font-medium">Scroll to explore</span>
+    <div className="fixed bottom-8 left-8 z-10 animate-bounce">
+      <div className="bg-primary/10 backdrop-blur-sm rounded-full p-3 border border-primary/20">
+        <ChevronDown className="w-5 h-5 text-primary animate-pulse" />
       </div>
     </div>
   );
