@@ -212,14 +212,6 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
                       `);
                     }}
                   />
-                  <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    <Badge variant="secondary" className="bg-white text-black font-semibold text-xs price-ticker shadow-sm border">
-                      #{uploads.findIndex(u => u.id === upload.id) + 1}
-                    </Badge>
-                    <Badge variant="outline" className="bg-white text-black font-semibold text-xs price-ticker shadow-sm border">
-                      {formatPrice(upload.price_paid)}
-                    </Badge>
-                  </div>
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <div className="bg-black/60 text-white p-1 rounded text-xs flex items-center gap-1">
                       <Eye className="w-3 h-3" />
@@ -228,8 +220,13 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
                   </div>
                 </div>
                 
-                {/* Voting buttons on the right side of image - Compact version */}
-                <div className="flex-shrink-0 w-14 flex flex-col justify-center" onClick={(e) => e.stopPropagation()}>
+                {/* Price and voting buttons on the right side */}
+                <div className="flex-shrink-0 w-16 flex flex-col justify-start gap-2" onClick={(e) => e.stopPropagation()}>
+                  {/* Price badge */}
+                  <Badge variant="outline" className="bg-white text-black font-semibold text-xs price-ticker shadow-sm border w-full justify-center">
+                    {formatPrice(upload.price_paid)}
+                  </Badge>
+                  {/* Voting buttons */}
                   <LikeButton uploadId={upload.id} compact={true} />
                 </div>
               </div>
