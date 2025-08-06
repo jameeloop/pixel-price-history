@@ -63,7 +63,7 @@ const ControlPanel: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch uploads
+      // Since we're authenticated as admin, we can access the uploads table directly
       const { data: uploadsData, error: uploadsError } = await supabase
         .from('uploads')
         .select('*')
