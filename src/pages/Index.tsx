@@ -10,6 +10,7 @@ import CurrentUploadHero from '@/components/CurrentUploadHero';
 import ProgressMilestones from '@/components/ProgressMilestones';
 import LiveFeed from '@/components/LiveFeed';
 import PredictionPoll from '@/components/PredictionPoll';
+import FloatingUploadCTA from '@/components/FloatingUploadCTA';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -20,6 +21,13 @@ const Index = () => {
 
   const handleUploadSuccess = () => {
     setRefreshGallery(prev => prev + 1);
+  };
+
+  const scrollToUpload = () => {
+    document.getElementById('upload-form')?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'center'
+    });
   };
 
   return (
@@ -109,74 +117,73 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Swapped Layout: Experiment Status and Current Upload Hero */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <div className="lg:order-2">
+        {/* Swapped Layout: Current Upload Hero takes more space */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2 lg:order-1">
             <CurrentUploadHero />
           </div>
-          <div className="lg:order-1">
+          <div className="lg:order-2">
             <EnhancedPricingDisplay onPriceUpdate={setCurrentPrice} />
           </div>
         </div>
 
-        {/* Progress Milestones */}
+        {/* Upload Form - Moved up for better accessibility */}
         <div className="mb-6">
+          <Card className="glass-card border-2 border-primary/20 bg-gradient-to-r from-purple-50/5 to-purple-100/5" id="upload-form">
+            <CardHeader className="pb-3 text-center">
+              <CardTitle className="text-xl gradient-text">🎨 Join the Experiment</CardTitle>
+              <p className="text-sm text-muted-foreground">Upload your photo to participate in the social experiment! ✨</p>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <UploadForm 
+                currentPrice={currentPrice} 
+                onUploadSuccess={handleUploadSuccess}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Progress Milestones - Made smaller */}
+        <div className="mb-4">
           <ProgressMilestones currentPrice={currentPrice} />
         </div>
 
-        {/* Live Feed and Prediction Poll */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <LiveFeed />
-          <PredictionPoll />
+        {/* Live Feed and Prediction Poll - Made smaller */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="lg:col-span-1">
+            <LiveFeed />
+          </div>
+          <div className="lg:col-span-1">
+            <PredictionPoll />
+          </div>
         </div>
 
-        {/* Main Content Grid - More compact */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Upload Form */}
-          <div className="lg:col-span-2">
-            <Card className="glass-card" id="upload-form">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Join the Experiment 🎨</CardTitle>
-                <p className="text-sm text-muted-foreground">Upload your photo to participate in the social experiment! ✨</p>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <UploadForm 
-                  currentPrice={currentPrice} 
-                  onUploadSuccess={handleUploadSuccess}
-                />
-              </CardContent>
-            </Card>
+        {/* Archive Preview - Simplified */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold gradient-text">Experiment Archive 📚</h3>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/history')}
+              className="text-primary hover:text-primary/80"
+            >
+              View All →
+            </Button>
           </div>
-
-          {/* Archive Preview */}
-          <div className="lg:col-span-3">
-            <div className="mb-3">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold">Experiment Archive 📚</h3>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => navigate('/history')}
-                  className="text-primary hover:text-primary/80"
-                >
-                  View All
-                </Button>
-              </div>
-            </div>
-            <div className="max-h-96 overflow-y-auto relative">
-              <Gallery refreshTrigger={refreshGallery} limitResults={6} />
-              <div className="md:hidden absolute bottom-2 right-2 animate-bounce">
-                <ArrowDownCircle className="w-5 h-5 text-muted-foreground/50" />
-              </div>
+          <div className="max-h-80 overflow-y-auto relative">
+            <Gallery refreshTrigger={refreshGallery} limitResults={4} />
+            <div className="md:hidden absolute bottom-2 right-2 animate-bounce">
+              <ArrowDownCircle className="w-5 h-5 text-muted-foreground/50" />
             </div>
           </div>
         </div>
 
-        {/* FAQ Section - Full version restored */}
-        <div className="mt-8 mb-6">
+        {/* FAQ Section - Made more compact */}
+        <div className="mt-6 mb-6">
           <Card className="glass-card">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="text-xl gradient-text">Frequently Asked Questions 💭</CardTitle>
+            <CardHeader className="text-center pb-3">
+              <CardTitle className="text-lg gradient-text">FAQ 💭</CardTitle>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible>
@@ -227,14 +234,15 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Footer */}
-        <footer className="mt-6 pt-4 border-t border-border/50">
-          <div className="text-center text-sm text-muted-foreground space-y-2">
-            <p className="font-medium">🧠 Psychology Fact: "People often value things more when they're harder to obtain"</p>
-            <p className="text-xs">The experiment continues... Will you be the one to push the price to new heights? 🚀✨</p>
-            <p className="text-xs opacity-75">Others are watching your decision 👀</p>
+        {/* Footer - Compact */}
+        <footer className="mt-4 pt-3 border-t border-border/50">
+          <div className="text-center text-sm text-muted-foreground space-y-1">
+            <p className="text-xs opacity-75">The experiment continues... Will you push the price higher? 🚀</p>
           </div>
         </footer>
+
+        {/* Floating Upload CTA */}
+        <FloatingUploadCTA onClick={scrollToUpload} />
       </div>
     </div>
   );

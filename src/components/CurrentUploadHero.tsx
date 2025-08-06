@@ -195,9 +195,11 @@ const CurrentUploadHero: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30 rounded-lg shadow-lg">
-          <p className="text-base text-purple-200 text-center font-medium">
-            🧠 <strong>Featured upload!</strong> This photo claimed the main space by paying {formatPrice(currentUpload.price_paid)}. Upload yours to take over!
+        <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30 rounded-lg shadow-lg relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-purple-600/10 animate-pulse"></div>
+          <p className="text-base text-purple-200 text-center font-medium relative z-10">
+            🌟 <strong>Want your post here?</strong> This photo claimed the featured space by paying {formatPrice(currentUpload.price_paid)}. 
+            <span className="block mt-1 text-purple-300 animate-bounce">Upload yours to take over! 👑</span>
           </p>
         </div>
       </CardContent>
