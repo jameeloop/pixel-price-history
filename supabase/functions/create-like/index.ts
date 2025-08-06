@@ -1,205 +1,188 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Content-Security-Policy': "default-src 'self'; script-src 'none'; object-src 'none';",
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block'
-};
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { DatabaseRateLimiter } from '../shared/rate-limiter.ts';
+import { InputValidator } from '../shared/input-validator.ts';
+import { getSecurityHeaders } from '../shared/security-headers.ts';
 
-// Rate limiting
-const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 10;
-
-function getRealIpAddress(request: Request): string {
-  // Get IP from various headers in order of preference
-  const xForwardedFor = request.headers.get('x-forwarded-for');
-  const xRealIp = request.headers.get('x-real-ip');
-  const cfConnectingIp = request.headers.get('cf-connecting-ip');
-  
-  if (xForwardedFor) {
-    // Take the first IP in the chain
-    return xForwardedFor.split(',')[0].trim();
-  }
-  
-  if (cfConnectingIp) {
-    return cfConnectingIp;
-  }
-  
-  if (xRealIp) {
-    return xRealIp;
-  }
-  
-  // Fallback - this might be a proxy IP
-  return 'unknown';
-}
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const limit = rateLimitMap.get(ip);
-  
-  if (!limit || now - limit.timestamp > RATE_LIMIT_WINDOW) {
-    rateLimitMap.set(ip, { count: 1, timestamp: now });
-    return false;
-  }
-  
-  if (limit.count >= MAX_REQUESTS_PER_WINDOW) {
-    return true;
-  }
-  
-  limit.count++;
-  return false;
-}
-
-function validateInput(input: string, maxLength: number = 500): boolean {
-  if (!input || input.length > maxLength) return false;
-  
-  // Check for dangerous patterns
-  const dangerousPatterns = [
-    /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
-    /javascript:/gi,
-    /on\w+\s*=/gi,
-  ];
-  
-  return !dangerousPatterns.some(pattern => pattern.test(input));
-}
+const corsHeaders = getSecurityHeaders();
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const clientIp = getRealIpAddress(req);
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Rate limiting
-    if (isRateLimited(clientIp)) {
+    // Enhanced IP detection
+    const getClientIP = (req: Request): string => {
+      const xForwardedFor = req.headers.get('x-forwarded-for');
+      const xRealIP = req.headers.get('x-real-ip');
+      const cfConnectingIP = req.headers.get('cf-connecting-ip');
+      
+      // Cloudflare IP (most reliable for Supabase)
+      if (cfConnectingIP && InputValidator.validateIpAddress(cfConnectingIP)) {
+        return cfConnectingIP;
+      }
+      
+      // X-Forwarded-For (take first IP)
+      if (xForwardedFor) {
+        const firstIP = xForwardedFor.split(',')[0].trim();
+        if (InputValidator.validateIpAddress(firstIP)) {
+          return firstIP;
+        }
+      }
+      
+      // X-Real-IP
+      if (xRealIP && InputValidator.validateIpAddress(xRealIP)) {
+        return xRealIP;
+      }
+      
+      return '127.0.0.1'; // Fallback
+    };
+
+    const clientIP = getClientIP(req);
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+    
+    // Validate user agent
+    if (!InputValidator.validateUserAgent(userAgent)) {
       return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded' }),
+        JSON.stringify({ error: 'Invalid request' }), 
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // Enhanced rate limiting with database persistence
+    const rateLimiter = new DatabaseRateLimiter(supabaseUrl, supabaseKey);
+    const rateCheck = await rateLimiter.checkRateLimit(clientIP, 'create-like', 60000, 20);
+    
+    if (!rateCheck.allowed) {
+      const retryAfter = rateCheck.penaltyUntil 
+        ? Math.ceil((rateCheck.penaltyUntil.getTime() - Date.now()) / 1000)
+        : Math.ceil((rateCheck.resetTime!.getTime() - Date.now()) / 1000);
+        
+      return new Response(
+        JSON.stringify({ 
+          error: 'Rate limit exceeded', 
+          retryAfter,
+          penaltyUntil: rateCheck.penaltyUntil?.toISOString()
+        }), 
         { 
           status: 429, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { 
+            ...corsHeaders, 
+            'Retry-After': retryAfter.toString(),
+            'X-RateLimit-Reset': (rateCheck.resetTime || rateCheck.penaltyUntil)!.toISOString()
+          } 
         }
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
     const { uploadId, likeType } = await req.json();
-
-    // Validate inputs
-    if (!validateInput(uploadId, 100) || !validateInput(likeType, 20)) {
+    
+    // Enhanced input validation
+    if (!InputValidator.validateUploadId(uploadId)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid input' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Invalid upload ID' }), 
+        { status: 400, headers: corsHeaders }
       );
     }
 
     if (!['like', 'dislike'].includes(likeType)) {
       return new Response(
-        JSON.stringify({ error: 'Invalid like type' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Invalid like type' }), 
+        { status: 400, headers: corsHeaders }
       );
     }
 
-    // Check if user already voted
-    const { data: existingVote } = await supabase
+    // Check if upload exists
+    const { data: uploadExists, error: uploadError } = await supabase
+      .from('uploads_public')
+      .select('id')
+      .eq('id', uploadId)
+      .single();
+
+    if (uploadError || !uploadExists) {
+      return new Response(
+        JSON.stringify({ error: 'Upload not found' }), 
+        { status: 404, headers: corsHeaders }
+      );
+    }
+
+    // Security logging
+    await supabase.rpc('log_security_event', {
+      event_type: 'LIKE_ATTEMPT',
+      table_name: 'likes',
+      record_id: uploadId,
+      ip_address: clientIP,
+      user_agent: userAgent,
+      additional_data: { like_type: likeType }
+    }).catch(console.error);
+
+    // Check for existing like from this IP
+    const { data: existingLike } = await supabase
       .from('likes')
       .select('*')
       .eq('upload_id', uploadId)
-      .eq('ip_address', clientIp)
+      .eq('ip_address', clientIP)
       .single();
 
-    if (existingVote) {
-      if (existingVote.like_type === likeType) {
-        // Remove vote if clicking same type
+    if (existingLike) {
+      if (existingLike.like_type === likeType) {
+        // Remove like if same type
         const { error } = await supabase
           .from('likes')
           .delete()
-          .eq('id', existingVote.id);
+          .eq('id', existingLike.id);
 
         if (error) throw error;
-
-        // Log security event
-        await supabase.rpc('log_security_event', {
-          event_type: 'vote_removed',
-          table_name: 'likes',
-          record_id: existingVote.id,
-          ip_address: clientIp,
-          user_agent: req.headers.get('user-agent') || null,
-          additional_data: { upload_id: uploadId, like_type: likeType }
-        });
-
+        
         return new Response(
-          JSON.stringify({ success: true, action: 'removed' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ success: true, action: 'removed', likeType }), 
+          { headers: corsHeaders }
         );
       } else {
-        // Change vote type
+        // Update like type if different
         const { error } = await supabase
           .from('likes')
           .update({ like_type: likeType })
-          .eq('id', existingVote.id);
+          .eq('id', existingLike.id);
 
         if (error) throw error;
-
-        // Log security event
-        await supabase.rpc('log_security_event', {
-          event_type: 'vote_changed',
-          table_name: 'likes',
-          record_id: existingVote.id,
-          ip_address: clientIp,
-          user_agent: req.headers.get('user-agent') || null,
-          additional_data: { upload_id: uploadId, old_type: existingVote.like_type, new_type: likeType }
-        });
-
+        
         return new Response(
-          JSON.stringify({ success: true, action: 'updated' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          JSON.stringify({ success: true, action: 'updated', likeType }), 
+          { headers: corsHeaders }
         );
       }
     } else {
-      // Create new vote
-      const { data, error } = await supabase
+      // Create new like
+      const { error } = await supabase
         .from('likes')
         .insert({
           upload_id: uploadId,
           like_type: likeType,
-          ip_address: clientIp
-        })
-        .select()
-        .single();
+          ip_address: clientIP
+        });
 
       if (error) throw error;
-
-      // Log security event
-      await supabase.rpc('log_security_event', {
-        event_type: 'vote_created',
-        table_name: 'likes',
-        record_id: data.id,
-        ip_address: clientIp,
-        user_agent: req.headers.get('user-agent') || null,
-        additional_data: { upload_id: uploadId, like_type: likeType }
-      });
-
+      
       return new Response(
-        JSON.stringify({ success: true, action: 'created' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: true, action: 'created', likeType }), 
+        { headers: corsHeaders }
       );
     }
+
   } catch (error) {
-    console.error('Error handling like:', error);
+    console.error('Error in create-like function:', error);
+    
+    // Don't leak internal error details
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Internal server error' }), 
+      { status: 500, headers: corsHeaders }
     );
   }
 });

@@ -216,7 +216,7 @@ export type Database = {
           image_url?: string | null
           price_paid?: number | null
           upload_order?: number | null
-          user_email?: string | null
+          user_email?: never
         }
         Update: {
           caption?: string | null
@@ -225,7 +225,7 @@ export type Database = {
           image_url?: string | null
           price_paid?: number | null
           upload_order?: number | null
-          user_email?: string | null
+          user_email?: never
         }
         Relationships: []
       }

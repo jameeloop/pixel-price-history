@@ -1,66 +1,11 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Content-Security-Policy': "default-src 'self'; script-src 'none'; object-src 'none';",
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block'
-};
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { DatabaseRateLimiter } from '../shared/rate-limiter.ts';
+import { InputValidator } from '../shared/input-validator.ts';
+import { getSecurityHeaders } from '../shared/security-headers.ts';
 
-// Rate limiting
-const rateLimitMap = new Map<string, { count: number; timestamp: number }>();
-const RATE_LIMIT_WINDOW = 300000; // 5 minutes
-const MAX_REQUESTS_PER_WINDOW = 5;
-
-function getRealIpAddress(request: Request): string {
-  const xForwardedFor = request.headers.get('x-forwarded-for');
-  const xRealIp = request.headers.get('x-real-ip');
-  const cfConnectingIp = request.headers.get('cf-connecting-ip');
-  
-  if (xForwardedFor) {
-    return xForwardedFor.split(',')[0].trim();
-  }
-  
-  if (cfConnectingIp) {
-    return cfConnectingIp;
-  }
-  
-  if (xRealIp) {
-    return xRealIp;
-  }
-  
-  return 'unknown';
-}
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const limit = rateLimitMap.get(ip);
-  
-  if (!limit || now - limit.timestamp > RATE_LIMIT_WINDOW) {
-    rateLimitMap.set(ip, { count: 1, timestamp: now });
-    return false;
-  }
-  
-  if (limit.count >= MAX_REQUESTS_PER_WINDOW) {
-    return true;
-  }
-  
-  limit.count++;
-  return false;
-}
-
-function getWeekEnding(): string {
-  const now = new Date();
-  const dayOfWeek = now.getDay(); // 0 = Sunday, 6 = Saturday
-  const daysUntilSunday = (7 - dayOfWeek) % 7;
-  const weekEnding = new Date(now);
-  weekEnding.setDate(now.getDate() + daysUntilSunday);
-  weekEnding.setHours(23, 59, 59, 999);
-  return weekEnding.toISOString().split('T')[0];
-}
+const corsHeaders = getSecurityHeaders();
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -68,41 +13,103 @@ serve(async (req) => {
   }
 
   try {
-    const clientIp = getRealIpAddress(req);
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
-    if (isRateLimited(clientIp)) {
+    // Enhanced IP detection
+    const getClientIP = (req: Request): string => {
+      const cfConnectingIP = req.headers.get('cf-connecting-ip');
+      const xForwardedFor = req.headers.get('x-forwarded-for');
+      const xRealIP = req.headers.get('x-real-ip');
+      
+      if (cfConnectingIP && InputValidator.validateIpAddress(cfConnectingIP)) {
+        return cfConnectingIP;
+      }
+      
+      if (xForwardedFor) {
+        const firstIP = xForwardedFor.split(',')[0].trim();
+        if (InputValidator.validateIpAddress(firstIP)) {
+          return firstIP;
+        }
+      }
+      
+      if (xRealIP && InputValidator.validateIpAddress(xRealIP)) {
+        return xRealIP;
+      }
+      
+      return '127.0.0.1';
+    };
+
+    const clientIP = getClientIP(req);
+    const userAgent = req.headers.get('user-agent') || 'unknown';
+    
+    // Validate user agent
+    if (!InputValidator.validateUserAgent(userAgent)) {
       return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded' }),
+        JSON.stringify({ error: 'Invalid request' }), 
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    // Rate limiting
+    const rateLimiter = new DatabaseRateLimiter(supabaseUrl, supabaseKey);
+    const rateCheck = await rateLimiter.checkRateLimit(clientIP, 'create-prediction', 3600000, 10); // 10 per hour
+    
+    if (!rateCheck.allowed) {
+      const retryAfter = rateCheck.penaltyUntil 
+        ? Math.ceil((rateCheck.penaltyUntil.getTime() - Date.now()) / 1000)
+        : Math.ceil((rateCheck.resetTime!.getTime() - Date.now()) / 1000);
+        
+      return new Response(
+        JSON.stringify({ 
+          error: 'Too many predictions. Please try again later.',
+          retryAfter
+        }), 
         { 
           status: 429, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          headers: { 
+            ...corsHeaders, 
+            'Retry-After': retryAfter.toString() 
+          } 
         }
       );
     }
 
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const { predictedPrice } = await req.json();
-
-    // Validate prediction
-    if (!predictedPrice || typeof predictedPrice !== 'number' || 
-        predictedPrice < 1 || predictedPrice > 10000) {
+    const { predictedPrice, weekEnding } = await req.json();
+    
+    // Enhanced input validation
+    if (!InputValidator.validatePrice(predictedPrice) || predictedPrice > 10000) {
       return new Response(
-        JSON.stringify({ error: 'Invalid prediction price (must be 1-10000)' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Invalid predicted price (must be between 1-10000 cents)' }), 
+        { status: 400, headers: corsHeaders }
       );
     }
 
-    const weekEnding = getWeekEnding();
+    // Validate week ending date
+    const weekEndDate = new Date(weekEnding);
+    if (isNaN(weekEndDate.getTime()) || weekEndDate <= new Date()) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid week ending date' }), 
+        { status: 400, headers: corsHeaders }
+      );
+    }
 
-    // Check if user already predicted for this week
+    // Security logging
+    await supabase.rpc('log_security_event', {
+      event_type: 'PREDICTION_ATTEMPT',
+      table_name: 'predictions',
+      record_id: null,
+      ip_address: clientIP,
+      user_agent: userAgent,
+      additional_data: { predicted_price: predictedPrice, week_ending: weekEnding }
+    }).catch(console.error);
+
+    // Check for existing prediction from this IP for the same week
     const { data: existingPrediction } = await supabase
       .from('predictions')
       .select('*')
-      .eq('ip_address', clientIp)
+      .eq('ip_address', clientIP)
       .eq('week_ending', weekEnding)
       .single();
 
@@ -116,24 +123,14 @@ serve(async (req) => {
         .single();
 
       if (error) throw error;
-
-      // Log security event
-      await supabase.rpc('log_security_event', {
-        event_type: 'prediction_updated',
-        table_name: 'predictions',
-        record_id: data.id,
-        ip_address: clientIp,
-        user_agent: req.headers.get('user-agent') || null,
-        additional_data: { 
-          week_ending: weekEnding, 
-          old_price: existingPrediction.predicted_price,
-          new_price: predictedPrice 
-        }
-      });
-
+      
       return new Response(
-        JSON.stringify({ success: true, action: 'updated', prediction: data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: true, 
+          action: 'updated', 
+          prediction: data 
+        }), 
+        { headers: corsHeaders }
       );
     } else {
       // Create new prediction
@@ -142,33 +139,30 @@ serve(async (req) => {
         .insert({
           predicted_price: predictedPrice,
           week_ending: weekEnding,
-          ip_address: clientIp
+          ip_address: clientIP
         })
         .select()
         .single();
 
       if (error) throw error;
-
-      // Log security event
-      await supabase.rpc('log_security_event', {
-        event_type: 'prediction_created',
-        table_name: 'predictions',
-        record_id: data.id,
-        ip_address: clientIp,
-        user_agent: req.headers.get('user-agent') || null,
-        additional_data: { week_ending: weekEnding, predicted_price: predictedPrice }
-      });
-
+      
       return new Response(
-        JSON.stringify({ success: true, action: 'created', prediction: data }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ 
+          success: true, 
+          action: 'created', 
+          prediction: data 
+        }), 
+        { headers: corsHeaders }
       );
     }
+
   } catch (error) {
-    console.error('Error handling prediction:', error);
+    console.error('Error in create-prediction function:', error);
+    
+    // Don't leak internal error details
     return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ error: 'Unable to process prediction' }), 
+      { status: 500, headers: corsHeaders }
     );
   }
 });

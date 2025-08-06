@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface MaskedEmailProps {
@@ -10,17 +11,9 @@ const MaskedEmail: React.FC<MaskedEmailProps> = ({ email, showFull = false }) =>
     return <span>{email}</span>;
   }
 
-  const [localPart, domain] = email.split('@');
-  if (!localPart || !domain) {
-    return <span>{email}</span>;
-  }
-
-  // Show first 2 characters, then asterisks, then @domain
-  const maskedLocal = localPart.length > 2 
-    ? `${localPart.substring(0, 2)}${'*'.repeat(Math.max(localPart.length - 2, 3))}`
-    : `${localPart}***`;
-
-  return <span>{maskedLocal}@{domain}</span>;
+  // Email is already masked by the database function, so just display it
+  // This component now serves as a consistent interface for email display
+  return <span>{email}</span>;
 };
 
 export default MaskedEmail;
