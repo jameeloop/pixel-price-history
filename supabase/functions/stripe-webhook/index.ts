@@ -242,9 +242,10 @@ async function sendConfirmationEmail(email: string, uploadRecord: any, pricePaid
 }
 
 async function createPlaceholderImage(caption: string, pricePaid: number, supabase: any): Promise<string> {
-  // Create a placeholder SVG image
-  const placeholderSvg = `
-    <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+  // Create a placeholder SVG image with safe character handling
+  const safeCaption = caption.replace(/[<>&"']/g, '').substring(0, 100);
+  
+  const placeholderSvg = `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
@@ -257,16 +258,17 @@ async function createPlaceholderImage(caption: string, pricePaid: number, supaba
         PixPeriment Upload
       </text>
       <text x="400" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.9)">
-        ${caption.length > 100 ? caption.substring(0, 100) + '...' : caption}
+        ${safeCaption}
       </text>
       <text x="400" y="400" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.7)">
-        PixPeriment Upload • $${((pricePaid || 50) / 100).toFixed(2)}
+        PixPeriment Upload • ${(pricePaid / 100).toFixed(2)}p
       </text>
-    </svg>
-  `;
+    </svg>`;
   
   const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.svg`;
-  const imageBlob = new Uint8Array(atob(btoa(placeholderSvg)).split('').map(char => char.charCodeAt(0)));
+  // Use TextEncoder for proper UTF-8 encoding
+  const encoder = new TextEncoder();
+  const imageBlob = encoder.encode(placeholderSvg);
   
   const { error: uploadError } = await supabase.storage
     .from("uploads")
