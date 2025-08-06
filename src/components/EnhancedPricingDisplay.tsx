@@ -20,6 +20,24 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
   const [lastUploadTime, setLastUploadTime] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const milestones = [100, 500, 1000, 2000, 5000];
+  
+  const getNextMilestone = (currentPrice: number) => {
+    return milestones.find(milestone => milestone > currentPrice) || milestones[milestones.length - 1];
+  };
+  
+  const getPreviousMilestone = (currentPrice: number) => {
+    const reachedMilestones = milestones.filter(milestone => milestone <= currentPrice);
+    return reachedMilestones.length > 0 ? reachedMilestones[reachedMilestones.length - 1] : 0;
+  };
+  
+  const getProgressToNextMilestone = (currentPrice: number) => {
+    const nextMilestone = getNextMilestone(currentPrice);
+    const prevMilestone = getPreviousMilestone(currentPrice);
+    const progress = ((currentPrice - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
+    return Math.min(progress, 100);
+  };
+
   const fetchData = async () => {
     try {
       // Fetch pricing data
@@ -154,32 +172,24 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
           </div>
         </div>
         
-        {/* Price Milestones - Subtle version without buttons */}
+        {/* Milestone Progress Bar */}
         <div className="mt-4 pt-4 border-t border-border/30">
-          <div className="space-y-3">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Progress to milestones</span>
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Progress to next milestone</span>
+              <span>${(pricingData.current_price / 100).toFixed(2)}</span>
             </div>
-            
-            <div className="space-y-2">
-              {[100, 500, 1000, 2000, 5000].map((milestone) => {
-                const isReached = pricingData.current_price >= milestone;
-                const isNext = !isReached && pricingData.current_price < milestone && 
-                  (milestone === 100 || pricingData.current_price >= [0, 100, 500, 1000, 2000][Math.max(0, [100, 500, 1000, 2000, 5000].indexOf(milestone) - 1)]);
-                
-                return (
-                  <div key={milestone} className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${
-                      isReached ? 'bg-primary' : isNext ? 'bg-accent/50' : 'bg-muted'
-                    }`} />
-                    <span className={`text-xs ${
-                      isReached ? 'text-primary font-medium' : isNext ? 'text-accent' : 'text-muted-foreground'
-                    }`}>
-                      ${(milestone / 100).toFixed(2)} {isReached ? '✓' : isNext ? `(${((milestone - pricingData.current_price) / 100).toFixed(2)} to go)` : ''}
-                    </span>
-                  </div>
-                );
-              })}
+            <Progress 
+              value={getProgressToNextMilestone(pricingData.current_price)} 
+              className="h-2 bg-muted"
+            />
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">
+                ${(getPreviousMilestone(pricingData.current_price) / 100).toFixed(2)}
+              </span>
+              <span className="text-primary font-medium">
+                ${(getNextMilestone(pricingData.current_price) / 100).toFixed(2)}
+              </span>
             </div>
           </div>
         </div>
