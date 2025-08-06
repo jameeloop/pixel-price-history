@@ -213,10 +213,10 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
                     }}
                   />
                   <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    <Badge variant="secondary" className="font-semibold text-xs price-ticker">
+                    <Badge variant="secondary" className="bg-white text-black font-semibold text-xs price-ticker shadow-sm border">
                       #{uploads.findIndex(u => u.id === upload.id) + 1}
                     </Badge>
-                    <Badge variant="outline" className="bg-background/90 text-xs price-ticker">
+                    <Badge variant="outline" className="bg-white text-black font-semibold text-xs price-ticker shadow-sm border">
                       {formatPrice(upload.price_paid)}
                     </Badge>
                   </div>
