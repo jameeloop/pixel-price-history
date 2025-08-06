@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
+import { validateCaption } from '@/utils/inputValidation';
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
@@ -12,16 +13,26 @@ const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = "Search by keyword, price, or index..." 
 }) => {
   const [query, setQuery] = useState('');
+  const [isValid, setIsValid] = useState(true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(query);
+    if (isValid) {
+      onSearch(query);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    
+    // Basic validation to prevent XSS in search queries
+    const validation = validateCaption(value || ' '); // Use space as fallback for empty queries
+    setIsValid(validation.isValid || value === ''); // Allow empty queries
     setQuery(value);
-    onSearch(value); // Real-time search
+    
+    if (validation.isValid || value === '') {
+      onSearch(value); // Real-time search only for valid queries
+    }
   };
 
   return (
@@ -33,8 +44,15 @@ const SearchBar: React.FC<SearchBarProps> = ({
           placeholder={placeholder}
           value={query}
           onChange={handleInputChange}
-          className="pl-10 glass-card border-border/50 focus:border-primary/50"
+          className={`pl-10 glass-card border-border/50 focus:border-primary/50 ${
+            !isValid ? 'border-destructive focus:border-destructive' : ''
+          }`}
         />
+        {!isValid && (
+          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-destructive text-xs">
+            Invalid input
+          </div>
+        )}
       </div>
     </form>
   );

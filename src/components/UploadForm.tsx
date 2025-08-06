@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { validateEmail, validateCaption, validateFileUpload, sanitizeHtml } from '@/utils/inputValidation';
 
 interface UploadFormProps {
   currentPrice: number;
@@ -17,6 +18,7 @@ interface ImageFile {
   name: string;
   type: string;
   data: string;
+  file: File;
 }
 
 const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }) => {
@@ -30,10 +32,11 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   const { toast } = useToast();
 
   const processFile = (file: File) => {
-    if (!file.type.startsWith('image/')) {
+    const fileValidation = validateFileUpload(file);
+    if (!fileValidation.isValid) {
       toast({
-        title: "Invalid file type",
-        description: "Please select an image file",
+        title: "Invalid file",
+        description: fileValidation.error,
         variant: "destructive",
       });
       return;
@@ -46,6 +49,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
         name: file.name,
         type: file.type,
         data: result,
+        file: file, // Store the actual file for validation
       });
       setImagePreview(result);
     };
@@ -105,10 +109,43 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !caption || !imageFile) {
+    // Validate email
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.isValid) {
       toast({
-        title: "Missing information",
-        description: "Please fill in all fields and select an image",
+        title: "Invalid email",
+        description: emailValidation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate caption
+    const captionValidation = validateCaption(caption);
+    if (!captionValidation.isValid) {
+      toast({
+        title: "Invalid caption",
+        description: captionValidation.error,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Validate file
+    if (!imageFile) {
+      toast({
+        title: "Missing image",
+        description: "Please upload an image",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const fileValidation = validateFileUpload(imageFile.file);
+    if (!fileValidation.isValid) {
+      toast({
+        title: "Invalid file",
+        description: fileValidation.error,
         variant: "destructive",
       });
       return;
@@ -118,7 +155,11 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
 
     try {
       const { data, error } = await supabase.functions.invoke('create-payment', {
-        body: { email, caption, imageFile },
+        body: { 
+          email: email.trim().toLowerCase(),
+          caption: sanitizeHtml(caption.trim()),
+          imageFile 
+        },
       });
 
       if (error) throw error;

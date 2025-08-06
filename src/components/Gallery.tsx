@@ -12,7 +12,7 @@ import ImageLightbox from '@/components/ImageLightbox';
 
 interface Upload {
   id: string;
-  user_id: string;
+  user_id?: string; // Make optional since uploads_public view doesn't include this
   user_email: string;
   image_url: string;
   caption: string;
@@ -39,7 +39,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
   const fetchUploads = async () => {
     try {
       let query = supabase
-        .from('uploads')
+        .from('uploads_public')
         .select('*')
         .order('created_at', { ascending: false });
 
