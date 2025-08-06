@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { History, Camera, TrendingUp, Instagram, Music, Mail, ArrowDownCircle } from 'lucide-react';
@@ -119,18 +120,22 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Swapped Layout: Featured Upload left, Experiment Status right */}
+        {/* Layout with Featured Upload left and Experiment Status right */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           <div className="lg:col-span-2 lg:order-1">
             <CurrentUploadHero />
           </div>
-          <div className="lg:order-2">
+          <div className="lg:order-2 space-y-4">
             <EnhancedPricingDisplay onPriceUpdate={setCurrentPrice} />
+            {/* Psychology Facts Box - Only show on large screens below experiment status */}
+            <div className="hidden lg:block">
+              <PsychologyFactsBox />
+            </div>
           </div>
         </div>
 
-        {/* Psychology Facts Box - Separate from Experiment Status */}
-        <div className="mb-4">
+        {/* Psychology Facts Box for mobile - separate from experiment status */}
+        <div className="mb-4 lg:hidden">
           <PsychologyFactsBox />
         </div>
 

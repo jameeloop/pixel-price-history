@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ChevronUp, ChevronDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -118,15 +119,15 @@ const LikeButton: React.FC<LikeButtonProps> = ({
 
   return (
     <div className="space-y-2 min-h-[60px]">
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col items-center gap-1">
         <Button
           variant={userVote === 'like' ? 'default' : 'outline'}
           size="sm"
           onClick={() => handleVote('like')}
           disabled={isLoading}
-          className="flex items-center gap-1 text-xs h-7 px-2"
+          className="flex items-center gap-1 text-xs h-6 px-2"
         >
-          <ThumbsUp className="w-3 h-3" />
+          <ChevronUp className="w-3 h-3" />
           <span>{likes}</span>
         </Button>
         <Button
@@ -134,9 +135,9 @@ const LikeButton: React.FC<LikeButtonProps> = ({
           size="sm"
           onClick={() => handleVote('dislike')}
           disabled={isLoading}
-          className="flex items-center gap-1 text-xs h-7 px-2"
+          className="flex items-center gap-1 text-xs h-6 px-2"
         >
-          <ThumbsDown className="w-3 h-3" />
+          <ChevronDown className="w-3 h-3" />
           <span>{dislikes}</span>
         </Button>
       </div>
@@ -144,9 +145,9 @@ const LikeButton: React.FC<LikeButtonProps> = ({
       {/* Like/Dislike Ratio Bar */}
       {totalVotes > 0 && (
         <div className="w-full">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1 px-1">
-            <span className="font-medium">{Math.round(likePercentage)}% likes</span>
-            <span className="font-medium">{Math.round(100 - likePercentage)}% dislikes</span>
+          <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+            <span className="font-medium">{Math.round(likePercentage)}%</span>
+            <span className="font-medium">{Math.round(100 - likePercentage)}%</span>
           </div>
           <div className="w-full h-1.5 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
             <div 
