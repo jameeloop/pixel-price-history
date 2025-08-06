@@ -43,8 +43,13 @@ serve(async (req) => {
       throw new Error("File too large");
     }
 
-    // Initialize Stripe with demo/test key
-    const stripe = new Stripe("sk_test_51IpGhJLNLrYGPMEYG1aGLdKJTqZP8l7l6xF6XxFhA7k3wZj7eR2b5wY6sU8zV7x9wA3gH8qC2k1jL0mN9oP6rS5t8uV2yW4", {
+    // Initialize Stripe with environment variable
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+    }
+    
+    const stripe = new Stripe(stripeKey, {
       apiVersion: "2023-10-16",
     });
 
