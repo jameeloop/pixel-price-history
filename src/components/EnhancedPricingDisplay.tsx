@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Users, DollarSign, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import RotatingPsychologyFacts from './RotatingPsychologyFacts';
 
 interface PricingData {
   current_price: number;
@@ -98,21 +99,21 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
 
   return (
     <Card className="glass-card experiment-glow text-center">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl gradient-text flex items-center justify-center gap-2">
-          <TrendingUp className="w-5 h-5" />
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg gradient-text flex items-center justify-center gap-2">
+          <TrendingUp className="w-4 h-4" />
           Experiment Status
         </CardTitle>
-        <Badge variant="outline" className="mx-auto w-fit animate-pulse border-primary/50">
+        <Badge variant="outline" className="mx-auto w-fit animate-pulse border-primary/50 text-xs">
           🧪 LIVE EXPERIMENT
         </Badge>
       </CardHeader>
       
-      <CardContent className="space-y-6">
-        {/* Current Price - Large Display */}
-        <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Current Upload Price</p>
-          <p className="text-5xl font-bold gradient-text price-ticker">
+      <CardContent className="space-y-4">
+        {/* Current Price - Smaller Display */}
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Current Upload Price</p>
+          <p className="text-3xl font-bold gradient-text price-ticker">
             {formatPrice(pricingData.current_price)}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -120,43 +121,42 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
           </p>
         </div>
         
-        {/* Stats Grid */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="glass-card p-3 space-y-1">
+        {/* Stats Grid - Smaller */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="glass-card p-2 space-y-1">
             <div className="flex items-center justify-center gap-1 text-primary">
-              <DollarSign className="w-4 h-4" />
+              <DollarSign className="w-3 h-3" />
             </div>
-            <p className="text-sm font-semibold">
+            <p className="text-xs font-semibold">
               {formatPrice(totalSpent)}
             </p>
-            <p className="text-xs text-muted-foreground">Total Spent</p>
+            <p className="text-[10px] text-muted-foreground">Total Spent</p>
           </div>
           
-          <div className="glass-card p-3 space-y-1">
+          <div className="glass-card p-2 space-y-1">
             <div className="flex items-center justify-center gap-1 text-accent">
-              <Users className="w-4 h-4" />
+              <Users className="w-3 h-3" />
             </div>
-            <p className="text-sm font-semibold">
+            <p className="text-xs font-semibold">
               {pricingData.upload_count}
             </p>
-            <p className="text-xs text-muted-foreground">Participants</p>
+            <p className="text-[10px] text-muted-foreground">Participants</p>
           </div>
           
-          <div className="glass-card p-3 space-y-1">
+          <div className="glass-card p-2 space-y-1">
             <div className="flex items-center justify-center gap-1 text-muted-foreground">
-              <Clock className="w-4 h-4" />
+              <Clock className="w-3 h-3" />
             </div>
-            <p className="text-sm font-semibold">
+            <p className="text-xs font-semibold">
               {formatTimeAgo(lastUploadTime)}
             </p>
-            <p className="text-xs text-muted-foreground">Last Upload</p>
+            <p className="text-[10px] text-muted-foreground">Last Upload</p>
           </div>
         </div>
         
-        {/* Psychology Quote */}
-        <div className="text-xs text-muted-foreground border-t border-border pt-4 space-y-1">
-          <p className="font-medium text-primary">🧠 Psychology Fact:</p>
-          <p>"As prices increase, perceived value often increases too - known as the Veblen effect"</p>
+        {/* Psychology Quote - Rotating */}
+        <div className="border-t border-border pt-3 mb-4">
+          <RotatingPsychologyFacts />
         </div>
       </CardContent>
     </Card>

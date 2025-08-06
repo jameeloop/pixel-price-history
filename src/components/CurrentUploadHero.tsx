@@ -108,18 +108,18 @@ const CurrentUploadHero: React.FC = () => {
 
   return (
     <Card className="glass-card experiment-glow mb-8 border-primary/20">
-      <CardContent className="p-6">
-        <div className="mb-4 flex items-center justify-between">
+      <CardContent className="p-8">
+        <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Crown className="w-5 h-5 text-yellow-500" />
-            <h2 className="text-lg sm:text-xl font-bold gradient-text">Featured Upload</h2>
+            <Crown className="w-6 h-6 text-yellow-500" />
+            <h2 className="text-xl sm:text-2xl font-bold gradient-text">Featured Upload</h2>
           </div>
           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
             Latest Upload
           </Badge>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Image */}
           <div className="relative">
             <div className="aspect-video rounded-lg overflow-hidden bg-muted">
@@ -139,7 +139,7 @@ const CurrentUploadHero: React.FC = () => {
                 }}
               />
             </div>
-            <div className="absolute top-2 left-2">
+            <div className="absolute top-3 left-3">
               <Badge variant="secondary" className="font-semibold bg-yellow-500/20 text-yellow-700 border-yellow-500/20">
                 #{currentUpload.upload_order}
               </Badge>
@@ -147,36 +147,36 @@ const CurrentUploadHero: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <p className="text-sm sm:text-lg font-medium mb-3 line-clamp-3 break-words">
+              <p className="text-base sm:text-xl font-medium mb-4 line-clamp-3 break-words leading-relaxed">
                 "{currentUpload.caption}"
               </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="glass-card p-3">
-                <p className="text-muted-foreground text-xs">Price Paid</p>
-                <p className="text-base sm:text-lg font-bold text-primary price-ticker">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="glass-card p-4">
+                <p className="text-muted-foreground text-sm">Price Paid</p>
+                <p className="text-lg sm:text-2xl font-bold text-primary price-ticker">
                   {formatPrice(currentUpload.price_paid)}
                 </p>
               </div>
-              <div className="glass-card p-3">
-                <p className="text-muted-foreground text-xs">Uploaded</p>
-                <p className="font-medium text-sm">{formatDate(currentUpload.created_at)}</p>
+              <div className="glass-card p-4">
+                <p className="text-muted-foreground text-sm">Uploaded</p>
+                <p className="font-medium text-base">{formatDate(currentUpload.created_at)}</p>
               </div>
             </div>
 
-            <div className="glass-card p-3">
-              <p className="text-muted-foreground text-xs">Owner</p>
-              <p className="font-medium">{formatEmail(currentUpload.user_email)}</p>
+            <div className="glass-card p-4">
+              <p className="text-muted-foreground text-sm">Owner</p>
+              <p className="font-medium text-lg">{formatEmail(currentUpload.user_email)}</p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <Button
                 onClick={() => navigate(`/post/${currentUpload.id}`)}
                 variant="outline"
-                size="sm"
+                size="default"
                 className="flex-1"
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
@@ -185,7 +185,7 @@ const CurrentUploadHero: React.FC = () => {
               <Button
                 onClick={shareCurrentUpload}
                 variant="outline"
-                size="sm"
+                size="default"
                 className="flex-1"
               >
                 <Share2 className="w-4 h-4 mr-2" />
@@ -195,8 +195,8 @@ const CurrentUploadHero: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-4 p-3 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30 rounded-lg shadow-lg">
-          <p className="text-sm text-purple-200 text-center font-medium">
+        <div className="mt-6 p-4 bg-gradient-to-r from-purple-900/20 to-purple-800/20 border border-purple-600/30 rounded-lg shadow-lg">
+          <p className="text-base text-purple-200 text-center font-medium">
             🧠 <strong>Featured upload!</strong> This photo claimed the main space by paying {formatPrice(currentUpload.price_paid)}. Upload yours to take over!
           </p>
         </div>
