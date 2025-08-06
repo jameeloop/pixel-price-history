@@ -111,9 +111,11 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
   };
 
   const formatEmail = (email: string) => {
+    if (!email || email.length < 3) return 'Anonymous User';
     const [username, domain] = email.split('@');
-    if (username.length <= 3) return `Anonymous User`;
-    return `${username.substring(0, 2)}***`;
+    if (!username || !domain) return 'Anonymous User';
+    if (username.length <= 2) return `${username}***`;
+    return `${username.substring(0, 2)}${'*'.repeat(Math.max(username.length - 2, 3))}`;
   };
 
   const truncateCaption = (caption: string, maxLength: number = 120) => {

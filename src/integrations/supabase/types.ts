@@ -216,7 +216,7 @@ export type Database = {
           image_url?: string | null
           price_paid?: number | null
           upload_order?: number | null
-          user_email?: never
+          user_email?: string | null
         }
         Update: {
           caption?: string | null
@@ -225,7 +225,7 @@ export type Database = {
           image_url?: string | null
           price_paid?: number | null
           upload_order?: number | null
-          user_email?: never
+          user_email?: string | null
         }
         Relationships: []
       }
@@ -255,6 +255,10 @@ export type Database = {
         Returns: undefined
       }
       mask_email: {
+        Args: { email_input: string }
+        Returns: string
+      }
+      mask_email_safe: {
         Args: { email_input: string }
         Returns: string
       }

@@ -87,9 +87,11 @@ const CurrentUploadHero: React.FC = () => {
   };
 
   const formatEmail = (email: string) => {
-    const [username] = email.split('@');
-    if (username.length <= 3) return `Anonymous`;
-    return `${username.substring(0, 2)}***`;
+    if (!email || email.length < 3) return 'Anonymous';
+    const [username, domain] = email.split('@');
+    if (!username || !domain) return 'Anonymous';
+    if (username.length <= 2) return `${username}***`;
+    return `${username.substring(0, 2)}${'*'.repeat(Math.max(username.length - 2, 3))}`;
   };
 
   const shareCurrentUpload = () => {
