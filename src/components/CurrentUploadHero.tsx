@@ -240,12 +240,12 @@ const CurrentUploadHero: React.FC = () => {
             uploadSection?.scrollIntoView({ behavior: 'smooth' });
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-purple-600/10 animate-[pulse_3s_ease-in-out_infinite]"></div>
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 to-purple-600/5 animate-[pulse_2s_ease-in-out_infinite_reverse] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-purple-600/10 animate-[pulse_4s_ease-in-out_infinite]"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 to-purple-600/5 animate-[pulse_3s_ease-in-out_infinite_reverse] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <p className="text-sm text-purple-200 text-center font-medium relative z-10">
             🌟 <strong>Want your post here?</strong> This photo claimed the featured space by paying {formatPrice(currentUpload.price_paid)}. 
             <span className="block mt-1 text-purple-300 text-xs relative">
-              <span className="inline-block animate-[pulse_2s_ease-in-out_infinite] brightness-110 hover:brightness-125 transition-all duration-300">
+              <span className="inline-block animate-[pulse_4s_ease-in-out_infinite] brightness-110 hover:brightness-125 transition-all duration-300">
                 Upload yours to take over! 👑
               </span>
             </span>

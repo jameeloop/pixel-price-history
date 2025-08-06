@@ -51,21 +51,21 @@ const PredictionPoll: React.FC = () => {
       
       if (data) {
         setCurrentPrice(data.current_price);
-        // Generate prediction options based on current price
-        // Options should be higher than current price
+        // Generate prediction options as price ranges based on current price
+        // Create overlapping windows so at least one option will be correct
         const basePrice = data.current_price;
         const options = [
-          basePrice + 50,   // +$0.50
-          basePrice + 100,  // +$1.00
-          basePrice + 200,  // +$2.00
-          basePrice + 500   // +$5.00
+          basePrice + 25,   // +$0.25 (lower range)
+          basePrice + 75,   // +$0.75 (mid-low range)  
+          basePrice + 150,  // +$1.50 (mid-high range)
+          basePrice + 300   // +$3.00 (high range)
         ];
         setPredictionOptions(options);
       }
     } catch (error) {
       console.error('Error fetching current price:', error);
-      // Fallback options if price fetch fails
-      setPredictionOptions([100, 200, 500, 1000]);
+      // Fallback options if price fetch fails - using ranges
+      setPredictionOptions([75, 125, 225, 450]);
     }
   };
 

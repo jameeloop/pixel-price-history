@@ -64,9 +64,30 @@ const LiveFeed: React.FC = () => {
   useEffect(() => {
     fetchRecentData();
     
-    // Update every 20 seconds
+    // Set up real-time subscription for new uploads
+    const uploadsChannel = supabase
+      .channel('uploads-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'uploads'
+        },
+        () => {
+          console.log('New upload detected, refreshing feed...');
+          fetchRecentData();
+        }
+      )
+      .subscribe();
+    
+    // Update every 20 seconds as backup
     const interval = setInterval(fetchRecentData, 20000);
-    return () => clearInterval(interval);
+    
+    return () => {
+      supabase.removeChannel(uploadsChannel);
+      clearInterval(interval);
+    };
   }, []);
 
   const generateTickerMessage = (upload: RecentUpload) => {
