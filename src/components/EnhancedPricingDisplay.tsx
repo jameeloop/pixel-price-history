@@ -50,13 +50,15 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
 
       // Calculate total spent and get last upload time
       const { data: uploads, error: uploadsError } = await supabase
-        .from('uploads')
+        .from('uploads_public')
         .select('price_paid, created_at')
         .order('created_at', { ascending: false });
 
-      if (uploadsError) throw uploadsError;
+      if (uploadsError) {
+        console.error('Error fetching uploads:', uploadsError);
+      }
 
-      const total = uploads?.reduce((sum, upload) => sum + upload.price_paid, 0) || 0;
+      const total = uploads?.reduce((sum, upload) => sum + (upload.price_paid || 0), 0) || 0;
       const lastUpload = uploads?.[0]?.created_at || null;
 
       if (pricing) {

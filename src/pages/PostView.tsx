@@ -10,11 +10,11 @@ import LikeButton from '@/components/LikeButton';
 
 interface Upload {
   id: string;
-  user_id: string;
   user_email: string;
   image_url: string;
   caption: string;
   price_paid: number;
+  upload_order: number;
   created_at: string;
 }
 
@@ -36,7 +36,7 @@ const PostView: React.FC = () => {
   const fetchUpload = async () => {
     try {
       const { data, error } = await supabase
-        .from('uploads')
+        .from('uploads_public')
         .select('*')
         .eq('id', id)
         .single();
