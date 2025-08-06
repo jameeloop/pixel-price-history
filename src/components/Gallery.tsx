@@ -177,15 +177,15 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
         {displayUploads.map((upload, index) => (
           <Card 
             key={upload.id} 
-            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group h-fit" 
+            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group flex flex-col h-64 sm:h-72" 
             onClick={() => handlePostClick(upload.id)}
           >
-            <CardContent className="p-3 sm:p-4">
-              <div className="relative mb-3 sm:mb-4">
+            <CardContent className="p-3 sm:p-4 h-full flex flex-col">
+              <div className="relative mb-3 sm:mb-4 flex-shrink-0">
                 <img
                   src={upload.image_url}
                   alt={upload.caption}
-                  className="w-full h-48 sm:h-60 md:h-72 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-40 sm:h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                 onError={(e) => {
                   e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
@@ -208,13 +208,13 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
               </div>
             </div>
             
-            <div className="space-y-2 sm:space-y-3">
-              <p className="text-xs sm:text-sm font-medium line-clamp-2 min-h-[2.5rem] break-words">
-                {truncateCaption(upload.caption, 80)}
+            <div className="flex-1 flex flex-col justify-between space-y-2">
+              <p className="text-xs sm:text-sm font-medium line-clamp-2 flex-shrink-0">
+                {truncateCaption(upload.caption, 60)}
               </p>
               
-              <div className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs text-muted-foreground">
+              <div className="space-y-2 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 flex-shrink-0" />
                     <span className="truncate">{formatDate(upload.created_at)}</span>
@@ -225,8 +225,8 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
                 <LikeButton uploadId={upload.id} />
               </div>
             </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         ))}
       </div>
     </div>

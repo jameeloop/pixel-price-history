@@ -72,6 +72,26 @@ serve(async (req) => {
     
     console.log("Uploading temp image:", tempFileName, "Size:", imageBytes.length, "bytes");
     
+     // Determine pricing tier based on amount
+    const priceInCents = currentPrice;
+    const amountInDollars = priceInCents / 100;
+    const useMicropayments = amountInDollars < 12;
+    
+    // Calculate Stripe fees based on tier
+    let stripeFeePercentage, stripeFeeFixed;
+    if (useMicropayments) {
+      // Micropayments: 5% + $0.05
+      stripeFeePercentage = 0.05;
+      stripeFeeFixed = 5; // $0.05 in cents
+    } else {
+      // Standard: 2.9% + $0.30
+      stripeFeePercentage = 0.029;
+      stripeFeeFixed = 30; // $0.30 in cents
+    }
+    
+    // Calculate total amount including Stripe fees
+    const totalAmount = Math.round(priceInCents + (priceInCents * stripeFeePercentage) + stripeFeeFixed);
+
     // Upload to storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from("uploads")
@@ -97,7 +117,7 @@ serve(async (req) => {
               name: "PicMint Upload",
               description: `Upload picture with caption: "${caption.substring(0, 50)}${caption.length > 50 ? '...' : ''}"`,
             },
-            unit_amount: currentPrice,
+            unit_amount: totalAmount,
           },
           quantity: 1,
         },
