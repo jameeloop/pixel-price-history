@@ -4,8 +4,12 @@ import { History, Camera, TrendingUp, Instagram, Music, Mail } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 import UploadForm from '@/components/UploadForm';
 import PricingDisplay from '@/components/PricingDisplay';
+import EnhancedPricingDisplay from '@/components/EnhancedPricingDisplay';
 import Gallery from '@/components/Gallery';
 import CurrentUploadHero from '@/components/CurrentUploadHero';
+import ProgressMilestones from '@/components/ProgressMilestones';
+import LiveFeed from '@/components/LiveFeed';
+import PredictionPoll from '@/components/PredictionPoll';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -29,7 +33,7 @@ const Index = () => {
                 <Camera className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold gradient-text">PixPeriment</h1>
+                <h1 className="text-lg font-bold gradient-text">The PixPeriment</h1>
                 <p className="text-xs text-muted-foreground">Social Experiment</p>
               </div>
             </div>
@@ -87,7 +91,7 @@ const Index = () => {
       {/* Main Content */}
       <div className="container mx-auto px-4 py-3">
         {/* Hero Section - Much more compact */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-6">
           <h2 className="text-2xl md:text-3xl font-bold mb-3">
             <span className="gradient-text experiment-glow">The Social Experiment: How High Can It Go? 🚀</span>
           </h2>
@@ -105,19 +109,32 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Current Upload Hero */}
-        <CurrentUploadHero />
+        {/* Swapped Layout: Experiment Status and Current Upload Hero */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div className="lg:order-2">
+            <CurrentUploadHero />
+          </div>
+          <div className="lg:order-1">
+            <EnhancedPricingDisplay onPriceUpdate={setCurrentPrice} />
+          </div>
+        </div>
 
-        {/* Pricing Display - Compact */}
-        <div className="mb-4">
-          <PricingDisplay onPriceUpdate={setCurrentPrice} />
+        {/* Progress Milestones */}
+        <div className="mb-6">
+          <ProgressMilestones currentPrice={currentPrice} />
+        </div>
+
+        {/* Live Feed and Prediction Poll */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <LiveFeed />
+          <PredictionPoll />
         </div>
 
         {/* Main Content Grid - More compact */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
           {/* Upload Form */}
           <div className="lg:col-span-2">
-            <Card className="glass-card">
+            <Card className="glass-card" id="upload-form">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg">Join the Experiment 🎨</CardTitle>
                 <p className="text-sm text-muted-foreground">Upload your photo to participate in the social experiment! ✨</p>
@@ -147,7 +164,7 @@ const Index = () => {
               </div>
             </div>
             <div className="max-h-96 overflow-y-auto">
-              <Gallery refreshTrigger={refreshGallery} />
+              <Gallery refreshTrigger={refreshGallery} limitResults={6} />
             </div>
           </div>
         </div>
@@ -209,9 +226,10 @@ const Index = () => {
 
         {/* Footer */}
         <footer className="mt-6 pt-4 border-t border-border/50">
-          <div className="text-center text-sm text-muted-foreground">
-            <p className="font-medium mb-1">The experiment continues... 🔬</p>
-            <p className="text-xs">Will you be the one to push the price to new heights? 🚀✨</p>
+          <div className="text-center text-sm text-muted-foreground space-y-2">
+            <p className="font-medium">🧠 Psychology Fact: "People often value things more when they're harder to obtain"</p>
+            <p className="text-xs">The experiment continues... Will you be the one to push the price to new heights? 🚀✨</p>
+            <p className="text-xs opacity-75">Others are watching your decision 👀</p>
           </div>
         </footer>
       </div>

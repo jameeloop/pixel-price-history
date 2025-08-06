@@ -38,6 +38,62 @@ export type Database = {
         }
         Relationships: []
       }
+      likes: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown
+          like_type: string
+          upload_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: unknown
+          like_type: string
+          upload_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          like_type?: string
+          upload_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      predictions: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: unknown
+          predicted_price: number
+          week_ending: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address: unknown
+          predicted_price: number
+          week_ending: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: unknown
+          predicted_price?: number
+          week_ending?: string
+        }
+        Relationships: []
+      }
       pricing: {
         Row: {
           current_price: number

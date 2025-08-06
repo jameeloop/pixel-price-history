@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Heart, MessageCircle, Calendar } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Heart, MessageCircle, Calendar, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import LikeButton from '@/components/LikeButton';
+import SearchBar from '@/components/SearchBar';
 
 interface Upload {
   id: string;
@@ -19,19 +22,29 @@ interface Upload {
 
 interface GalleryProps {
   refreshTrigger?: number;
+  showSearch?: boolean;
+  limitResults?: number;
 }
 
-const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
+const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, limitResults }) => {
   const navigate = useNavigate();
   const [uploads, setUploads] = useState<Upload[]>([]);
+  const [filteredUploads, setFilteredUploads] = useState<Upload[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchUploads = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('uploads')
         .select('*')
         .order('created_at', { ascending: false });
+
+      if (limitResults) {
+        query = query.limit(limitResults);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching uploads:', error);
@@ -39,6 +52,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
       }
 
       setUploads(data || []);
+      setFilteredUploads(data || []);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -48,7 +62,38 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
 
   useEffect(() => {
     fetchUploads();
-  }, [refreshTrigger]);
+  }, [refreshTrigger, limitResults]);
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) {
+      setFilteredUploads(uploads);
+      return;
+    }
+
+    const filtered = uploads.filter(upload => {
+      const queryLower = query.toLowerCase();
+      
+      // Search by caption
+      if (upload.caption.toLowerCase().includes(queryLower)) return true;
+      
+      // Search by price (formatted)
+      const priceFormatted = formatPrice(upload.price_paid).toLowerCase();
+      if (priceFormatted.includes(queryLower)) return true;
+      
+      // Search by upload index (position in reverse chronological order)
+      const uploadIndex = uploads.findIndex(u => u.id === upload.id) + 1;
+      if (uploadIndex.toString().includes(queryLower)) return true;
+      
+      // Search by raw price value
+      if (upload.price_paid.toString().includes(queryLower)) return true;
+      
+      return false;
+    });
+    
+    setFilteredUploads(filtered);
+  };
 
   const formatPrice = (cents: number) => {
     return `$${(cents / 100).toFixed(2)}`;
@@ -94,21 +139,42 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
 
   if (uploads.length === 0) {
     return (
-      <Card className="glass-card">
-        <CardContent className="p-8 text-center">
-          <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">No uploads yet</h3>
-          <p className="text-muted-foreground">
-            Be the first to upload a picture!
-          </p>
-        </CardContent>
-      </Card>
+      <div>
+        {showSearch && (
+          <div className="mb-6">
+            <SearchBar onSearch={handleSearch} />
+          </div>
+        )}
+        <Card className="glass-card">
+          <CardContent className="p-8 text-center">
+            <MessageCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No uploads yet</h3>
+            <p className="text-muted-foreground">
+              Be the first to join the experiment! 👀
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
+  const displayUploads = filteredUploads.length > 0 ? filteredUploads : uploads;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-      {uploads.map((upload, index) => (
+    <div>
+      {showSearch && (
+        <div className="mb-6">
+          <SearchBar onSearch={handleSearch} />
+          {searchQuery && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Showing {displayUploads.length} results for "{searchQuery}"
+            </p>
+          )}
+        </div>
+      )}
+      
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        {displayUploads.map((upload, index) => (
         <Card 
           key={upload.id} 
           className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group" 
@@ -134,7 +200,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
               />
               <div className="absolute top-2 left-2 flex flex-col sm:flex-row gap-1 sm:gap-2">
                 <Badge variant="secondary" className="font-semibold text-xs price-ticker">
-                  #{uploads.length - index}
+                  #{uploads.findIndex(u => u.id === upload.id) + 1}
                 </Badge>
                 <Badge variant="outline" className="bg-background/90 text-xs price-ticker">
                   {formatPrice(upload.price_paid)}
@@ -147,17 +213,22 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger }) => {
                 {truncateCaption(upload.caption)}
               </p>
               
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3 flex-shrink-0" />
-                  <span className="truncate">{formatDate(upload.created_at)}</span>
+              <div className="space-y-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3 flex-shrink-0" />
+                    <span className="truncate">{formatDate(upload.created_at)}</span>
+                  </div>
+                  <span className="text-xs font-medium text-primary/80">{formatEmail(upload.user_email)}</span>
                 </div>
-                <span className="text-xs font-medium text-primary/80">{formatEmail(upload.user_email)}</span>
+                
+                <LikeButton uploadId={upload.id} />
               </div>
             </div>
           </CardContent>
         </Card>
-      ))}
+        ))}
+      </div>
     </div>
   );
 };

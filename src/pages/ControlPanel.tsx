@@ -18,6 +18,7 @@ import {
   Activity,
   LogOut,
   RotateCcw,
+  ArrowLeft,
   Download,
   AlertTriangle
 } from 'lucide-react';
@@ -26,6 +27,7 @@ import { toast } from 'sonner';
 import { useSecureControlAuth } from '@/hooks/useSecureControlAuth';
 import ControlLogin from '@/components/ControlLogin';
 import MaskedEmail from '@/components/MaskedEmail';
+import { useNavigate } from 'react-router-dom';
 
 interface Upload {
   id: string;
@@ -45,6 +47,7 @@ interface PricingData {
 }
 
 const ControlPanel: React.FC = () => {
+  const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading, login, logout, deleteUpload: secureDeleteUpload, updatePricing: secureUpdatePricing } = useSecureControlAuth();
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [pricing, setPricing] = useState<PricingData | null>(null);
@@ -195,17 +198,26 @@ const ControlPanel: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold gradient-text mb-2">Control Panel 🎛️</h1>
-          <p className="text-muted-foreground">Manage your PixPeriment application</p>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex items-center gap-4 mb-8">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate('/')}
+            className="shrink-0"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Control Panel 🎛️</h1>
+            <p className="text-sm text-muted-foreground">Manage your PixPeriment application</p>
+          </div>
+          <Button variant="outline" onClick={logout} className="gap-2">
+            <LogOut className="w-4 h-4" />
+            Logout
+          </Button>
         </div>
-        <Button variant="outline" onClick={logout} className="gap-2">
-          <LogOut className="w-4 h-4" />
-          Logout
-        </Button>
-      </div>
 
       {/* Stats Overview */}
       <div className="grid md:grid-cols-4 gap-6 mb-8">
@@ -503,7 +515,8 @@ const ControlPanel: React.FC = () => {
             </CardContent>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
     </div>
   );
 };
