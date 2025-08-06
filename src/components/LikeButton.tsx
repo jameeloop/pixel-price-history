@@ -110,6 +110,8 @@ const LikeButton: React.FC<LikeButtonProps> = ({
             upload_id: uploadId,
             ip_address: userIP,
             like_type: voteType
+          }, {
+            onConflict: 'upload_id,ip_address'
           });
 
         if (error) throw error;

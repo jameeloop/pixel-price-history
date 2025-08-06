@@ -100,6 +100,8 @@ const PredictionPoll: React.FC = () => {
           ip_address: userIP,
           predicted_price: price,
           week_ending: weekEnding
+        }, {
+          onConflict: 'ip_address,week_ending'
         });
 
       if (error) throw error;

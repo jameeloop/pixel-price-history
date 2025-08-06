@@ -133,22 +133,6 @@ const Index = () => {
           <PsychologyFactsBox />
         </div>
 
-        {/* Experiment Archive - Moved up */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold gradient-text">Experiment Archive 📚</h3>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/history')}
-              className="text-primary hover:text-primary/80"
-            >
-              View All →
-            </Button>
-          </div>
-          <Gallery refreshTrigger={refreshGallery} limitResults={4} />
-        </div>
-
         {/* Upload Form */}
         <div className="mb-4">
           <Card className="glass-card border-2 border-primary/20 bg-gradient-to-r from-purple-50/5 to-purple-100/5" id="upload-form">
@@ -163,6 +147,22 @@ const Index = () => {
               />
             </CardContent>
           </Card>
+        </div>
+
+        {/* Experiment Archive */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-lg font-bold gradient-text">Experiment Archive 📚</h3>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/history')}
+              className="text-primary hover:text-primary/80"
+            >
+              View All →
+            </Button>
+          </div>
+          <Gallery refreshTrigger={refreshGallery} limitResults={4} />
         </div>
 
         {/* Progress Milestones - Made smaller */}
