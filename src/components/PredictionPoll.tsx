@@ -12,8 +12,8 @@ const PredictionPoll: React.FC = () => {
   const [hasVoted, setHasVoted] = useState(false);
   const [predictions, setPredictions] = useState<{[key: number]: number}>({});
   const [isLoading, setIsLoading] = useState(false);
-
-  const predictionOptions = [100, 200, 500, 1000]; // $1, $2, $5, $10 in cents
+  const [currentPrice, setCurrentPrice] = useState<number>(50);
+  const [predictionOptions, setPredictionOptions] = useState<number[]>([]);
   
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -37,6 +37,35 @@ const PredictionPoll: React.FC = () => {
         localStorage.setItem('pixperiment_user_id', userId);
       }
       return userId;
+    }
+  };
+
+  const fetchCurrentPrice = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pricing')
+        .select('current_price')
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        setCurrentPrice(data.current_price);
+        // Generate prediction options based on current price
+        // Options should be higher than current price
+        const basePrice = data.current_price;
+        const options = [
+          basePrice + 50,   // +$0.50
+          basePrice + 100,  // +$1.00
+          basePrice + 200,  // +$2.00
+          basePrice + 500   // +$5.00
+        ];
+        setPredictionOptions(options);
+      }
+    } catch (error) {
+      console.error('Error fetching current price:', error);
+      // Fallback options if price fetch fails
+      setPredictionOptions([100, 200, 500, 1000]);
     }
   };
 
@@ -89,9 +118,15 @@ const PredictionPoll: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchPredictions();
-    checkUserVote();
+    fetchCurrentPrice();
   }, []);
+
+  useEffect(() => {
+    if (predictionOptions.length > 0) {
+      fetchPredictions();
+      checkUserVote();
+    }
+  }, [predictionOptions]);
 
   const handleVote = async (price: number) => {
     if (isLoading) return;
@@ -134,7 +169,7 @@ const PredictionPoll: React.FC = () => {
           🔮 Weekly Prediction Poll
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Where will the price be by Sunday?
+          Where will the price be by Sunday? (Current: {formatPrice(currentPrice)})
         </p>
       </CardHeader>
       <CardContent>
@@ -145,19 +180,21 @@ const PredictionPoll: React.FC = () => {
             const isSelected = selectedPrediction === price;
             
             return (
-              <div key={price} className="space-y-1">
+              <div key={price} className="space-y-2">
                 <Button
                   variant={isSelected ? 'default' : 'outline'}
                   onClick={() => handleVote(price)}
                   disabled={isLoading}
-                  className="w-full justify-between"
+                  className={`w-full justify-between transition-all duration-200 ${
+                    isSelected ? 'bg-purple-600 hover:bg-purple-700 border-purple-600' : ''
+                  }`}
                 >
                   <span>{formatPrice(price)}</span>
                   <div className="flex items-center gap-2">
                     {hasVoted && (
                       <>
                         <Badge variant="secondary" className="text-xs">
-                          {voteCount} votes
+                          {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
                         </Badge>
                         <span className="text-xs text-muted-foreground">
                           {percentage.toFixed(0)}%
@@ -167,9 +204,11 @@ const PredictionPoll: React.FC = () => {
                   </div>
                 </Button>
                 {hasVoted && percentage > 0 && (
-                  <div className="w-full bg-muted rounded-full h-1">
+                  <div className="w-full bg-muted rounded-full h-2">
                     <div 
-                      className="bg-primary h-1 rounded-full transition-all duration-300"
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        isSelected ? 'bg-purple-600' : 'bg-primary'
+                      }`}
                       style={{ width: `${percentage}%` }}
                     />
                   </div>

@@ -193,41 +193,43 @@ const CurrentUploadHero: React.FC = () => {
                 Share
               </Button>
             </div>
+
+            {/* Content */}
+            <div className="space-y-3">
+              <div>
+                <p className="text-base font-medium break-words leading-relaxed">
+                  "{currentUpload.caption}"
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Voting Section - Now positioned next to image */}
+          {/* Voting Section and Details */}
           <div className="md:col-span-1 space-y-4">
             <div className="glass-card p-4">
               <h3 className="text-sm font-medium mb-3 text-center">Community Rating</h3>
               <LikeButton uploadId={currentUpload.id} />
+              
+              {/* Post Details moved under Community Rating */}
+              <div className="mt-4 pt-4 border-t border-border space-y-3">
+                <div className="grid grid-cols-1 gap-3 text-sm">
+                  <div className="glass-card p-3">
+                    <p className="text-muted-foreground text-xs">Price Paid</p>
+                    <p className="text-lg font-bold text-primary price-ticker">
+                      {formatPrice(currentUpload.price_paid)}
+                    </p>
+                  </div>
+                  <div className="glass-card p-3">
+                    <p className="text-muted-foreground text-xs">Uploaded</p>
+                    <p className="font-medium text-sm">{formatDate(currentUpload.created_at)}</p>
+                  </div>
+                  <div className="glass-card p-3">
+                    <p className="text-muted-foreground text-xs">Owner</p>
+                    <p className="font-medium text-sm">{formatEmail(currentUpload.user_email)}</p>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-
-        {/* Content - More compact now */}
-        <div className="mt-4 space-y-4">
-          <div>
-            <p className="text-base font-medium mb-3 break-words leading-relaxed">
-              "{currentUpload.caption}"
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="glass-card p-3">
-              <p className="text-muted-foreground text-xs">Price Paid</p>
-              <p className="text-lg font-bold text-primary price-ticker">
-                {formatPrice(currentUpload.price_paid)}
-              </p>
-            </div>
-            <div className="glass-card p-3">
-              <p className="text-muted-foreground text-xs">Uploaded</p>
-              <p className="font-medium text-sm">{formatDate(currentUpload.created_at)}</p>
-            </div>
-          </div>
-
-          <div className="glass-card p-3">
-            <p className="text-muted-foreground text-xs">Owner</p>
-            <p className="font-medium text-base">{formatEmail(currentUpload.user_email)}</p>
           </div>
         </div>
 
