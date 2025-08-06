@@ -243,6 +243,17 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: number
       }
+      log_security_event: {
+        Args: {
+          event_type: string
+          table_name: string
+          record_id: string
+          ip_address: string
+          user_agent?: string
+          additional_data?: Json
+        }
+        Returns: undefined
+      }
       mask_email: {
         Args: { email_input: string }
         Returns: string
