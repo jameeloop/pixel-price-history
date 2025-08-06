@@ -225,11 +225,13 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
             </div>
             
             <div className="flex-1 flex flex-col justify-between min-h-0">
-              <p className="text-xs sm:text-sm font-medium line-clamp-2 mb-2">
-                {truncateCaption(upload.caption, 50)}
-              </p>
+              <div className="flex-1 mb-3">
+                <p className="text-xs sm:text-sm font-medium leading-relaxed break-words overflow-hidden display-text">
+                  {truncateCaption(upload.caption, 60)}
+                </p>
+              </div>
               
-              <div className="space-y-2 mt-auto">
+              <div className="space-y-2 flex-shrink-0">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 flex-shrink-0" />

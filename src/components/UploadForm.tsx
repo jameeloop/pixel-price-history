@@ -186,20 +186,20 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
 
   return (
     <Card className="glass-card">
-      <CardHeader>
-        <CardTitle className="text-2xl font-bold gradient-text">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-xl font-bold gradient-text">
           Upload Your Picture
         </CardTitle>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-lg font-semibold">
+          <Badge variant="secondary" className="text-base font-semibold">
             Current Price: {formatPrice(currentPrice)}
           </Badge>
         </div>
       </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <CardContent className="pt-0">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium mb-2">
+            <label htmlFor="email" className="block text-sm font-medium mb-1.5">
               Email Address
             </label>
             <Input
@@ -209,11 +209,12 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your.email@example.com"
               required
+              className="h-9"
             />
           </div>
 
           <div>
-            <label htmlFor="caption" className="block text-sm font-medium mb-2">
+            <label htmlFor="caption" className="block text-sm font-medium mb-1.5">
               Caption
             </label>
             <Textarea
@@ -221,44 +222,45 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               placeholder="Write a caption for your picture..."
-              rows={3}
+              rows={2}
               required
+              className="resize-none"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-2">
+            <label className="block text-sm font-medium mb-1.5">
               Picture
             </label>
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div
                 onClick={() => fileInputRef.current?.click()}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
-                className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+                className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
                   dragActive 
                     ? 'border-primary bg-primary/5' 
                     : 'border-border hover:border-primary'
                 }`}
               >
                 {imagePreview ? (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="max-w-full max-h-48 mx-auto rounded-lg"
+                      className="max-w-full max-h-36 mx-auto rounded-lg"
                     />
                     <p className="text-sm text-muted-foreground">
                       Click to change image
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <div className="space-y-3">
+                    <ImageIcon className="mx-auto h-10 w-10 text-muted-foreground" />
                     <div>
-                      <p className="text-lg font-medium">Click, drag & drop, or paste image</p>
+                      <p className="text-base font-medium">Click, drag & drop, or paste image</p>
                       <p className="text-sm text-muted-foreground">
                         PNG, JPG, GIF supported
                       </p>

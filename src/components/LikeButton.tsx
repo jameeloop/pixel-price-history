@@ -144,9 +144,9 @@ const LikeButton: React.FC<LikeButtonProps> = ({
       {/* Like/Dislike Ratio Bar */}
       {totalVotes > 0 && (
         <div className="w-full">
-          <div className="flex justify-between text-xs text-muted-foreground mb-1">
-            <span>{Math.round(likePercentage)}% likes</span>
-            <span>{Math.round(100 - likePercentage)}% dislikes</span>
+          <div className="flex justify-between text-xs text-muted-foreground mb-1 px-1">
+            <span className="font-medium">{Math.round(likePercentage)}% likes</span>
+            <span className="font-medium">{Math.round(100 - likePercentage)}% dislikes</span>
           </div>
           <div className="w-full h-1.5 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
             <div 

@@ -135,7 +135,7 @@ const Index = () => {
         </div>
 
         {/* Upload Form */}
-        <div className="mb-4">
+        <div id="upload-section" className="mb-4">
           <Card className="glass-card border-2 border-primary/20 bg-gradient-to-r from-purple-50/5 to-purple-100/5" id="upload-form">
             <CardHeader className="pb-2 text-center">
               <CardTitle className="text-lg gradient-text">🎨 Join the Experiment</CardTitle>
