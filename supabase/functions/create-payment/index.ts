@@ -188,11 +188,26 @@ serve(async (req) => {
       }
     }
 
-    console.log('=== CREATING STRIPE SESSION ===');
-    
-    // Store image URL temporarily - we'll access it in the webhook via a temp storage mechanism
-    // Since Stripe metadata has a 500 character limit, we need an alternative approach
+    console.log('=== CREATING PENDING UPLOAD RECORD ===');
+    // Store upload data in pending_uploads table to avoid Stripe metadata limits
+    const { data: pendingUpload, error: pendingError } = await supabase
+      .from('pending_uploads')
+      .insert([{
+        email,
+        caption: caption.trim(),
+        image_url: imageStorageUrl
+      }])
+      .select()
+      .single();
 
+    if (pendingError) {
+      console.error('Failed to create pending upload:', pendingError);
+      throw new Error(`Failed to create pending upload: ${pendingError.message}`);
+    }
+
+    console.log('Pending upload created:', pendingUpload.id);
+
+    console.log('=== CREATING STRIPE SESSION ===');
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -213,12 +228,7 @@ serve(async (req) => {
       cancel_url: `${req.headers.get('origin')}?cancelled=true`,
       customer_email: email,
       metadata: {
-        email,
-        caption: caption.trim().substring(0, 400), // Limit caption to 400 chars
-        fileName: fileName || 'upload.jpg',
-        uploadOrder: priceInCents.toString(),
-        price_paid: priceInCents.toString(),
-        imageStorageUrl: imageStorageUrl || '' // Try to include the URL
+        pending_upload_id: pendingUpload.id,
       },
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     });

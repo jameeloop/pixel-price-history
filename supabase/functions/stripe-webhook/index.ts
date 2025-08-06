@@ -101,6 +101,7 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
   console.log("Session ID:", session.id);
   console.log("Payment status:", session.payment_status);
   console.log("Customer email:", session.customer_email);
+  console.log("Session metadata:", session.metadata);
   
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
@@ -108,12 +109,32 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
   );
 
   try {
-    // Get metadata from session  
-    const email = session.customer_email || session.metadata?.email;
-    const caption = session.metadata?.caption || "Default upload";
-    const imageStorageUrl = session.metadata?.imageStorageUrl;
+    // Get pending upload data using the ID from metadata
+    const pendingUploadId = session.metadata?.pending_upload_id;
+    
+    if (!pendingUploadId) {
+      throw new Error("No pending upload ID found in session metadata");
+    }
 
-    console.log("Session metadata:", session.metadata);
+    console.log("Retrieving pending upload:", pendingUploadId);
+    const { data: pendingUpload, error: pendingError } = await supabase
+      .from('pending_uploads')
+      .select('*')
+      .eq('id', pendingUploadId)
+      .single();
+
+    if (pendingError || !pendingUpload) {
+      console.error("Failed to retrieve pending upload:", pendingError);
+      throw new Error("Pending upload not found");
+    }
+
+    console.log("Retrieved pending upload:", pendingUpload);
+
+    // Extract data from pending upload
+    const email = pendingUpload.email || session.customer_email;
+    const caption = pendingUpload.caption || "Default upload";
+    const imageStorageUrl = pendingUpload.image_url;
+
     console.log("Extracted - email:", email, "caption:", caption);
     console.log("Image storage URL:", imageStorageUrl);
 
@@ -180,6 +201,14 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     if (insertError) {
       throw new Error(`Failed to save upload: ${insertError.message}`);
     }
+
+    // Clean up the pending upload record
+    await supabase
+      .from('pending_uploads')
+      .delete()
+      .eq('id', pendingUploadId);
+    
+    console.log("Pending upload cleaned up");
 
     // Send confirmation email
     await sendConfirmationEmail(email, uploadRecord, pricePaid);

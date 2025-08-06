@@ -116,6 +116,33 @@ export type Database = {
           },
         ]
       }
+      pending_uploads: {
+        Row: {
+          caption: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          image_url: string | null
+        }
+        Insert: {
+          caption: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          image_url?: string | null
+        }
+        Update: {
+          caption?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          image_url?: string | null
+        }
+        Relationships: []
+      }
       predictions: {
         Row: {
           created_at: string
@@ -211,6 +238,10 @@ export type Database = {
     }
     Functions: {
       cleanup_expired_admin_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_pending_uploads: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
