@@ -38,6 +38,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          ip_address: unknown | null
+          new_values: Json | null
+          old_values: Json | null
+          operation: string
+          record_id: string | null
+          table_name: string
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          operation: string
+          record_id?: string | null
+          table_name: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown | null
+          new_values?: Json | null
+          old_values?: Json | null
+          operation?: string
+          record_id?: string | null
+          table_name?: string
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       likes: {
         Row: {
           created_at: string
@@ -66,6 +105,13 @@ export type Database = {
             columns: ["upload_id"]
             isOneToOne: false
             referencedRelation: "uploads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "likes_upload_id_fkey"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "uploads_public"
             referencedColumns: ["id"]
           },
         ]
@@ -153,7 +199,36 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      uploads_public: {
+        Row: {
+          caption: string | null
+          created_at: string | null
+          id: string | null
+          image_url: string | null
+          price_paid: number | null
+          upload_order: number | null
+          user_email: string | null
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          price_paid?: number | null
+          upload_order?: number | null
+          user_email?: never
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          price_paid?: number | null
+          upload_order?: number | null
+          user_email?: never
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cleanup_expired_admin_sessions: {
@@ -167,6 +242,10 @@ export type Database = {
       get_and_increment_price: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      mask_email: {
+        Args: { email_input: string }
+        Returns: string
       }
     }
     Enums: {
