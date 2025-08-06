@@ -149,7 +149,7 @@ const CurrentUploadHero: React.FC = () => {
           {/* Content */}
           <div className="space-y-6">
             <div>
-              <p className="text-base sm:text-xl font-medium mb-4 line-clamp-3 break-words leading-relaxed">
+              <p className="text-base sm:text-xl font-medium mb-4 break-words leading-relaxed">
                 "{currentUpload.caption}"
               </p>
             </div>
