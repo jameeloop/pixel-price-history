@@ -133,10 +133,29 @@ serve(async (req) => {
           bytes[i] = binaryString.charCodeAt(i);
         }
         
-        // Generate unique filename
+        // Generate unique filename with proper extension mapping
         const timestamp = Date.now();
         const randomString = Math.random().toString(36).substring(7);
-        const extension = mimeType.split('/')[1] || 'jpg';
+        let extension = 'jpg'; // default
+        
+        // Map MIME types to proper extensions
+        switch (mimeType) {
+          case 'image/jpeg':
+            extension = 'jpg';
+            break;
+          case 'image/png':
+            extension = 'png';
+            break;
+          case 'image/gif':
+            extension = 'gif';
+            break;
+          case 'image/webp':
+            extension = 'webp';
+            break;
+          default:
+            extension = 'jpg';
+        }
+        
         const storageFileName = `${timestamp}-${randomString}.${extension}`;
         
         console.log('Uploading file to storage:', storageFileName);
