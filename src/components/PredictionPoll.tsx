@@ -141,6 +141,10 @@ const PredictionPoll: React.FC = () => {
 
       if (error) throw error;
       
+      // Update local state immediately to show the vote
+      setSelectedPrediction(price);
+      setHasVoted(true);
+      
       // Refresh predictions and user vote status
       await Promise.all([fetchPredictions(), checkUserVote()]);
       
@@ -192,25 +196,22 @@ const PredictionPoll: React.FC = () => {
                 >
                   <span>{formatPrice(price)}</span>
                   <div className="flex items-center gap-2">
-                    {hasVoted && (
-                      <>
-                        <Badge variant="secondary" className="text-xs">
-                          {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {percentage.toFixed(0)}%
-                        </span>
-                      </>
-                    )}
+                    <Badge variant="secondary" className="text-xs">
+                      {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {percentage.toFixed(0)}%
+                    </span>
                   </div>
                 </Button>
-                {hasVoted && percentage > 0 && (
+                {/* Always show progress bar with vote counts and percentages when someone has voted */}
+                {hasVoted && (
                   <div className="w-full bg-muted rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all duration-500 ${
                         isSelected ? 'bg-purple-600' : 'bg-primary'
                       }`}
-                      style={{ width: `${percentage}%` }}
+                      style={{ width: `${Math.max(percentage, 2)}%` }}
                     />
                   </div>
                 )}
@@ -219,9 +220,16 @@ const PredictionPoll: React.FC = () => {
           })}
           
           {hasVoted && (
-            <div className="text-center pt-2 border-t border-border">
+            <div className="text-center pt-4 border-t border-border">
               <p className="text-xs text-muted-foreground">
                 Thanks for voting! Total votes: {totalVotes}
+              </p>
+              <p className="text-xs text-purple-600 font-medium mt-1">
+                Your prediction: {formatPrice(selectedPrediction || 0)} 
+                {selectedPrediction && predictions[selectedPrediction] ? 
+                  ` (${Math.round((predictions[selectedPrediction] / totalVotes) * 100)}% agree)` : 
+                  ''
+                }
               </p>
             </div>
           )}

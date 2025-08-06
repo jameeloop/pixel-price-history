@@ -16,7 +16,19 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')!;
+    const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    
+    if (!supabaseUrl || !supabaseKey || !stripeKey) {
+      console.error('Missing required environment variables:', {
+        supabaseUrl: !!supabaseUrl,
+        supabaseKey: !!supabaseKey,
+        stripeKey: !!stripeKey
+      });
+      return new Response(
+        JSON.stringify({ error: 'Configuration error' }), 
+        { status: 500, headers: corsHeaders }
+      );
+    }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     const stripe = new Stripe(stripeKey, {
@@ -83,7 +95,14 @@ serve(async (req) => {
       );
     }
 
-    const requestBody = await req.json();
+    const requestBody = await req.json().catch(() => null);
+    if (!requestBody) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid JSON body' }), 
+        { status: 400, headers: corsHeaders }
+      );
+    }
+    
     const { email, caption, imageUrl, fileName } = requestBody;
     
     // Enhanced input validation
