@@ -162,10 +162,12 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     
     console.log("Price paid for this upload:", pricePaid);
 
-    // Use the actual image URL from storage, or create placeholder if no image was uploaded
-    const finalImageUrl = imageStorageUrl && imageStorageUrl.trim() !== '' 
-      ? imageStorageUrl 
-      : await createPlaceholderImage(caption, pricePaid, supabase);
+    // Use the actual image URL from storage - no fallback to placeholder!
+    const finalImageUrl = imageStorageUrl;
+    
+    if (!finalImageUrl) {
+      throw new Error("No image URL found in pending upload - cannot create upload record");
+    }
     
     console.log("Final image URL:", finalImageUrl);
 
