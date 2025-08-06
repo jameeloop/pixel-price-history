@@ -8,6 +8,7 @@ import PricingDisplay from '@/components/PricingDisplay';
 import EnhancedPricingDisplay from '@/components/EnhancedPricingDisplay';
 import Gallery from '@/components/Gallery';
 import CurrentUploadHero from '@/components/CurrentUploadHero';
+import FixImagesButton from '@/components/FixImagesButton';
 
 import LiveFeed from '@/components/LiveFeed';
 import PredictionPoll from '@/components/PredictionPoll';
@@ -101,6 +102,7 @@ const Index = () => {
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-2">
+        <FixImagesButton />
         {/* Hero Section - Much more compact */}
         <div className="text-center mb-4">
           <h2 className="text-2xl md:text-3xl font-bold mb-2">
