@@ -91,12 +91,9 @@ const AdminPasswordHelper: React.FC = () => {
         )}
 
         <div className="border-t pt-4">
-          <p className="text-xs text-muted-foreground mb-2">Common passwords:</p>
-          <div className="space-y-1 text-xs">
-            <div>admin: 8c6976e5b...a918</div>
-            <div>control: baf1ff66b...5c2b</div>
-            <div>password: 5e884898d...42d8</div>
-          </div>
+          <p className="text-xs text-warning-foreground bg-warning/10 p-2 rounded border">
+            ⚠️ Development Only: This tool is for generating secure hashes. Never store password hashes in your codebase.
+          </p>
         </div>
       </CardContent>
     </Card>
