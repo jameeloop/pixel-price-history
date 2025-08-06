@@ -175,18 +175,18 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
         {displayUploads.map((upload, index) => (
-        <Card 
-          key={upload.id} 
-          className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group" 
-          onClick={() => handlePostClick(upload.id)}
-        >
-          <CardContent className="p-3 sm:p-4">
-            <div className="relative mb-3 sm:mb-4">
-              <img
-                src={upload.image_url}
-                alt={upload.caption}
-                className="w-full max-h-80 object-contain rounded-lg group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
+          <Card 
+            key={upload.id} 
+            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group h-fit" 
+            onClick={() => handlePostClick(upload.id)}
+          >
+            <CardContent className="p-3 sm:p-4">
+              <div className="relative mb-3 sm:mb-4">
+                <img
+                  src={upload.image_url}
+                  alt={upload.caption}
+                  className="w-full h-48 sm:h-60 md:h-72 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                  loading="lazy"
                 onError={(e) => {
                   e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
                     <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
@@ -209,8 +209,8 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
             </div>
             
             <div className="space-y-2 sm:space-y-3">
-              <p className="text-xs sm:text-sm font-medium line-clamp-3 min-h-[3rem] sm:min-h-[3.5rem] break-words">
-                {truncateCaption(upload.caption)}
+              <p className="text-xs sm:text-sm font-medium line-clamp-2 min-h-[2.5rem] break-words">
+                {truncateCaption(upload.caption, 80)}
               </p>
               
               <div className="space-y-2">

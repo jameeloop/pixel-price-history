@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { History, Camera, TrendingUp, Instagram, Music, Mail } from 'lucide-react';
+import { History, Camera, TrendingUp, Instagram, Music, Mail, ArrowDownCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import UploadForm from '@/components/UploadForm';
 import PricingDisplay from '@/components/PricingDisplay';
@@ -163,8 +163,11 @@ const Index = () => {
                 </Button>
               </div>
             </div>
-            <div className="max-h-96 overflow-y-auto">
+            <div className="max-h-96 overflow-y-auto relative">
               <Gallery refreshTrigger={refreshGallery} limitResults={6} />
+              <div className="md:hidden absolute bottom-2 right-2 animate-bounce">
+                <ArrowDownCircle className="w-5 h-5 text-muted-foreground/50" />
+              </div>
             </div>
           </div>
         </div>

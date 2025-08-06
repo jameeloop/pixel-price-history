@@ -42,21 +42,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          ip_address: unknown
+          ip_address: string
           like_type: string
           upload_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          ip_address: unknown
+          ip_address: string
           like_type: string
           upload_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          ip_address?: unknown
+          ip_address?: string
           like_type?: string
           upload_id?: string
         }
@@ -74,21 +74,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          ip_address: unknown
+          ip_address: string
           predicted_price: number
           week_ending: string
         }
         Insert: {
           created_at?: string
           id?: string
-          ip_address: unknown
+          ip_address: string
           predicted_price: number
           week_ending: string
         }
         Update: {
           created_at?: string
           id?: string
-          ip_address?: unknown
+          ip_address?: string
           predicted_price?: number
           week_ending?: string
         }
