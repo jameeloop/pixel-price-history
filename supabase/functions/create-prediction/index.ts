@@ -76,7 +76,18 @@ serve(async (req) => {
       );
     }
 
-    const { predictedPrice, weekEnding } = await req.json();
+    const { predictedPrice } = await req.json();
+    
+    // Calculate the week ending date (next Sunday)
+    const getNextSunday = () => {
+      const today = new Date();
+      const daysUntilSunday = 7 - today.getDay();
+      const nextSunday = new Date(today);
+      nextSunday.setDate(today.getDate() + (daysUntilSunday === 7 ? 0 : daysUntilSunday));
+      return nextSunday.toISOString().split('T')[0];
+    };
+
+    const weekEnding = getNextSunday();
     
     // Enhanced input validation
     if (!InputValidator.validatePrice(predictedPrice) || predictedPrice > 10000) {
@@ -86,24 +97,19 @@ serve(async (req) => {
       );
     }
 
-    // Validate week ending date
-    const weekEndDate = new Date(weekEnding);
-    if (isNaN(weekEndDate.getTime()) || weekEndDate <= new Date()) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid week ending date' }), 
-        { status: 400, headers: corsHeaders }
-      );
+    // Security logging - fixed the .catch() issue
+    try {
+      await supabase.rpc('log_security_event', {
+        event_type: 'PREDICTION_ATTEMPT',
+        table_name: 'predictions',
+        record_id: null,
+        ip_address: clientIP,
+        user_agent: userAgent,
+        additional_data: { predicted_price: predictedPrice, week_ending: weekEnding }
+      });
+    } catch (logError) {
+      console.error('Security logging failed:', logError);
     }
-
-    // Security logging
-    await supabase.rpc('log_security_event', {
-      event_type: 'PREDICTION_ATTEMPT',
-      table_name: 'predictions',
-      record_id: null,
-      ip_address: clientIP,
-      user_agent: userAgent,
-      additional_data: { predicted_price: predictedPrice, week_ending: weekEnding }
-    }).catch(console.error);
 
     // Check for existing prediction from this IP for the same week
     const { data: existingPrediction } = await supabase

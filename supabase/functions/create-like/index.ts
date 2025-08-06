@@ -112,15 +112,19 @@ serve(async (req) => {
       );
     }
 
-    // Security logging
-    await supabase.rpc('log_security_event', {
-      event_type: 'LIKE_ATTEMPT',
-      table_name: 'likes',
-      record_id: uploadId,
-      ip_address: clientIP,
-      user_agent: userAgent,
-      additional_data: { like_type: likeType }
-    }).catch(console.error);
+    // Security logging - fixed the .catch() issue
+    try {
+      await supabase.rpc('log_security_event', {
+        event_type: 'LIKE_ATTEMPT',
+        table_name: 'likes',
+        record_id: uploadId,
+        ip_address: clientIP,
+        user_agent: userAgent,
+        additional_data: { like_type: likeType }
+      });
+    } catch (logError) {
+      console.error('Security logging failed:', logError);
+    }
 
     // Check for existing like from this IP
     const { data: existingLike } = await supabase
