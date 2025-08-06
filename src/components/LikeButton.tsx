@@ -9,12 +9,14 @@ interface LikeButtonProps {
   uploadId: string;
   initialLikes?: number;
   initialDislikes?: number;
+  compact?: boolean; // For experiment archive
 }
 
 const LikeButton: React.FC<LikeButtonProps> = ({ 
   uploadId, 
   initialLikes = 0, 
-  initialDislikes = 0 
+  initialDislikes = 0,
+  compact = false
 }) => {
   const { toast } = useToast();
   const [likes, setLikes] = useState(initialLikes);
@@ -101,6 +103,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
       toast({
         title: "Success",
         description: `Vote ${data?.action || 'recorded'} successfully!`,
+        duration: 2000, // 2 seconds
       });
     } catch (error) {
       console.error('Error voting:', error);
@@ -117,6 +120,35 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   const totalVotes = likes + dislikes;
   const likePercentage = totalVotes > 0 ? (likes / totalVotes) * 100 : 50;
 
+  // Compact version for experiment archive
+  if (compact) {
+    return (
+      <div className="flex gap-1">
+        <Button
+          variant={userVote === 'like' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => handleVote('like')}
+          disabled={isLoading}
+          className="flex items-center gap-1 text-xs h-7 px-2 bg-green-500/10 hover:bg-green-500/20 border-green-500/20 text-green-700 dark:text-green-400"
+        >
+          <ChevronUp className="w-3 h-3" />
+          <span>{likes}</span>
+        </Button>
+        <Button
+          variant={userVote === 'dislike' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => handleVote('dislike')}
+          disabled={isLoading}
+          className="flex items-center gap-1 text-xs h-7 px-2 bg-red-500/10 hover:bg-red-500/20 border-red-500/20 text-red-700 dark:text-red-400"
+        >
+          <ChevronDown className="w-3 h-3" />
+          <span>{dislikes}</span>
+        </Button>
+      </div>
+    );
+  }
+
+  // Full version for featured posts
   return (
     <div className="space-y-3 w-full">
       {/* Horizontal Buttons */}

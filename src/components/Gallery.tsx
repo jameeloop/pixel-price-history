@@ -228,11 +228,9 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
                   </div>
                 </div>
                 
-                {/* Voting buttons on the right side of image - Now smaller and compact */}
-                <div className="flex-shrink-0 w-16 flex flex-col justify-center" onClick={(e) => e.stopPropagation()}>
-                  <div className="scale-75 origin-center">
-                    <LikeButton uploadId={upload.id} />
-                  </div>
+                {/* Voting buttons on the right side of image - Compact version */}
+                <div className="flex-shrink-0 w-14 flex flex-col justify-center" onClick={(e) => e.stopPropagation()}>
+                  <LikeButton uploadId={upload.id} compact={true} />
                 </div>
               </div>
               

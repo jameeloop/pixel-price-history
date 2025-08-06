@@ -120,13 +120,17 @@ serve(async (req) => {
     }).catch(console.error);
 
     // Get current price with atomic increment
-    const currentPrice = await supabase.rpc('get_and_increment_price');
+    const { data: priceInCents, error: priceError } = await supabase.rpc('get_and_increment_price');
     
-    if (!currentPrice.data || !InputValidator.validatePrice(currentPrice.data)) {
+    if (priceError) {
+      console.error('Error getting current price:', priceError);
+      throw new Error('Failed to get current price');
+    }
+    
+    if (!priceInCents || !InputValidator.validatePrice(priceInCents)) {
       throw new Error('Failed to get valid current price');
     }
 
-    const priceInCents = currentPrice.data;
 
     // Create Stripe checkout session with enhanced security
     const session = await stripe.checkout.sessions.create({
