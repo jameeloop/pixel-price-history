@@ -139,16 +139,17 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     }
 
     // Get the price paid from session metadata (already incremented in create-payment)
-    const amountTotal = session.amount_total || session.metadata?.price_paid || 5100; // Default to $51 if not available
-    const pricePaid = amountTotal;
-
-    // Get temp file path from Stripe metadata
-    const tempFilePath = session.metadata?.temp_file_path;
-    const imageName = session.metadata?.image_name || 'upload.png';
-    const imageType = session.metadata?.image_type || 'image/png';
+    const pricePaid = parseInt(session.metadata?.price_paid || session.amount_total?.toString() || '51');
     
-    console.log("Processing payment with temp file:", {
-      tempFilePath,
+    console.log("Price paid for this upload:", pricePaid);
+
+    // Get image data from Stripe metadata
+    const imageUrl = session.metadata?.image_url;
+    const imageName = session.metadata?.fileName || 'upload.png';
+    const imageType = 'image/png'; // Default type
+    
+    console.log("Processing payment with image data:", {
+      imageUrl: imageUrl ? 'present' : 'missing',
       imageName,
       imageType
     });
@@ -156,96 +157,48 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     let finalImageUrl: string;
     let fileName: string;
 
-    if (tempFilePath) {
-      console.log("Moving temp file to permanent location");
+    if (imageUrl && imageUrl.startsWith('data:image/')) {
+      console.log("Processing base64 image data");
       
-      // Download the temp file
-      const { data: tempFileData, error: downloadError } = await supabase.storage
-        .from("uploads")
-        .download(tempFilePath);
+      try {
+        // Extract image data and type from data URL
+        const [header, base64Data] = imageUrl.split(',');
+        const mimeType = header.match(/data:(.+);base64/)?.[1] || 'image/png';
+        
+        // Convert base64 to blob
+        const imageBlob = new Uint8Array(atob(base64Data).split('').map(char => char.charCodeAt(0)));
+        
+        // Create permanent filename
+        const fileExtension = mimeType.split('/')[1] || 'png';
+        fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+        
+        // Upload to permanent location
+        const { error: uploadError } = await supabase.storage
+          .from("uploads")
+          .upload(fileName, imageBlob, {
+            contentType: mimeType,
+          });
 
-      if (downloadError) {
-        console.error("Failed to download temp file:", downloadError);
-        throw new Error(`Failed to process uploaded image: ${downloadError.message}`);
+        if (uploadError) {
+          console.error("Failed to upload image:", uploadError);
+          throw new Error(`Failed to save uploaded image: ${uploadError.message}`);
+        }
+
+        // Get public URL for permanent file
+        const { data: { publicUrl } } = supabase.storage
+          .from("uploads")
+          .getPublicUrl(fileName);
+
+        finalImageUrl = publicUrl;
+        console.log("Successfully uploaded image to permanent location:", fileName);
+      } catch (error) {
+        console.error("Failed to process image data:", error);
+        // Fall back to placeholder
+        finalImageUrl = await createPlaceholderImage(caption, pricePaid, supabase);
       }
-
-      // Create permanent filename
-      const fileExtension = imageType.split('/')[1] || 'png';
-      fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
-      
-      // Upload to permanent location
-      const { error: permanentUploadError } = await supabase.storage
-        .from("uploads")
-        .upload(fileName, tempFileData, {
-          contentType: imageType,
-        });
-
-      if (permanentUploadError) {
-        console.error("Failed to upload permanent file:", permanentUploadError);
-        throw new Error(`Failed to save uploaded image: ${permanentUploadError.message}`);
-      }
-
-      // Delete temp file
-      const { error: deleteError } = await supabase.storage
-        .from("uploads")
-        .remove([tempFilePath]);
-
-      if (deleteError) {
-        console.error("Failed to delete temp file:", deleteError);
-        // Don't throw here, the main upload worked
-      }
-
-      // Get public URL for permanent file
-      const { data: { publicUrl } } = supabase.storage
-        .from("uploads")
-        .getPublicUrl(fileName);
-
-      finalImageUrl = publicUrl;
-      console.log("Successfully moved temp file to permanent location:", fileName);
     } else {
-      console.log("No temp file found, creating placeholder");
-      // Fallback to placeholder if no temp file
-      const placeholderSvg = `
-        <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
-              <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
-            </linearGradient>
-          </defs>
-          <rect width="800" height="600" fill="url(#grad1)"/>
-          <rect x="50" y="50" width="700" height="500" fill="rgba(255,255,255,0.1)" rx="20"/>
-          <text x="400" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white" font-weight="bold">
-            PixPeriment Upload
-          </text>
-          <text x="400" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.9)">
-            ${caption.length > 100 ? caption.substring(0, 100) + '...' : caption}
-          </text>
-          <text x="400" y="400" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.7)">
-            PixPeriment Upload • $${((pricePaid || 50) / 100).toFixed(2)}
-          </text>
-        </svg>
-      `;
-      
-      const placeholderImageData = "data:image/svg+xml;base64," + btoa(placeholderSvg);
-      fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.svg`;
-      const imageBlob = new Uint8Array(atob(placeholderImageData.split(',')[1]).split('').map(char => char.charCodeAt(0)));
-      
-      const { error: uploadError } = await supabase.storage
-        .from("uploads")
-        .upload(fileName, imageBlob, {
-          contentType: "image/svg+xml",
-        });
-
-      if (uploadError) {
-        throw new Error(`Failed to upload placeholder: ${uploadError.message}`);
-      }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("uploads")
-        .getPublicUrl(fileName);
-
-      finalImageUrl = publicUrl;
+      console.log("No image data found, creating placeholder");
+      finalImageUrl = await createPlaceholderImage(caption, pricePaid, supabase);
     }
 
     // Get current upload count for ordering
@@ -327,4 +280,48 @@ async function sendConfirmationEmail(email: string, uploadRecord: any, pricePaid
     console.error("Failed to send email:", error);
     // Don't throw here - we don't want email failures to block the upload
   }
+}
+
+async function createPlaceholderImage(caption: string, pricePaid: number, supabase: any): Promise<string> {
+  // Create a placeholder SVG image
+  const placeholderSvg = `
+    <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+          <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+        </linearGradient>
+      </defs>
+      <rect width="800" height="600" fill="url(#grad1)"/>
+      <rect x="50" y="50" width="700" height="500" fill="rgba(255,255,255,0.1)" rx="20"/>
+      <text x="400" y="250" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="white" font-weight="bold">
+        PixPeriment Upload
+      </text>
+      <text x="400" y="300" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="rgba(255,255,255,0.9)">
+        ${caption.length > 100 ? caption.substring(0, 100) + '...' : caption}
+      </text>
+      <text x="400" y="400" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="rgba(255,255,255,0.7)">
+        PixPeriment Upload • $${((pricePaid || 50) / 100).toFixed(2)}
+      </text>
+    </svg>
+  `;
+  
+  const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.svg`;
+  const imageBlob = new Uint8Array(atob(btoa(placeholderSvg)).split('').map(char => char.charCodeAt(0)));
+  
+  const { error: uploadError } = await supabase.storage
+    .from("uploads")
+    .upload(fileName, imageBlob, {
+      contentType: "image/svg+xml",
+    });
+
+  if (uploadError) {
+    throw new Error(`Failed to upload placeholder: ${uploadError.message}`);
+  }
+
+  const { data: { publicUrl } } = supabase.storage
+    .from("uploads")
+    .getPublicUrl(fileName);
+
+  return publicUrl;
 }

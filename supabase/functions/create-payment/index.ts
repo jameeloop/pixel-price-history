@@ -93,13 +93,12 @@ serve(async (req) => {
     });
     console.log('Clients initialized');
 
-    console.log('=== GETTING CURRENT PRICE (WITHOUT INCREMENT) ===');
-    const { data: priceData, error: priceError } = await supabase
-      .from('pricing')
-      .select('current_price')
-      .single();
+    console.log('=== GETTING AND INCREMENTING PRICE ===');
+    // Use atomic function to get current price and increment for next upload
+    const { data: priceInCents, error: priceError } = await supabase
+      .rpc('get_and_increment_price');
     
-    console.log('Price query result:', { priceData, priceError });
+    console.log('Price function result:', { priceInCents, priceError });
     
     if (priceError) {
       console.error('Database error getting price:', priceError);
@@ -109,7 +108,6 @@ serve(async (req) => {
       );
     }
     
-    const priceInCents = priceData?.current_price;
     if (!priceInCents || typeof priceInCents !== 'number' || priceInCents < 1) {
       console.error('Invalid price returned:', priceInCents);
       return new Response(
@@ -144,8 +142,9 @@ serve(async (req) => {
         email,
         caption: caption.trim().substring(0, 400), // Limit caption to 400 chars
         fileName: fileName || 'upload.jpg',
-        uploadOrder: priceInCents.toString()
-        // Removed imageUrl as it's too large for Stripe metadata (500 char limit)
+        uploadOrder: priceInCents.toString(),
+        price_paid: priceInCents.toString(),
+        image_url: imageUrl // Store for webhook processing
       },
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     });
