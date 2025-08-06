@@ -93,7 +93,7 @@ const PredictionPoll: React.FC = () => {
   }, []);
 
   const handleVote = async (price: number) => {
-    if (isLoading || hasVoted) return;
+    if (isLoading) return;
     setIsLoading(true);
 
     try {
@@ -148,7 +148,7 @@ const PredictionPoll: React.FC = () => {
                 <Button
                   variant={isSelected ? 'default' : 'outline'}
                   onClick={() => handleVote(price)}
-                  disabled={isLoading || hasVoted}
+                  disabled={isLoading}
                   className="w-full justify-between"
                 >
                   <span>{formatPrice(price)}</span>
