@@ -153,11 +153,18 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     // we'll create a placeholder image for now
     const finalImageUrl = await createPlaceholderImage(caption, pricePaid, supabase);
 
-    // Get current upload count for ordering
-    const { data: uploadCountData } = await supabase
-      .from("pricing")
-      .select("upload_count")
-      .single();
+    // Get current upload count for ordering and increment price atomically
+    // This ensures price only increases when uploads are actually successful
+    console.log("Getting current upload count and incrementing price");
+    const currentPriceResult = await supabase.rpc('get_and_increment_price');
+    
+    if (currentPriceResult.error) {
+      console.error("Failed to increment price:", currentPriceResult.error);
+      throw new Error(`Failed to increment price: ${currentPriceResult.error.message}`);
+    }
+    
+    const currentUploadOrder = currentPriceResult.data;
+    console.log("Successfully incremented price. Upload order:", currentUploadOrder);
 
     // Save upload record
     const { data: uploadRecord, error: insertError } = await supabase
@@ -167,7 +174,7 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
         image_url: finalImageUrl,
         caption: caption,
         price_paid: pricePaid,
-        upload_order: uploadCountData?.upload_count || 1,
+        upload_order: currentUploadOrder,
         stripe_session_id: session.id,
       })
       .select()
