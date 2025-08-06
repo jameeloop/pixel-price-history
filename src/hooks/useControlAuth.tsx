@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
-const CONTROL_PASSWORD_HASH = '8c2c9dcb6da0fa48a1c7b12f0e7b9b1d5c0e4a8f2b6d9e1c7a3f5b8e0d4c9a1b7'; // '1029384756Mn'
+const CONTROL_PASSWORD_HASH = '2212fe46729ca6d25f28cad6fe0f3a11f12642c4b4c255cd285d1b5a1ae7a413'; // '1029384756Mn'
 const SESSION_KEY = 'control_panel_auth';
 const SESSION_DURATION = 30 * 60 * 1000; // 30 minutes
 
