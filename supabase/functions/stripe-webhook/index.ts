@@ -111,20 +111,19 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     // Get metadata from session  
     const email = session.customer_email || session.metadata?.email;
     const caption = session.metadata?.caption || "Default upload";
+    const imageStorageUrl = session.metadata?.imageStorageUrl;
+    const fileName = session.metadata?.fileName;
 
     console.log("Session metadata:", session.metadata);
     console.log("Extracted - email:", email, "caption:", caption);
+    console.log("Image storage URL:", imageStorageUrl);
 
     if (!email) {
       console.log("No email found in session");
-      // Use customer email from session instead
       throw new Error("No email found in session");
     }
 
-    // Since we can't access temp storage across functions, we'll create a placeholder
-    // The image will be uploaded when the user uploads it initially
     console.log("Processing payment for session:", session.id);
-    console.log("Metadata:", session.metadata);
 
     // Check if already processed
     const { data: existingUpload } = await supabase
@@ -138,20 +137,17 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
       return;
     }
 
-    // Get the price paid from session metadata (already incremented in create-payment)
+    // Get the price paid from session metadata 
     const pricePaid = parseInt(session.metadata?.price_paid || session.amount_total?.toString() || '51');
     
     console.log("Price paid for this upload:", pricePaid);
 
-    // Image data cannot be stored in Stripe metadata due to size limits
-    // Will create placeholder image since we cannot access the original
-    const imageName = session.metadata?.fileName || 'upload.png';
+    // Use the actual image URL from storage, or create placeholder if no image was uploaded
+    const finalImageUrl = imageStorageUrl && imageStorageUrl.trim() !== '' 
+      ? imageStorageUrl 
+      : await createPlaceholderImage(caption, pricePaid, supabase);
     
-    console.log("No image data available - will create placeholder");
-    
-    // Since we cannot store large image data in Stripe metadata,
-    // we'll create a placeholder image for now
-    const finalImageUrl = await createPlaceholderImage(caption, pricePaid, supabase);
+    console.log("Final image URL:", finalImageUrl);
 
     // Get current upload count for ordering and increment price atomically
     // This ensures price only increases when uploads are actually successful

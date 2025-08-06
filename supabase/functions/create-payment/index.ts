@@ -119,8 +119,68 @@ serve(async (req) => {
       );
     }
 
+    console.log('=== UPLOADING IMAGE TO STORAGE ===');
+    // Upload the actual image to Supabase storage first
+    let imageStorageUrl = null;
+    if (imageUrl && imageUrl.startsWith('data:')) {
+      try {
+        // Extract base64 data and convert to blob
+        const [header, base64Data] = imageUrl.split(',');
+        const mimeType = header.match(/data:([^;]+)/)?.[1] || 'image/jpeg';
+        
+        // Convert base64 to Uint8Array
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // Generate unique filename
+        const timestamp = Date.now();
+        const randomString = Math.random().toString(36).substring(7);
+        const extension = mimeType.split('/')[1] || 'jpg';
+        const storageFileName = `${timestamp}-${randomString}.${extension}`;
+        
+        console.log('Uploading file to storage:', storageFileName);
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('uploads')
+          .upload(storageFileName, bytes, {
+            contentType: mimeType,
+            upsert: false
+          });
+        
+        if (uploadError) {
+          console.error('Storage upload error:', uploadError);
+          throw new Error(`Failed to upload image: ${uploadError.message}`);
+        }
+        
+        console.log('File uploaded successfully:', uploadData);
+        
+        // Get public URL for the uploaded file
+        const { data: urlData } = supabase.storage
+          .from('uploads')
+          .getPublicUrl(storageFileName);
+        
+        imageStorageUrl = urlData.publicUrl;
+        console.log('Image storage URL:', imageStorageUrl);
+        
+      } catch (error) {
+        console.error('Error uploading image:', error);
+        throw new Error(`Image upload failed: ${error.message}`);
+      }
+    }
+
     console.log('=== CREATING STRIPE SESSION ===');
-    console.log('Creating session with price:', priceInCents);
+    // Create Stripe session with metadata including storage URL
+    const sessionMetadata = {
+      email,
+      caption,
+      imageStorageUrl: imageStorageUrl || '', // Use the storage URL instead of base64
+      fileName: fileName || 'upload.jpg',
+      price_paid: priceInCents.toString(),
+      uploadOrder: priceInCents.toString()
+    };
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],

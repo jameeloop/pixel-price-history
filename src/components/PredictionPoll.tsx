@@ -8,12 +8,12 @@ import { useToast } from '@/hooks/use-toast';
 
 const PredictionPoll: React.FC = () => {
   const { toast } = useToast();
-  const [selectedPrediction, setSelectedPrediction] = useState<number | null>(null);
+  const [selectedPrediction, setSelectedPrediction] = useState<any>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [predictions, setPredictions] = useState<{[key: number]: number}>({});
   const [isLoading, setIsLoading] = useState(false);
   const [currentPrice, setCurrentPrice] = useState<number>(50);
-  const [predictionOptions, setPredictionOptions] = useState<number[]>([]);
+  const [predictionOptions, setPredictionOptions] = useState<Array<{value: number, label: string}>>([]);
   
   const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -51,21 +51,25 @@ const PredictionPoll: React.FC = () => {
       
       if (data) {
         setCurrentPrice(data.current_price);
-        // Generate prediction options as price ranges based on current price
-        // Create overlapping windows so at least one option will be correct
+        // Generate prediction options as price windows/ranges based on current price
         const basePrice = data.current_price;
         const options = [
-          basePrice + 25,   // +$0.25 (lower range)
-          basePrice + 75,   // +$0.75 (mid-low range)  
-          basePrice + 150,  // +$1.50 (mid-high range)
-          basePrice + 300   // +$3.00 (high range)
+          { value: basePrice + 25, label: `${formatPrice(basePrice + 1)} - ${formatPrice(basePrice + 50)}` },
+          { value: basePrice + 75, label: `${formatPrice(basePrice + 51)} - ${formatPrice(basePrice + 100)}` },  
+          { value: basePrice + 150, label: `${formatPrice(basePrice + 101)} - ${formatPrice(basePrice + 200)}` },
+          { value: basePrice + 300, label: `${formatPrice(basePrice + 201)} - ${formatPrice(basePrice + 400)}` }
         ];
         setPredictionOptions(options);
       }
     } catch (error) {
       console.error('Error fetching current price:', error);
-      // Fallback options if price fetch fails - using ranges
-      setPredictionOptions([75, 125, 225, 450]);
+      // Fallback options if price fetch fails - using windows
+      setPredictionOptions([
+        { value: 75, label: '$0.01 - $0.50' },
+        { value: 125, label: '$0.51 - $1.00' },
+        { value: 225, label: '$1.01 - $2.00' },
+        { value: 450, label: '$2.01 - $4.00' }
+      ]);
     }
   };
 
@@ -80,7 +84,7 @@ const PredictionPoll: React.FC = () => {
       if (error) throw error;
 
       const counts: {[key: number]: number} = {};
-      predictionOptions.forEach(option => counts[option] = 0);
+      predictionOptions.forEach(option => counts[option.value] = 0);
       
       data?.forEach(prediction => {
         if (counts[prediction.predicted_price] !== undefined) {
@@ -109,7 +113,9 @@ const PredictionPoll: React.FC = () => {
       if (error && error.code !== 'PGRST116') throw error;
       
       if (data) {
-        setSelectedPrediction(data.predicted_price);
+        // Find the matching option object for the voted price
+        const matchingOption = predictionOptions.find(opt => opt.value === data.predicted_price);
+        setSelectedPrediction(matchingOption || null);
         setHasVoted(true);
       }
     } catch (error) {
@@ -128,21 +134,21 @@ const PredictionPoll: React.FC = () => {
     }
   }, [predictionOptions]);
 
-  const handleVote = async (price: number) => {
+  const handleVote = async (option: {value: number, label: string}) => {
     if (isLoading) return;
     setIsLoading(true);
 
     try {
       const { data, error } = await supabase.functions.invoke('create-prediction', {
         body: {
-          predictedPrice: price
+          predictedPrice: option.value
         }
       });
 
       if (error) throw error;
       
       // Update local state immediately to show the vote
-      setSelectedPrediction(price);
+      setSelectedPrediction(option);
       setHasVoted(true);
       
       // Refresh predictions and user vote status
@@ -179,22 +185,22 @@ const PredictionPoll: React.FC = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {predictionOptions.map((price) => {
-            const voteCount = predictions[price] || 0;
+          {predictionOptions.map((option) => {
+            const voteCount = predictions[option.value] || 0;
             const percentage = totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0;
-            const isSelected = selectedPrediction === price;
+            const isSelected = selectedPrediction?.value === option.value;
             
             return (
-              <div key={price} className="space-y-2">
+              <div key={option.value} className="space-y-2">
                 <Button
                   variant={isSelected ? 'default' : 'outline'}
-                  onClick={() => handleVote(price)}
+                  onClick={() => handleVote(option)}
                   disabled={isLoading}
                   className={`w-full justify-between transition-all duration-200 ${
                     isSelected ? 'bg-purple-600 hover:bg-purple-700 border-purple-600' : ''
                   }`}
                 >
-                  <span>{formatPrice(price)}</span>
+                  <span className="font-medium">{option.label}</span>
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">
                       {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
@@ -225,9 +231,9 @@ const PredictionPoll: React.FC = () => {
                 Thanks for voting! Total votes: {totalVotes}
               </p>
               <p className="text-xs text-purple-600 font-medium mt-1">
-                Your prediction: {formatPrice(selectedPrediction || 0)} 
-                {selectedPrediction && predictions[selectedPrediction] ? 
-                  ` (${Math.round((predictions[selectedPrediction] / totalVotes) * 100)}% agree)` : 
+                Your prediction: {selectedPrediction?.label || 'Unknown'} 
+                {selectedPrediction && predictions[selectedPrediction.value] ? 
+                  ` (${Math.round((predictions[selectedPrediction.value] / totalVotes) * 100)}% agree)` : 
                   ''
                 }
               </p>
