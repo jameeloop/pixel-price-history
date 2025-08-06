@@ -158,7 +158,8 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
         body: { 
           email: email.trim().toLowerCase(),
           caption: sanitizeHtml(caption.trim()),
-          imageFile 
+          imageUrl: imageFile.data, // Send the base64 data URL
+          fileName: imageFile.name
         },
       });
 
