@@ -141,7 +141,7 @@ const PredictionPoll: React.FC = () => {
     try {
       const { data, error } = await supabase.functions.invoke('create-prediction', {
         body: {
-          predictedPrice: option.value
+          predictedPrice: option.value  // Send the numeric value to the backend
         }
       });
 
