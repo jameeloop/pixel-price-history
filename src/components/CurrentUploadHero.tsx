@@ -144,9 +144,9 @@ const CurrentUploadHero: React.FC = () => {
           </Badge>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Image and Buttons */}
-          <div className="space-y-3">
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Image */}
+          <div className="md:col-span-2 space-y-3">
             <div className="relative">
               <div className="aspect-video rounded-lg overflow-hidden bg-muted">
                 <img
@@ -172,64 +172,62 @@ const CurrentUploadHero: React.FC = () => {
               </div>
             </div>
 
-            {/* Buttons and Like Count */}
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => navigate(`/post/${currentUpload.id}`)}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  View Post
-                </Button>
-                <Button
-                  onClick={shareCurrentUpload}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
-                </Button>
-              </div>
-              
-              {/* Like functionality */}
-              <div className="flex items-center justify-between">
-                <LikeButton uploadId={currentUpload.id} />
-                <span className="text-sm text-muted-foreground">
-                  {likeCount} total {likeCount === 1 ? 'vote' : 'votes'}
-                </span>
-              </div>
+            {/* Action Buttons */}
+            <div className="flex gap-2">
+              <Button
+                onClick={() => navigate(`/post/${currentUpload.id}`)}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" />
+                View Post
+              </Button>
+              <Button
+                onClick={shareCurrentUpload}
+                variant="outline"
+                size="sm"
+                className="flex-1"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
             </div>
           </div>
 
-          {/* Content - More compact now */}
-          <div className="space-y-4">
-            <div>
-              <p className="text-base font-medium mb-3 break-words leading-relaxed">
-                "{currentUpload.caption}"
+          {/* Voting Section - Now positioned next to image */}
+          <div className="md:col-span-1 space-y-4">
+            <div className="glass-card p-4">
+              <h3 className="text-sm font-medium mb-3 text-center">Community Rating</h3>
+              <LikeButton uploadId={currentUpload.id} />
+            </div>
+          </div>
+        </div>
+
+        {/* Content - More compact now */}
+        <div className="mt-4 space-y-4">
+          <div>
+            <p className="text-base font-medium mb-3 break-words leading-relaxed">
+              "{currentUpload.caption}"
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="glass-card p-3">
+              <p className="text-muted-foreground text-xs">Price Paid</p>
+              <p className="text-lg font-bold text-primary price-ticker">
+                {formatPrice(currentUpload.price_paid)}
               </p>
             </div>
-
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="glass-card p-3">
-                <p className="text-muted-foreground text-xs">Price Paid</p>
-                <p className="text-lg font-bold text-primary price-ticker">
-                  {formatPrice(currentUpload.price_paid)}
-                </p>
-              </div>
-              <div className="glass-card p-3">
-                <p className="text-muted-foreground text-xs">Uploaded</p>
-                <p className="font-medium text-sm">{formatDate(currentUpload.created_at)}</p>
-              </div>
-            </div>
-
             <div className="glass-card p-3">
-              <p className="text-muted-foreground text-xs">Owner</p>
-              <p className="font-medium text-base">{formatEmail(currentUpload.user_email)}</p>
+              <p className="text-muted-foreground text-xs">Uploaded</p>
+              <p className="font-medium text-sm">{formatDate(currentUpload.created_at)}</p>
             </div>
+          </div>
+
+          <div className="glass-card p-3">
+            <p className="text-muted-foreground text-xs">Owner</p>
+            <p className="font-medium text-base">{formatEmail(currentUpload.user_email)}</p>
           </div>
         </div>
 

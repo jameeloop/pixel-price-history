@@ -118,42 +118,48 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   const likePercentage = totalVotes > 0 ? (likes / totalVotes) * 100 : 50;
 
   return (
-    <div className="space-y-2 min-h-[60px]">
-      <div className="flex flex-col items-center gap-1">
+    <div className="space-y-3 w-full">
+      {/* Horizontal Buttons */}
+      <div className="flex gap-2 w-full">
         <Button
           variant={userVote === 'like' ? 'default' : 'outline'}
           size="sm"
           onClick={() => handleVote('like')}
           disabled={isLoading}
-          className="flex items-center gap-1 text-xs h-6 px-2"
+          className="flex items-center gap-2 flex-1 justify-center"
         >
-          <ChevronUp className="w-3 h-3" />
-          <span>{likes}</span>
+          <ChevronUp className="w-4 h-4" />
+          <span className="text-sm">Like ({likes})</span>
         </Button>
         <Button
           variant={userVote === 'dislike' ? 'default' : 'outline'}
           size="sm"
           onClick={() => handleVote('dislike')}
           disabled={isLoading}
-          className="flex items-center gap-1 text-xs h-6 px-2"
+          className="flex items-center gap-2 flex-1 justify-center"
         >
-          <ChevronDown className="w-3 h-3" />
-          <span>{dislikes}</span>
+          <ChevronDown className="w-4 h-4" />
+          <span className="text-sm">Dislike ({dislikes})</span>
         </Button>
       </div>
       
-      {/* Like/Dislike Ratio Bar */}
+      {/* Bigger Like/Dislike Ratio Bar */}
       {totalVotes > 0 && (
         <div className="w-full">
-          <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-            <span className="font-medium">{Math.round(likePercentage)}%</span>
-            <span className="font-medium">{Math.round(100 - likePercentage)}%</span>
+          <div className="flex justify-between text-sm text-muted-foreground mb-2">
+            <span className="font-medium">{Math.round(likePercentage)}% Like</span>
+            <span className="font-medium">{Math.round(100 - likePercentage)}% Dislike</span>
           </div>
-          <div className="w-full h-1.5 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
             <div 
-              className="h-full bg-green-500 dark:bg-green-400 transition-all duration-300 rounded-full"
+              className="h-full bg-green-500 dark:bg-green-400 transition-all duration-500 rounded-full"
               style={{ width: `${likePercentage}%` }}
             />
+          </div>
+          <div className="text-center mt-2">
+            <span className="text-xs text-muted-foreground">
+              {totalVotes} total {totalVotes === 1 ? 'vote' : 'votes'}
+            </span>
           </div>
         </div>
       )}
