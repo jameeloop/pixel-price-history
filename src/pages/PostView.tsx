@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 import { ArrowLeft, Share2, Download, Copy, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import QRTooltip from '@/components/QRTooltip';
 
 interface Upload {
   id: string;
@@ -194,9 +195,11 @@ const PostView: React.FC = () => {
               
               {/* QR Code - Smaller */}
               <div className="text-center mb-4">
-                <div className="inline-block p-2 bg-white rounded-lg">
-                  <img src={qrCode} alt="QR Code" className="w-32 h-32 mx-auto" />
-                </div>
+                <QRTooltip>
+                  <div className="inline-block p-2 bg-white rounded-lg cursor-pointer">
+                    <img src={qrCode} alt="QR Code" className="w-32 h-32 mx-auto" />
+                  </div>
+                </QRTooltip>
                 <p className="text-xs text-muted-foreground mt-1">Scan to view this post</p>
               </div>
 

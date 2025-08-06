@@ -4,10 +4,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { Heart, MessageCircle, Calendar, Search } from 'lucide-react';
+import { Heart, MessageCircle, Calendar, Search, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LikeButton from '@/components/LikeButton';
 import SearchBar from '@/components/SearchBar';
+import ImageLightbox from '@/components/ImageLightbox';
 
 interface Upload {
   id: string;
@@ -32,6 +33,8 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
   const [filteredUploads, setFilteredUploads] = useState<Upload[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [selectedUpload, setSelectedUpload] = useState<Upload | null>(null);
 
   const fetchUploads = async () => {
     try {
@@ -121,6 +124,12 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
     navigate(`/post/${uploadId}`);
   };
 
+  const handleImageClick = (e: React.MouseEvent, upload: Upload) => {
+    e.stopPropagation();
+    setSelectedUpload(upload);
+    setLightboxOpen(true);
+  };
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -177,7 +186,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
         {displayUploads.map((upload, index) => (
           <Card 
             key={upload.id} 
-            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group flex flex-col h-64 sm:h-72" 
+            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group flex flex-col h-64 sm:h-72 hover:shadow-2xl hover:shadow-primary/20" 
             onClick={() => handlePostClick(upload.id)}
           >
             <CardContent className="p-3 sm:p-4 h-full flex flex-col">
@@ -187,6 +196,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
                   alt={upload.caption}
                   className="w-full h-40 sm:h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
+                  onClick={(e) => handleImageClick(e, upload)}
                 onError={(e) => {
                   e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
                     <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
@@ -205,6 +215,12 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
                 <Badge variant="outline" className="bg-background/90 text-xs price-ticker">
                   {formatPrice(upload.price_paid)}
                 </Badge>
+              </div>
+              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="bg-black/60 text-white p-1 rounded text-xs flex items-center gap-1">
+                  <Eye className="w-3 h-3" />
+                  Click to preview
+                </div>
               </div>
             </div>
             
@@ -229,6 +245,20 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
           </Card>
         ))}
       </div>
+
+      {/* Image Lightbox */}
+      {selectedUpload && (
+        <ImageLightbox
+          isOpen={lightboxOpen}
+          onClose={() => setLightboxOpen(false)}
+          imageUrl={selectedUpload.image_url}
+          caption={selectedUpload.caption}
+          uploadOrder={uploads.findIndex(u => u.id === selectedUpload.id) + 1}
+          pricePaid={selectedUpload.price_paid}
+          uploadDate={selectedUpload.created_at}
+          userEmail={selectedUpload.user_email}
+        />
+      )}
     </div>
   );
 };

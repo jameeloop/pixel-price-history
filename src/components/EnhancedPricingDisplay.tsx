@@ -153,11 +153,6 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
             <p className="text-[10px] text-muted-foreground">Last Upload</p>
           </div>
         </div>
-        
-        {/* Psychology Quote - Rotating */}
-        <div className="border-t border-border pt-3 mb-4">
-          <RotatingPsychologyFacts />
-        </div>
       </CardContent>
     </Card>
   );

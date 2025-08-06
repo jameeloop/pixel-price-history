@@ -11,6 +11,7 @@ import ProgressMilestones from '@/components/ProgressMilestones';
 import LiveFeed from '@/components/LiveFeed';
 import PredictionPoll from '@/components/PredictionPoll';
 import FloatingUploadCTA from '@/components/FloatingUploadCTA';
+import PsychologyFactsBox from '@/components/PsychologyFactsBox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
@@ -117,7 +118,7 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Swapped Layout: Current Upload Hero takes more space */}
+        {/* Swapped Layout: Featured Upload left, Experiment Status right */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2 lg:order-1">
             <CurrentUploadHero />
@@ -125,6 +126,11 @@ const Index = () => {
           <div className="lg:order-2">
             <EnhancedPricingDisplay onPriceUpdate={setCurrentPrice} />
           </div>
+        </div>
+
+        {/* Psychology Facts Box - Separate from Experiment Status */}
+        <div className="mb-6">
+          <PsychologyFactsBox />
         </div>
 
         {/* Upload Form - Moved up for better accessibility */}
