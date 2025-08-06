@@ -14,6 +14,7 @@ import FloatingUploadCTA from '@/components/FloatingUploadCTA';
 import PsychologyFactsBox from '@/components/PsychologyFactsBox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import ScrollIndicator from '@/components/ScrollIndicator';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -245,6 +246,9 @@ const Index = () => {
 
         {/* Floating Upload CTA */}
         <FloatingUploadCTA onClick={scrollToUpload} />
+        
+        {/* Scroll Indicator */}
+        <ScrollIndicator />
       </div>
     </div>
   );
