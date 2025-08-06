@@ -112,7 +112,6 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     const email = session.customer_email || session.metadata?.email;
     const caption = session.metadata?.caption || "Default upload";
     const imageStorageUrl = session.metadata?.imageStorageUrl;
-    const fileName = session.metadata?.fileName;
 
     console.log("Session metadata:", session.metadata);
     console.log("Extracted - email:", email, "caption:", caption);

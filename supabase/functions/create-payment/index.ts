@@ -172,15 +172,9 @@ serve(async (req) => {
     }
 
     console.log('=== CREATING STRIPE SESSION ===');
-    // Create Stripe session with metadata including storage URL
-    const sessionMetadata = {
-      email,
-      caption,
-      imageStorageUrl: imageStorageUrl || '', // Use the storage URL instead of base64
-      fileName: fileName || 'upload.jpg',
-      price_paid: priceInCents.toString(),
-      uploadOrder: priceInCents.toString()
-    };
+    
+    // Store image URL temporarily - we'll access it in the webhook via a temp storage mechanism
+    // Since Stripe metadata has a 500 character limit, we need an alternative approach
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -206,9 +200,8 @@ serve(async (req) => {
         caption: caption.trim().substring(0, 400), // Limit caption to 400 chars
         fileName: fileName || 'upload.jpg',
         uploadOrder: priceInCents.toString(),
-        price_paid: priceInCents.toString()
-        // Note: Cannot store imageUrl in metadata due to 500 char limit
-        // Image will be processed via alternative method in webhook
+        price_paid: priceInCents.toString(),
+        imageStorageUrl: imageStorageUrl || '' // Try to include the URL
       },
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     });
