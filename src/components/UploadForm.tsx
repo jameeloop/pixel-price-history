@@ -154,6 +154,14 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
     setIsLoading(true);
 
     try {
+      console.log('=== FRONTEND: Calling create-payment function ===');
+      console.log('Request data:', { 
+        email: email.trim().toLowerCase(),
+        caption: sanitizeHtml(caption.trim()),
+        imageUrl: imageFile.data ? 'base64 data present' : 'NO DATA',
+        fileName: imageFile.name
+      });
+
       const { data, error } = await supabase.functions.invoke('create-payment', {
         body: { 
           email: email.trim().toLowerCase(),
@@ -163,14 +171,33 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
         },
       });
 
-      if (error) throw error;
+      console.log('=== FRONTEND: Function response ===');
+      console.log('Data:', data);
+      console.log('Error:', error);
+
+      if (error) {
+        console.error('=== FRONTEND: Function returned error ===');
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        throw error;
+      }
 
       // Redirect to Stripe checkout
       if (data.url) {
+        console.log('=== FRONTEND: Redirecting to Stripe ===');
+        console.log('Stripe URL:', data.url);
         window.location.href = data.url;
+      } else {
+        console.error('=== FRONTEND: No URL in response ===');
+        console.log('Full response data:', data);
+        throw new Error('No checkout URL received');
       }
     } catch (error: any) {
+      console.error('=== FRONTEND: Payment error caught ===');
       console.error('Payment error:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error name:', error?.name);
+      console.error('Error message:', error?.message);
+      console.error('Error stack:', error?.stack);
       toast({
         title: "Payment failed",
         description: error.message || "Failed to create payment session",
