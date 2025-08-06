@@ -140,27 +140,6 @@ export type Database = {
         }
         Relationships: []
       }
-      pricing: {
-        Row: {
-          current_price: number
-          id: string
-          updated_at: string
-          upload_count: number
-        }
-        Insert: {
-          current_price?: number
-          id?: string
-          updated_at?: string
-          upload_count?: number
-        }
-        Update: {
-          current_price?: number
-          id?: string
-          updated_at?: string
-          upload_count?: number
-        }
-        Relationships: []
-      }
       uploads: {
         Row: {
           caption: string
@@ -239,7 +218,7 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
-      get_and_increment_price: {
+      get_next_upload_price: {
         Args: Record<PropertyKey, never>
         Returns: number
       }
