@@ -21,19 +21,19 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get user's IP (simplified approach using localStorage as backup)
+  // Get secure user identifier
   const getUserIP = async () => {
     try {
-      // In a real app, you'd get the actual IP from the server
-      // For now, we'll use a combination of localStorage and timestamp
+      const { getOrCreateSecureUserId } = await import('@/utils/secureIpUtils');
+      return getOrCreateSecureUserId();
+    } catch {
+      // Fallback for legacy users
       let userId = localStorage.getItem('pixperiment_user_id');
       if (!userId) {
         userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         localStorage.setItem('pixperiment_user_id', userId);
       }
       return userId;
-    } catch {
-      return `anonymous_${Date.now()}`;
     }
   };
 

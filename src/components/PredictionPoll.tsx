@@ -25,12 +25,18 @@ const PredictionPoll: React.FC = () => {
   };
 
   const getUserIP = async () => {
-    let userId = localStorage.getItem('pixperiment_user_id');
-    if (!userId) {
-      userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem('pixperiment_user_id', userId);
+    try {
+      const { getOrCreateSecureUserId } = await import('@/utils/secureIpUtils');
+      return getOrCreateSecureUserId();
+    } catch {
+      // Fallback for legacy users
+      let userId = localStorage.getItem('pixperiment_user_id');
+      if (!userId) {
+        userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        localStorage.setItem('pixperiment_user_id', userId);
+      }
+      return userId;
     }
-    return userId;
   };
 
   const fetchPredictions = async () => {

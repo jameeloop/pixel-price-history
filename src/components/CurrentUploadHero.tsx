@@ -10,7 +10,6 @@ import LikeButton from '@/components/LikeButton';
 
 interface Upload {
   id: string;
-  user_id: string;
   user_email: string;
   image_url: string;
   caption: string;
@@ -38,7 +37,7 @@ const CurrentUploadHero: React.FC = () => {
   const fetchCurrentUpload = async () => {
     try {
       const { data, error } = await supabase
-        .from('uploads')
+        .from('uploads_public')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1)
