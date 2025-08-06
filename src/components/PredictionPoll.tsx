@@ -111,7 +111,7 @@ const PredictionPoll: React.FC = () => {
       
       toast({
         title: "Success!",
-        description: `Your prediction has been ${data.action}!`,
+        description: `Your prediction has been ${data?.action || 'recorded'}!`,
       });
     } catch (error) {
       console.error('Error submitting prediction:', error);

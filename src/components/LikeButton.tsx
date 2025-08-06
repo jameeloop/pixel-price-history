@@ -100,7 +100,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
       
       toast({
         title: "Success",
-        description: `Vote ${data.action} successfully!`,
+        description: `Vote ${data?.action || 'recorded'} successfully!`,
       });
     } catch (error) {
       console.error('Error voting:', error);
@@ -113,6 +113,9 @@ const LikeButton: React.FC<LikeButtonProps> = ({
       setIsLoading(false);
     }
   };
+
+  const totalVotes = likes + dislikes;
+  const likePercentage = totalVotes > 0 ? (likes / totalVotes) * 100 : 50;
 
   return (
     <div className="space-y-2 min-h-[60px]">
@@ -138,6 +141,22 @@ const LikeButton: React.FC<LikeButtonProps> = ({
           <span>{dislikes}</span>
         </Button>
       </div>
+      
+      {/* Like/Dislike Ratio Bar */}
+      {totalVotes > 0 && (
+        <div className="w-full">
+          <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+            <span className="font-medium">{Math.round(likePercentage)}%</span>
+            <span className="font-medium">{Math.round(100 - likePercentage)}%</span>
+          </div>
+          <div className="w-full h-1.5 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-green-500 dark:bg-green-400 transition-all duration-300 rounded-full"
+              style={{ width: `${likePercentage}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
