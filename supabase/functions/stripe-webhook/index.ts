@@ -138,15 +138,9 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
       return;
     }
 
-    // Get and increment the price
-    const { data: priceData, error: priceError } = await supabase
-      .rpc("get_and_increment_price");
-
-    if (priceError) {
-      throw new Error(`Failed to get price: ${priceError.message}`);
-    }
-
-    const pricePaid = priceData;
+    // Get the price paid from session metadata (already incremented in create-payment)
+    const amountTotal = session.amount_total; // This is in cents
+    const pricePaid = amountTotal;
 
     // Get temp file path from Stripe metadata
     const tempFilePath = session.metadata?.temp_file_path;
