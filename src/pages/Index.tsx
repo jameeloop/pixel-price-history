@@ -7,7 +7,7 @@ import PricingDisplay from '@/components/PricingDisplay';
 import EnhancedPricingDisplay from '@/components/EnhancedPricingDisplay';
 import Gallery from '@/components/Gallery';
 import CurrentUploadHero from '@/components/CurrentUploadHero';
-import ProgressMilestones from '@/components/ProgressMilestones';
+
 import LiveFeed from '@/components/LiveFeed';
 import PredictionPoll from '@/components/PredictionPoll';
 import FloatingUploadCTA from '@/components/FloatingUploadCTA';

@@ -145,28 +145,49 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     }
   };
 
+  const totalVotes = likes + dislikes;
+  const likePercentage = totalVotes > 0 ? (likes / totalVotes) * 100 : 50;
+
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        variant={userVote === 'like' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => handleVote('like')}
-        disabled={isLoading}
-        className="flex items-center gap-1 text-xs"
-      >
-        <ThumbsUp className="w-3 h-3" />
-        <span>{likes}</span>
-      </Button>
-      <Button
-        variant={userVote === 'dislike' ? 'default' : 'outline'}
-        size="sm"
-        onClick={() => handleVote('dislike')}
-        disabled={isLoading}
-        className="flex items-center gap-1 text-xs"
-      >
-        <ThumbsDown className="w-3 h-3" />
-        <span>{dislikes}</span>
-      </Button>
+    <div className="space-y-2">
+      <div className="flex items-center gap-2">
+        <Button
+          variant={userVote === 'like' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => handleVote('like')}
+          disabled={isLoading}
+          className="flex items-center gap-1 text-xs"
+        >
+          <ThumbsUp className="w-3 h-3" />
+          <span>{likes}</span>
+        </Button>
+        <Button
+          variant={userVote === 'dislike' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => handleVote('dislike')}
+          disabled={isLoading}
+          className="flex items-center gap-1 text-xs"
+        >
+          <ThumbsDown className="w-3 h-3" />
+          <span>{dislikes}</span>
+        </Button>
+      </div>
+      
+      {/* Like/Dislike Ratio Bar */}
+      {totalVotes > 0 && (
+        <div className="w-full">
+          <div className="flex justify-between text-xs text-muted-foreground mb-1">
+            <span>{Math.round(likePercentage)}% likes</span>
+            <span>{Math.round(100 - likePercentage)}% dislikes</span>
+          </div>
+          <div className="w-full h-1.5 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-green-500 dark:bg-green-400 transition-all duration-300 rounded-full"
+              style={{ width: `${likePercentage}%` }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

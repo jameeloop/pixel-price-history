@@ -6,6 +6,7 @@ import { ArrowLeft, Share2, Download, Copy, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import QRTooltip from '@/components/QRTooltip';
+import LikeButton from '@/components/LikeButton';
 
 interface Upload {
   id: string;
@@ -183,6 +184,12 @@ const PostView: React.FC = () => {
                 <div className="glass-card p-2">
                   <p className="text-muted-foreground text-xs">Uploaded by</p>
                   <p className="font-medium text-sm">{upload.user_email ? formatEmail(upload.user_email) : 'Anonymous'}</p>
+                </div>
+                
+                {/* Like/Dislike Section */}
+                <div className="glass-card p-3">
+                  <p className="text-muted-foreground text-xs mb-2">Community Rating</p>
+                  <LikeButton uploadId={upload.id} />
                 </div>
               </div>
             </Card>
