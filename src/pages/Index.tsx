@@ -163,7 +163,7 @@ const Index = () => {
               View All →
             </Button>
           </div>
-          <Gallery refreshTrigger={refreshGallery} limitResults={4} />
+          <Gallery refreshTrigger={refreshGallery} limitResults={5} />
         </div>
 
 

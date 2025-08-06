@@ -182,19 +182,19 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
         </div>
       )}
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
         {displayUploads.map((upload, index) => (
           <Card 
             key={upload.id} 
-            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group flex flex-col h-64 sm:h-72 hover:shadow-2xl hover:shadow-primary/20 overflow-hidden" 
+            className="glass-card experiment-glow cursor-pointer hover:scale-105 transition-all duration-300 group h-64 sm:h-72 hover:shadow-2xl hover:shadow-primary/20 overflow-hidden" 
             onClick={() => handlePostClick(upload.id)}
           >
-            <CardContent className="p-3 sm:p-4 h-full flex flex-col overflow-hidden">
+            <CardContent className="p-3 sm:p-4 h-full flex flex-col">
               <div className="relative mb-3 sm:mb-4 flex-shrink-0">
                 <img
                   src={upload.image_url}
                   alt={upload.caption}
-                  className="w-full h-40 sm:h-48 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
+                  className="w-full h-32 sm:h-36 object-cover rounded-lg group-hover:scale-105 transition-transform duration-300"
                   loading="lazy"
                   onClick={(e) => handleImageClick(e, upload)}
                 onError={(e) => {
@@ -208,7 +208,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
                   `);
                 }}
               />
-              <div className="absolute top-2 left-2 flex flex-col sm:flex-row gap-1 sm:gap-2">
+              <div className="absolute top-2 left-2 flex flex-col gap-1">
                 <Badge variant="secondary" className="font-semibold text-xs price-ticker">
                   #{uploads.findIndex(u => u.id === upload.id) + 1}
                 </Badge>
@@ -219,26 +219,28 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="bg-black/60 text-white p-1 rounded text-xs flex items-center gap-1">
                   <Eye className="w-3 h-3" />
-                  Click to preview
+                  Preview
                 </div>
               </div>
             </div>
             
-            <div className="flex-1 flex flex-col justify-between space-y-2">
-              <p className="text-xs sm:text-sm font-medium line-clamp-2 flex-shrink-0">
-                {truncateCaption(upload.caption, 60)}
+            <div className="flex-1 flex flex-col justify-between min-h-0">
+              <p className="text-xs sm:text-sm font-medium line-clamp-2 mb-2">
+                {truncateCaption(upload.caption, 50)}
               </p>
               
-              <div className="space-y-2 flex-shrink-0">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 text-xs text-muted-foreground">
+              <div className="space-y-2 mt-auto">
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 flex-shrink-0" />
                     <span className="truncate">{formatDate(upload.created_at)}</span>
                   </div>
-                  <span className="text-xs font-medium text-primary/80">{formatEmail(upload.user_email)}</span>
+                  <span className="text-xs font-medium text-primary/80 truncate max-w-[60px]">{formatEmail(upload.user_email)}</span>
                 </div>
                 
-                <LikeButton uploadId={upload.id} />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <LikeButton uploadId={upload.id} />
+                </div>
               </div>
             </div>
             </CardContent>

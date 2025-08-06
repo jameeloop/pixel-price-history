@@ -149,14 +149,14 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   const likePercentage = totalVotes > 0 ? (likes / totalVotes) * 100 : 50;
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 min-h-[60px]">
       <div className="flex items-center gap-2">
         <Button
           variant={userVote === 'like' ? 'default' : 'outline'}
           size="sm"
           onClick={() => handleVote('like')}
           disabled={isLoading}
-          className="flex items-center gap-1 text-xs"
+          className="flex items-center gap-1 text-xs h-7 px-2"
         >
           <ThumbsUp className="w-3 h-3" />
           <span>{likes}</span>
@@ -166,7 +166,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
           size="sm"
           onClick={() => handleVote('dislike')}
           disabled={isLoading}
-          className="flex items-center gap-1 text-xs"
+          className="flex items-center gap-1 text-xs h-7 px-2"
         >
           <ThumbsDown className="w-3 h-3" />
           <span>{dislikes}</span>
