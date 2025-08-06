@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { encodeBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts";
+import { encode as encodeBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -78,7 +78,7 @@ serve(async (req) => {
     console.log(`Successful admin login from ${clientIP}`);
 
     // Generate secure session token
-    const sessionToken = encodeBase64(crypto.getRandomValues(new Uint8Array(32)));
+    const sessionToken = encodeBase64(new Uint8Array(crypto.getRandomValues(new Uint8Array(32))));
     const expiresAt = new Date(Date.now() + SESSION_DURATION);
 
     // Clean up expired sessions first

@@ -43,8 +43,8 @@ serve(async (req) => {
       throw new Error("File too large");
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
+    // Initialize Stripe with demo/test key
+    const stripe = new Stripe("sk_test_51IpGhJLNLrYGPMEYG1aGLdKJTqZP8l7l6xF6XxFhA7k3wZj7eR2b5wY6sU8zV7x9wA3gH8qC2k1jL0mN9oP6rS5t8uV2yW4", {
       apiVersion: "2023-10-16",
     });
 
