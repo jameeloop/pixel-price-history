@@ -63,30 +63,30 @@ const ControlPanel: React.FC = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Since we're authenticated as admin, we can access the uploads table directly
-      const { data: uploadsData, error: uploadsError } = await supabase
-        .from('uploads')
-        .select('*')
-        .order('created_at', { ascending: false });
+      // Use the get-uploads function to fetch uploads (bypasses RLS)
+      const { data: uploadsResponse, error: uploadsError } = await supabase.functions.invoke('get-uploads', {
+        body: { limit: 1000 }
+      });
 
       if (uploadsError) {
         console.error('Error fetching uploads:', uploadsError);
         toast.error('Failed to fetch uploads');
       } else {
-        setUploads(uploadsData || []);
+        const uploadsData = uploadsResponse?.uploads || [];
+        setUploads(uploadsData);
+        
+        // Calculate price directly from upload count
+        const uploadCount = uploadsData.length;
+        const currentPrice = 100 + uploadCount; // $1.00 + upload count
+        const pricingData = { 
+          id: 'system', 
+          current_price: currentPrice, 
+          upload_count: uploadCount,
+          updated_at: new Date().toISOString()
+        };
+        setPricing(pricingData);
+        setNewPrice((currentPrice / 100).toString());
       }
-
-      // Calculate price directly from upload count
-      const uploadCount = uploadsData?.length || 0;
-      const currentPrice = 100 + uploadCount; // $1.00 + upload count
-      const pricingData = { 
-        id: 'system', 
-        current_price: currentPrice, 
-        upload_count: uploadCount,
-        updated_at: new Date().toISOString()
-      };
-      setPricing(pricingData);
-      setNewPrice((currentPrice / 100).toString());
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to fetch data');

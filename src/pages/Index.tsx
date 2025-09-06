@@ -17,8 +17,9 @@ import Gallery from '@/components/Gallery';
 import LiveFeed from '@/components/LiveFeed';
 import PredictionPoll from '@/components/PredictionPoll';
 import PsychologyFactsBox from '@/components/PsychologyFactsBox';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import ScrollIndicator from '@/components/ScrollIndicator';
+import AnimatedFAQ from '@/components/AnimatedFAQ';
+import FuzzyText from '@/components/FuzzyText';
 import { usePricing } from '@/hooks/usePricing';
 
 const Index = () => {
@@ -36,9 +37,9 @@ const Index = () => {
     const uploadSection = document.getElementById('upload-section');
     if (uploadSection) {
       uploadSection.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
+      behavior: 'smooth',
+      block: 'center'
+    });
     }
   };
 
@@ -95,8 +96,17 @@ const Index = () => {
       <div className="container mx-auto px-4 py-2">
         {/* Hero Section - Much more compact */}
         <div className="text-center mb-4">
-          <h2 className="text-2xl md:text-3xl font-bold mb-2">
-            <span className="gradient-text experiment-glow">The Social Experiment: How High Can It Go? 🚀</span>
+          <h2 className="text-2xl md:text-3xl font-bold mb-2 flex justify-center">
+            <FuzzyText 
+              baseIntensity={0.2} 
+              hoverIntensity={0.5} 
+              enableHover={true}
+              fontSize="clamp(1.5rem, 6vw, 2.5rem)"
+              fontWeight={700}
+              color="#8b5cf6"
+            >
+              The Social Experiment: How High Can It Go? 🚀
+            </FuzzyText>
           </h2>
           <p className="text-sm text-muted-foreground mb-3 max-w-xl mx-auto">
             A psychological pricing experiment where each photo upload costs more than the last 📈
@@ -131,22 +141,46 @@ const Index = () => {
           <PsychologyFactsBox />
         </div>
 
-        {/* Upload Section */}
-        <div id="upload-section" className="mb-8">
-          <Card className="glass-card border-primary/20">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl gradient-text flex items-center justify-center gap-2">
-                <Upload className="w-6 h-6" />
-                Join the Experiment
-              </CardTitle>
-              <p className="text-muted-foreground">
-                Upload your photo and become part of the pricing history
-              </p>
+        {/* Upload Section and Live Activity - Side by Side on Desktop */}
+        <div className="mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Join the Experiment - 65% width on desktop */}
+            <div id="upload-section" className="lg:col-span-3">
+              <Card className="glass-card border-primary/20">
+                <CardHeader className="text-center pb-4">
+                  <CardTitle className="text-lg gradient-text flex items-center justify-center gap-2">
+                    <Upload className="w-5 h-5" />
+                    Join the Experiment
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Upload your photo and become part of the pricing history
+                  </p>
             </CardHeader>
-            <CardContent>
-              <UploadForm currentPrice={nextPrice} onUploadSuccess={handleUploadSuccess} />
+            <CardContent className="pt-0">
+                  <UploadForm currentPrice={nextPrice} onUploadSuccess={handleUploadSuccess} />
             </CardContent>
           </Card>
+        </div>
+
+            {/* Live Activity Feed and Prediction Poll - 25% width on desktop */}
+            <div className="lg:col-span-1 space-y-4">
+              <div>
+                <h2 className="text-xl font-bold gradient-text flex items-center gap-2 mb-4">
+                  <Zap className="w-5 h-5" />
+                  Live Activity
+                </h2>
+                <LiveFeed />
+              </div>
+              
+              <div>
+                <h2 className="text-xl font-bold gradient-text flex items-center gap-2 mb-4">
+                  <Target className="w-5 h-5" />
+                  Weekly Poll
+                </h2>
+                <PredictionPoll />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Gallery Section */}
@@ -167,36 +201,12 @@ const Index = () => {
           </div>
           <Gallery 
             refreshTrigger={refreshGallery}
-            limitResults={6}
+            limitResults={5}
           />
         </div>
 
-        {/* Live Feed Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold gradient-text flex items-center gap-2 mb-6">
-            <Zap className="w-6 h-6" />
-            Live Activity
-          </h2>
-          <LiveFeed />
-        </div>
-
-        {/* Prediction Poll Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold gradient-text flex items-center gap-2 mb-6">
-            <Target className="w-6 h-6" />
-            Predict the Next Price
-          </h2>
-          <PredictionPoll />
-        </div>
 
         {/* Psychology Facts Section */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold gradient-text flex items-center gap-2 mb-6">
-            <Brain className="w-6 h-6" />
-            The Psychology Behind It
-          </h2>
-          <PsychologyFactsBox />
-        </div>
 
         {/* FAQ Section */}
         <div className="mb-8">
@@ -206,44 +216,11 @@ const Index = () => {
           </h2>
           <Card className="glass-card">
             <CardContent className="p-6">
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-1">
-                  <AccordionTrigger className="text-left">
-                    How does the pricing work?
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    Each upload costs more than the previous one. The price increases by a fixed amount with every upload, creating a sense of scarcity and urgency.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-2">
-                  <AccordionTrigger className="text-left">
-                    What happens to my photos?
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    Your photos are stored securely and displayed in the gallery. You can view them anytime and see how they contribute to the experiment's pricing history.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-3">
-                  <AccordionTrigger className="text-left">
-                    Can I delete my uploads?
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    Currently, uploads cannot be deleted to maintain the integrity of the pricing experiment. This ensures the pricing history remains accurate.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-4">
-                  <AccordionTrigger className="text-left">
-                    Is this a real experiment?
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    Yes! This is a real psychological experiment studying how people respond to increasing prices and scarcity. Your participation helps researchers understand human behavior.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+              <AnimatedFAQ />
             </CardContent>
           </Card>
         </div>
-
+        
         {/* Scroll Indicator */}
         <ScrollIndicator />
       </div>

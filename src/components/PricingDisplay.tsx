@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Users, Camera } from 'lucide-react';
 import { usePricing } from '@/hooks/usePricing';
+import CountUp from '@/components/CountUp';
 
 interface PricingDisplayProps {
   onPriceUpdate: (price: number) => void;
@@ -25,7 +26,13 @@ const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
         <div>
           <p className="text-sm text-muted-foreground">Next Upload Price</p>
           <p className="text-4xl font-bold gradient-text price-ticker">
-            {formatPrice(nextPrice)}
+            <CountUp 
+              end={nextPrice / 100} 
+              duration={1500}
+              prefix="$"
+              decimals={2}
+              className="text-2xl font-bold text-green-500"
+            />
           </p>
           <p className="text-xs text-muted-foreground mt-1">and climbing...</p>
         </div>
@@ -34,7 +41,13 @@ const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
           <div className="glass-card p-3">
             <p className="text-muted-foreground">What You'll Pay</p>
             <p className="font-semibold text-accent">
-              {formatPrice(nextPrice)}
+              <CountUp 
+                end={nextPrice / 100} 
+                duration={1500}
+                prefix="$"
+                decimals={2}
+                className="text-green-500 font-bold"
+              />
             </p>
           </div>
           <div className="glass-card p-3">

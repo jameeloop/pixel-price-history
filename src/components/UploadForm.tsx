@@ -8,6 +8,7 @@ import { Upload, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { validateEmail, validateCaption, validateFileUpload, sanitizeHtml } from '@/utils/inputValidation';
+import CountUp from '@/components/CountUp';
 
 interface UploadFormProps {
   currentPrice: number;
@@ -32,8 +33,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   const { toast } = useToast();
 
   const processFile = useCallback((file: File) => {
+    console.log('Processing file:', file.name, file.type, file.size);
     const fileValidation = validateFileUpload(file);
     if (!fileValidation.isValid) {
+      console.log('File validation failed:', fileValidation.error);
       toast({
         title: "Invalid file",
         description: fileValidation.error,
@@ -42,9 +45,11 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
       return;
     }
 
+    console.log('File validation passed, reading file...');
     const reader = new FileReader();
     reader.onload = (e) => {
       const result = e.target?.result as string;
+      console.log('File read successfully, data length:', result.length);
       setImageFile({
         name: file.name,
         type: file.type,
@@ -52,6 +57,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
         file: file, // Store the actual file for validation
       });
       setImagePreview(result);
+      console.log('Image file and preview set');
     };
     reader.readAsDataURL(file);
   }, [toast]);
@@ -59,6 +65,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    console.log('File selected via input:', file.name, file.type, file.size);
     processFile(file);
   };
 
@@ -79,6 +86,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
     
     const files = e.dataTransfer.files;
     if (files && files[0]) {
+      console.log('File dropped:', files[0].name, files[0].type, files[0].size);
       processFile(files[0]);
     }
   };
@@ -213,18 +221,21 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   };
 
   return (
-    <Card className="glass-card">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-xl font-bold gradient-text">
-          Upload Your Picture
-        </CardTitle>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-base font-semibold">
-            Current Price: {formatPrice(currentPrice)}
+    <div className="space-y-4">
+      <div className="text-center">
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Badge variant="secondary" className="text-sm font-semibold">
+            Current Price: <CountUp 
+              end={currentPrice / 100} 
+              duration={1500}
+              prefix="$"
+              decimals={2}
+              className="text-green-500 font-bold"
+            />
           </Badge>
         </div>
-      </CardHeader>
-      <CardContent className="pt-0">
+      </div>
+      <div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-sm font-medium mb-1.5">
@@ -262,7 +273,10 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
             </label>
             <div className="space-y-3">
               <div
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  console.log('Upload area clicked, triggering file input...');
+                  fileInputRef.current?.click();
+                }}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
@@ -320,13 +334,19 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
             ) : (
               <>
                 <Upload className="w-4 h-4 mr-2" />
-                Pay {formatPrice(currentPrice)} & Upload
+                Pay <CountUp 
+                  end={currentPrice / 100} 
+                  duration={1500}
+                  prefix="$"
+                  decimals={2}
+                  className="text-green-500 font-bold"
+                /> & Upload
               </>
             )}
           </Button>
         </form>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePricing } from '@/hooks/usePricing';
+import CountUp from '@/components/CountUp';
 
 const PredictionPoll: React.FC = () => {
   const { toast } = useToast();
@@ -51,7 +52,7 @@ const PredictionPoll: React.FC = () => {
     setPredictionOptions(options);
   }, [nextPrice, formatPrice]);
 
-  const fetchPredictions = useCallback(async () => {
+  const fetchPredictions = useCallback(async (options: Array<{value: number, label: string}>) => {
     try {
       const weekEnding = getNextSunday();
       const { data, error } = await supabase
@@ -62,21 +63,21 @@ const PredictionPoll: React.FC = () => {
       if (error) throw error;
 
       const counts: {[key: number]: number} = {};
-      predictionOptions.forEach(option => counts[option.value] = 0);
+      options.forEach(option => counts[option.value] = 0);
       
       data?.forEach(prediction => {
         if (counts[prediction.predicted_price] !== undefined) {
           counts[prediction.predicted_price]++;
         }
       });
-
+      
       setPredictions(counts);
     } catch (error) {
       console.error('Error fetching predictions:', error);
     }
-  }, [predictionOptions]);
+  }, []);
 
-  const checkUserVote = useCallback(async () => {
+  const checkUserVote = useCallback(async (options: Array<{value: number, label: string}>) => {
     try {
       const userIP = await getUserIP();
       const weekEnding = getNextSunday();
@@ -92,23 +93,23 @@ const PredictionPoll: React.FC = () => {
       
       if (data) {
         // Find the matching option object for the voted price
-        const matchingOption = predictionOptions.find(opt => opt.value === data.predicted_price);
+        const matchingOption = options.find(opt => opt.value === data.predicted_price);
         setSelectedPrediction(matchingOption || null);
         setHasVoted(true);
       }
     } catch (error) {
       console.error('Error checking user vote:', error);
     }
-  }, [predictionOptions]);
+  }, []);
 
   useEffect(() => {
     generatePredictionOptions();
-  }, [generatePredictionOptions]);
+  }, [nextPrice]);
 
   useEffect(() => {
     if (predictionOptions.length > 0) {
-      fetchPredictions();
-      checkUserVote();
+      fetchPredictions(predictionOptions);
+      checkUserVote(predictionOptions);
     }
   }, [predictionOptions, fetchPredictions, checkUserVote]);
 
@@ -153,35 +154,42 @@ const PredictionPoll: React.FC = () => {
 
   return (
     <Card className="glass-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          🔮 Weekly Prediction Poll
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          🔮 Weekly Poll
         </CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Where will the price be by Sunday? (Current: {formatPrice(nextPrice)})
+        <p className="text-xs text-muted-foreground">
+          Where by Sunday? (Now: <CountUp 
+            end={nextPrice / 100} 
+            duration={1500}
+            prefix="$"
+            decimals={2}
+            className="text-green-500 font-bold"
+          />)
         </p>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
+      <CardContent className="pt-0">
+        <div className="space-y-2">
           {predictionOptions.map((option) => {
             const voteCount = predictions[option.value] || 0;
             const percentage = totalVotes > 0 ? (voteCount / totalVotes) * 100 : 0;
             const isSelected = selectedPrediction?.value === option.value;
             
             return (
-              <div key={option.value} className="space-y-2">
+              <div key={option.value} className="space-y-1">
                 <Button
                   variant={isSelected ? 'default' : 'outline'}
                   onClick={() => handleVote(option)}
                   disabled={isLoading}
-                  className={`w-full justify-between transition-all duration-200 ${
+                  size="sm"
+                  className={`w-full justify-between text-xs h-8 transition-all duration-200 ${
                     isSelected ? 'bg-purple-600 hover:bg-purple-700 border-purple-600' : ''
                   }`}
                 >
-                  <span className="font-medium">{option.label}</span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {voteCount} {voteCount === 1 ? 'vote' : 'votes'}
+                  <span className="font-medium truncate">{option.label}</span>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="secondary" className="text-xs px-1 py-0">
+                      {voteCount}
                     </Badge>
                     <span className="text-xs text-muted-foreground">
                       {percentage.toFixed(0)}%
@@ -190,9 +198,9 @@ const PredictionPoll: React.FC = () => {
                 </Button>
                 {/* Always show progress bar with vote counts and percentages when someone has voted */}
                 {hasVoted && (
-                  <div className="w-full bg-muted rounded-full h-2">
+                  <div className="w-full bg-muted rounded-full h-1.5">
                     <div 
-                      className={`h-2 rounded-full transition-all duration-500 ${
+                      className={`h-1.5 rounded-full transition-all duration-500 ${
                         isSelected ? 'bg-purple-600' : 'bg-primary'
                       }`}
                       style={{ width: `${Math.max(percentage, 2)}%` }}
@@ -204,14 +212,14 @@ const PredictionPoll: React.FC = () => {
           })}
           
           {hasVoted && (
-            <div className="text-center pt-4 border-t border-border">
+            <div className="text-center pt-2 border-t border-border">
               <p className="text-xs text-muted-foreground">
-                Thanks for voting! Total votes: {totalVotes}
+                Total: {totalVotes} votes
               </p>
-              <p className="text-xs text-purple-600 font-medium mt-1">
-                Your prediction: {selectedPrediction?.label || 'Unknown'} 
+              <p className="text-xs text-purple-600 font-medium mt-1 truncate">
+                Your pick: {selectedPrediction?.label || 'Unknown'} 
                 {selectedPrediction && predictions[selectedPrediction.value] ? 
-                  ` (${Math.round((predictions[selectedPrediction.value] / totalVotes) * 100)}% agree)` : 
+                  ` (${Math.round((predictions[selectedPrediction.value] / totalVotes) * 100)}%)` : 
                   ''
                 }
               </p>

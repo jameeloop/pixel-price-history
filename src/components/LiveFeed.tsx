@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { usePricing } from '@/hooks/usePricing';
+import CountUp from '@/components/CountUp';
 
 interface RecentUpload {
   user_email: string;
@@ -88,9 +89,9 @@ const LiveFeed: React.FC<LiveFeedProps> = ({ refreshTrigger }) => {
     const userTag = formatEmail(upload.user_email);
     
     const messages = [
-      `${userTag} just uploaded for ${formatPrice(upload.price_paid)} ${timeAgo}`,
-      `New upload by ${userTag} • ${formatPrice(upload.price_paid)} paid ${timeAgo}`,
-      `${userTag} joined the experiment • ${formatPrice(upload.price_paid)} ${timeAgo}`,
+      `${userTag} just uploaded for $${(upload.price_paid / 100).toFixed(2)} ${timeAgo}`,
+      `New upload by ${userTag} • $${(upload.price_paid / 100).toFixed(2)} paid ${timeAgo}`,
+      `${userTag} joined the experiment • $${(upload.price_paid / 100).toFixed(2)} ${timeAgo}`,
     ];
     
     return messages[Math.floor(Math.random() * messages.length)];
@@ -98,37 +99,44 @@ const LiveFeed: React.FC<LiveFeedProps> = ({ refreshTrigger }) => {
 
   return (
     <Card className="glass-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          📡 Live Activity Feed
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          📡 Live Feed
           <Badge variant="outline" className="text-xs animate-pulse">
             LIVE
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/20">
-            <p className="text-sm font-medium">
-              Current Price: <span className="text-primary font-bold">{formatPrice(nextPrice)}</span>
+      <CardContent className="pt-0">
+        <div className="space-y-2">
+          <div className="text-center p-2 bg-primary/10 rounded-lg border border-primary/20">
+            <p className="text-xs font-medium">
+              Current: <span className="text-primary font-bold">
+                <CountUp 
+                  end={nextPrice / 100} 
+                  duration={1500}
+                  prefix="$"
+                  decimals={2}
+                  className="text-green-500 font-bold"
+                />
+              </span>
             </p>
           </div>
           
           {recentUploads.length > 0 ? (
-            <div className="space-y-2 max-h-32 overflow-y-auto">
+            <div className="space-y-1 max-h-24 overflow-y-auto">
               {recentUploads.map((upload, index) => (
                 <div 
                   key={index} 
-                  className="text-xs p-2 bg-muted/30 rounded-md text-muted-foreground hover:bg-muted/50 transition-colors"
+                  className="text-xs p-1.5 bg-muted/30 rounded text-muted-foreground hover:bg-muted/50 transition-colors"
                 >
                   {generateTickerMessage(upload)}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center text-sm text-muted-foreground py-4">
-              <p>👀 Waiting for new uploads...</p>
-              <p className="text-xs mt-1">Be the first to join the experiment!</p>
+            <div className="text-center text-xs text-muted-foreground py-2">
+              <p>👀 Waiting for uploads...</p>
             </div>
           )}
         </div>

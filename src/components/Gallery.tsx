@@ -132,7 +132,9 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
     );
   }
 
-  const displayUploads = filteredUploads.length > 0 ? filteredUploads : uploads;
+  const allUploads = filteredUploads.length > 0 ? filteredUploads : uploads;
+  // Only limit to specified number if limitResults is specified (for homepage), otherwise show all
+  const displayUploads = limitResults ? allUploads.slice(0, limitResults) : allUploads;
 
   return (
     <div>
@@ -178,12 +180,9 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
           </div>
         </div>
         
-        <div className="text-sm text-muted-foreground">
-          {displayUploads.length} upload{displayUploads.length !== 1 ? 's' : ''}
-        </div>
       </div>
       
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+      <div className={`grid gap-3 md:gap-4 ${limitResults ? 'grid-cols-5' : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5'}`}>
         {displayUploads.map((upload, index) => (
           <Card 
             key={upload.id} 

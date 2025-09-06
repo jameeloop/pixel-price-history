@@ -5,6 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { TrendingUp, Users, DollarSign, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePricing } from '@/hooks/usePricing';
+import CountUp from '@/components/CountUp';
 
 interface EnhancedPricingDisplayProps {
   onPriceUpdate: (price: number) => void;
@@ -103,7 +104,13 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">Next Upload Price</p>
           <p className="text-3xl font-bold gradient-text price-ticker">
-            {formatPrice(nextPrice || 100)}
+            <CountUp 
+              end={(nextPrice || 100) / 100} 
+              duration={1500}
+              prefix="$"
+              decimals={2}
+              className="text-2xl font-bold text-green-500"
+            />
           </p>
           <p className="text-xs text-muted-foreground">
             This is what you'll pay
@@ -117,7 +124,13 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
               <DollarSign className="w-3 h-3" />
             </div>
             <p className="text-xs font-semibold">
-              {formatPrice(totalSpent)}
+              <CountUp 
+                end={totalSpent / 100} 
+                duration={1500}
+                prefix="$"
+                decimals={2}
+                className="text-green-500 font-bold"
+              />
             </p>
             <p className="text-[10px] text-muted-foreground">Total Spent</p>
           </div>

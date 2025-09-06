@@ -39,19 +39,20 @@ const LikeButton: React.FC<LikeButtonProps> = ({
 
   const fetchUpvotes = async () => {
     try {
-      const { data, error } = await supabase
-        .from('uploads')
-        .select('upvotes')
-        .eq('id', uploadId)
-        .single();
+      // Use the get-uploads function to fetch all uploads and find the specific one
+      const { data, error } = await supabase.functions.invoke('get-uploads', {
+        body: { limit: 1000 } // Get enough uploads to find the specific one
+      });
 
       if (error) {
-        // If upvotes column doesn't exist, set to 0
+        // If function fails, set to 0
         setUpvotes(0);
         return;
       }
 
-      setUpvotes(data?.upvotes || 0);
+      const uploads = data.uploads || [];
+      const upload = uploads.find(u => u.id === uploadId);
+      setUpvotes(upload?.upvotes || 0);
     } catch (error) {
       console.error('Error fetching upvotes:', error);
       setUpvotes(0);
@@ -59,26 +60,10 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   };
 
   const checkUserVote = async () => {
-    try {
-      const userIP = await getUserIP();
-      const { data, error } = await supabase
-        .from('user_votes')
-        .select('voted')
-        .eq('upload_id', uploadId)
-        .eq('user_ip', userIP)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        // If user_votes table doesn't exist, set to null
-        setUserVote(null);
-        return;
-      }
-      
-      setUserVote(data?.voted || null);
-    } catch (error) {
-      console.error('Error checking user vote:', error);
-      setUserVote(null);
-    }
+    // Since we can't access user_votes table directly due to RLS,
+    // we'll let the create-like function handle vote checking
+    // and just set userVote to null initially
+    setUserVote(null);
   };
 
   useEffect(() => {
@@ -110,8 +95,15 @@ const LikeButton: React.FC<LikeButtonProps> = ({
         return;
       }
 
-      // Refresh upvotes and user vote status
-      await Promise.all([fetchUpvotes(), checkUserVote()]);
+      // Update user vote state based on the action
+      if (data?.action === 'created') {
+        setUserVote(true);
+      } else if (data?.action === 'removed') {
+        setUserVote(false);
+      }
+      
+      // Refresh upvotes count
+      await fetchUpvotes();
       
       toast({
         title: "Success",
@@ -165,14 +157,6 @@ const LikeButton: React.FC<LikeButtonProps> = ({
         </Button>
       </div>
       
-      {/* Vote count display */}
-      {upvotes > 0 && (
-        <div className="w-full text-center">
-          <span className="text-xs text-muted-foreground">
-            {upvotes} {upvotes === 1 ? 'upvote' : 'upvotes'}
-          </span>
-        </div>
-      )}
     </div>
   );
 };

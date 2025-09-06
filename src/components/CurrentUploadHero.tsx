@@ -7,6 +7,7 @@ import { Calendar, Share2, ExternalLink, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import LikeButton from '@/components/LikeButton';
+import CountUp from '@/components/CountUp';
 
 interface Upload {
   id: string;
@@ -78,6 +79,11 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
     return `${username.substring(0, 2)}${'*'.repeat(Math.max(username.length - 2, 3))}`;
   };
 
+  const handlePostClick = () => {
+    if (!currentUpload) return;
+    navigate(`/post/${currentUpload.id}`);
+  };
+
   const shareCurrentUpload = () => {
     if (!currentUpload) return;
     const url = `${window.location.origin}/post/${currentUpload.id}`;
@@ -103,7 +109,7 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
   }
 
   return (
-    <Card className="glass-card experiment-glow border-primary/20">
+    <Card className="glass-card experiment-glow border-primary/20 mb-8">
       <CardContent className="p-6">
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -115,15 +121,15 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
           </Badge>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-5 gap-6">
           {/* Image */}
-          <div className="md:col-span-2 space-y-3">
+          <div className="md:col-span-3 space-y-3">
             <div className="relative">
-              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+              <div className="aspect-[4/3] rounded-2xl overflow-hidden relative">
                 <img
                   src={currentUpload.image_url}
                   alt={currentUpload.caption}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  className="w-full h-full object-cover rounded-2xl"
                   onError={(e) => {
                     e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
                       <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
@@ -135,18 +141,18 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
                     `);
                   }}
                 />
-              </div>
-              <div className="absolute top-3 left-3">
-                <Badge variant="secondary" className="font-semibold bg-yellow-500/20 text-yellow-700 border-yellow-500/20">
-                  #{currentUpload.upload_order}
-                </Badge>
+                <div className="absolute top-0 left-0 z-20">
+                  <Badge variant="secondary" className="font-semibold bg-yellow-500/95 text-yellow-900 border-yellow-500/60 shadow-xl backdrop-blur-sm rounded-tl-2xl rounded-br-lg">
+                    #{currentUpload.upload_order}
+                  </Badge>
+                </div>
               </div>
             </div>
 
             {/* Action Buttons */}
             <div className="flex gap-2">
               <Button
-                onClick={() => navigate(`/post/${currentUpload.id}`)}
+                onClick={handlePostClick}
                 variant="outline"
                 size="sm"
                 className="flex-1"
@@ -176,7 +182,7 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
           </div>
 
           {/* Voting Section and Details */}
-          <div className="md:col-span-1 space-y-4">
+          <div className="md:col-span-2 space-y-4">
             <div className="glass-card p-4">
               <h3 className="text-sm font-medium mb-3 text-center">Community Rating</h3>
               <LikeButton uploadId={currentUpload.id} />
@@ -187,7 +193,13 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
                   <div className="glass-card p-3">
                     <p className="text-muted-foreground text-xs">Price Paid</p>
                     <p className="text-lg font-bold text-primary price-ticker">
-                      {formatPrice(currentUpload.price_paid)}
+                      <CountUp 
+                        end={currentUpload.price_paid / 100} 
+                        duration={1500}
+                        prefix="$"
+                        decimals={2}
+                        className="text-2xl font-bold text-green-500"
+                      />
                     </p>
                   </div>
                   <div className="glass-card p-3">
@@ -214,7 +226,13 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
           <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-purple-600/10 animate-[pulse_4s_ease-in-out_infinite]"></div>
           <div className="absolute inset-0 bg-gradient-to-r from-purple-400/5 to-purple-600/5 animate-[pulse_3s_ease-in-out_infinite_reverse] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           <p className="text-sm text-purple-200 text-center font-medium relative z-10">
-            🌟 <strong>Want your post here?</strong> This photo claimed the featured space by paying {formatPrice(currentUpload.price_paid)}. 
+            🌟 <strong>Want your post here?</strong> This photo claimed the featured space by paying <CountUp 
+              end={currentUpload.price_paid / 100} 
+              duration={1500}
+              prefix="$"
+              decimals={2}
+              className="text-green-500 font-bold"
+            />. 
             <span className="block mt-1 text-purple-300 text-xs relative">
               <span className="inline-block animate-[pulse_4s_ease-in-out_infinite] brightness-110 hover:brightness-125 transition-all duration-300">
                 Upload yours to take over! 👑

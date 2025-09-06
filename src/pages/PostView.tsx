@@ -31,7 +31,7 @@ const PostView: React.FC = () => {
       fetchUpload();
       generateQrCode();
     }
-  }, [id, fetchUpload]);
+  }, [id]);
 
   const fetchUpload = useCallback(async () => {
     try {
