@@ -51,7 +51,7 @@ serve(async (req) => {
           
           const email = session.customer_email || session.metadata.email;
           const caption = session.metadata.caption || "Recovered upload";
-          const pricePaid = session.amount_total || 5000; // Default to $50 if amount not available
+          const pricePaid = session.amount_total || 100; // Default to $1.00 if amount not available
 
           // Create placeholder image
           const placeholderSvg = `
@@ -91,11 +91,10 @@ serve(async (req) => {
               .from("uploads")
               .getPublicUrl(fileName);
 
-            // Get current upload count
-            const { data: uploadCountData } = await supabase
-              .from("pricing")
-              .select("upload_count")
-              .single();
+            // Get current upload count directly from uploads table
+            const { count: uploadCount, error: countError } = await supabase
+              .from("uploads")
+              .select("*", { count: "exact", head: true });
 
             // Create upload record
             const { data: uploadRecord, error: insertError } = await supabase
@@ -105,7 +104,7 @@ serve(async (req) => {
                 image_url: publicUrl,
                 caption: caption,
                 price_paid: pricePaid,
-                upload_order: (uploadCountData?.upload_count || 0) + recoveredUploads.length + 1,
+                upload_order: (uploadCount || 0) + recoveredUploads.length + 1,
                 stripe_session_id: session.id,
               })
               .select()

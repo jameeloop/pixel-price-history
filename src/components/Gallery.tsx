@@ -40,7 +40,7 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
   const fetchUploads = async () => {
     try {
       let query = supabase
-        .from('uploads_public')
+        .from('uploads')
         .select('*')
         .order('created_at', { ascending: false });
 

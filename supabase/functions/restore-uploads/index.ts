@@ -19,22 +19,23 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get current state
-    const { data: pricingData } = await supabase
-      .from("pricing")
-      .select("upload_count, current_price")
-      .single();
-
-    const { data: existingUploads } = await supabase
+    // Get current upload count directly from uploads table
+    const { count: uploadCount, error: countError } = await supabase
       .from("uploads")
-      .select("id, upload_order")
-      .order("upload_order", { ascending: true });
+      .select("*", { count: "exact", head: true });
 
-    const uploadCount = pricingData?.upload_count || 0;
-    const existingCount = existingUploads?.length || 0;
-    const missingCount = uploadCount - existingCount;
+    if (countError) {
+      return new Response(JSON.stringify({ error: "Failed to get upload count" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+
+    const actualUploadCount = uploadCount || 0;
+    const existingCount = actualUploadCount; // Same as upload count in our new system
+    const missingCount = 0; // No missing uploads in our new system
     
-    console.log(`Should have ${uploadCount} uploads, found ${existingCount}, missing ${missingCount}`);
+    console.log(`Current upload count: ${actualUploadCount}, Missing: ${missingCount}`);
 
     if (missingCount <= 0) {
       return new Response(JSON.stringify({ 
@@ -48,12 +49,10 @@ serve(async (req) => {
     }
 
     const createdUploads = [];
-    const basePrice = 51; // Starting price after the first upload
-
     // Create the missing uploads
     for (let i = 0; i < missingCount; i++) {
       const uploadOrder = existingCount + i + 1;
-      const price = basePrice + i; // Each upload costs 1 cent more
+      const price = 100 + (uploadOrder - 1); // Current price: 100 + upload count
       
       // Create placeholder image
       const placeholderSvg = `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">

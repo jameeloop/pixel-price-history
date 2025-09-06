@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { usePricing } from '@/hooks/usePricing';
 
 interface RecentUpload {
   user_email: string;
@@ -12,9 +13,7 @@ interface RecentUpload {
 
 const LiveFeed: React.FC = () => {
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([]);
-  const [currentPrice, setCurrentPrice] = useState(50);
-
-  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+  const { currentPrice, formatPrice } = usePricing();
   
   const formatEmail = (email: string) => {
     const [username] = email.split('@');
@@ -37,23 +36,16 @@ const LiveFeed: React.FC = () => {
 
   const fetchRecentData = async () => {
     try {
-      // Fetch recent uploads from public view
+      // Fetch recent uploads
       const { data: uploads, error: uploadsError } = await supabase
-        .from('uploads_public')
+        .from('uploads')
         .select('user_email, price_paid, created_at, caption')
         .order('created_at', { ascending: false })
         .limit(5);
 
       if (uploadsError) throw uploadsError;
 
-      // Get next price from the function
-      const { data: nextPrice, error: priceError } = await supabase
-        .rpc('get_next_upload_price');
-
-      if (priceError) throw priceError;
-
       setRecentUploads(uploads || []);
-      setCurrentPrice((nextPrice || 50) - 1); // Current price is one less than next price
     } catch (error) {
       console.error('Error fetching live feed data:', error);
     }

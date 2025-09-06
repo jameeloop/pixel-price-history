@@ -1,62 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Users, Camera } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-
-interface PricingData {
-  current_price: number;
-  upload_count: number;
-}
+import { usePricing } from '@/hooks/usePricing';
 
 interface PricingDisplayProps {
   onPriceUpdate: (price: number) => void;
 }
 
 const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
-  const [pricingData, setPricingData] = useState<PricingData>({ current_price: 50, upload_count: 0 });
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchPricing = async () => {
-    try {
-      const { data: nextPrice, error } = await supabase
-        .rpc('get_next_upload_price');
-
-      if (error) {
-        console.error('Error fetching pricing:', error);
-        return;
-      }
-
-      // Get upload count from uploads_public
-      const { data: uploads } = await supabase
-        .from('uploads_public')
-        .select('id');
-
-      const currentPrice = (nextPrice || 50) - 1; // Current price is one less than next price
-      const uploadCount = uploads?.length || 0;
-      
-      setPricingData({ current_price: currentPrice, upload_count: uploadCount });
-      onPriceUpdate(currentPrice);
-    } catch (error) {
-      console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const { uploadCount, currentPrice, nextPrice, isLoading, formatPrice } = usePricing();
 
   useEffect(() => {
-    fetchPricing();
-    
-    // Refresh pricing every 30 seconds
-    const interval = setInterval(fetchPricing, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatPrice = (cents: number) => {
-    return `$${(cents / 100).toFixed(2)}`;
-  };
-
-  const nextPrice = pricingData.current_price + 1;
+    onPriceUpdate(nextPrice); // Pass the next price (what user will pay) to the upload form
+  }, [nextPrice, onPriceUpdate]);
 
   if (isLoading) {
     return (
@@ -84,7 +41,7 @@ const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
         <div>
           <p className="text-sm text-muted-foreground">Current Price</p>
           <p className="text-4xl font-bold gradient-text price-ticker">
-            {formatPrice(pricingData.current_price)}
+            {formatPrice(currentPrice)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">and climbing...</p>
         </div>
@@ -99,7 +56,7 @@ const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
           <div className="glass-card p-3">
             <p className="text-muted-foreground">Participants</p>
             <p className="font-semibold text-accent">
-              {pricingData.upload_count}
+              {uploadCount}
             </p>
           </div>
         </div>

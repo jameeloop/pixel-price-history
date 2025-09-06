@@ -37,7 +37,7 @@ const CurrentUploadHero: React.FC = () => {
   const fetchCurrentUpload = async () => {
     try {
       const { data, error } = await supabase
-        .from('uploads_public')
+        .from('uploads')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(1)

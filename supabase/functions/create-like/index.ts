@@ -100,7 +100,7 @@ serve(async (req) => {
 
     // Check if upload exists
     const { data: uploadExists, error: uploadError } = await supabase
-      .from('uploads_public')
+      .from('uploads')
       .select('id')
       .eq('id', uploadId)
       .single();

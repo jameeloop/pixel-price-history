@@ -76,25 +76,17 @@ const ControlPanel: React.FC = () => {
         setUploads(uploadsData || []);
       }
 
-      // Get next price from the function  
-      const { data: nextPrice, error: priceError } = await supabase
-        .rpc('get_next_upload_price');
-
-      if (priceError) {
-        console.error('Error fetching pricing:', priceError);
-        toast.error('Failed to fetch pricing data');
-      } else {
-        const currentPrice = (nextPrice || 50) - 1;
-        const uploadCount = uploadsData?.length || 0;
-        const pricingData = { 
-          id: 'system', 
-          current_price: currentPrice, 
-          upload_count: uploadCount,
-          updated_at: new Date().toISOString()
-        };
-        setPricing(pricingData);
-        setNewPrice((currentPrice / 100).toString());
-      }
+      // Calculate price directly from upload count
+      const uploadCount = uploadsData?.length || 0;
+      const currentPrice = 100 + uploadCount; // $1.00 + upload count
+      const pricingData = { 
+        id: 'system', 
+        current_price: currentPrice, 
+        upload_count: uploadCount,
+        updated_at: new Date().toISOString()
+      };
+      setPricing(pricingData);
+      setNewPrice((currentPrice / 100).toString());
     } catch (error) {
       console.error('Error:', error);
       toast.error('Failed to fetch data');
@@ -127,12 +119,12 @@ const ControlPanel: React.FC = () => {
   };
 
   const resetPricing = async () => {
-    if (!confirm('⚠️ Reset pricing to $0.50 and upload count to 0? This cannot be undone!')) return;
+    if (!confirm('⚠️ Reset pricing to $1.00 and upload count to 0? This cannot be undone!')) return;
 
-    const success = await secureUpdatePricing(50); // $0.50 in cents
+    const success = await secureUpdatePricing(100); // $1.00 in cents
     if (success) {
-      setPricing(prev => prev ? { ...prev, current_price: 50, upload_count: 0 } : null);
-      setNewPrice('0.50');
+      setPricing(prev => prev ? { ...prev, current_price: 100, upload_count: 0 } : null);
+      setNewPrice('1.00');
       await fetchData(); // Refresh data
     }
   };

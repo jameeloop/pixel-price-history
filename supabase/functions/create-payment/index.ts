@@ -10,6 +10,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   console.log('=== EDGE FUNCTION START ===');
+  console.log('🔥 VERSION: AGGRESSIVE-DEBUG-50-CENT-BUG 🔥');
   console.log('Method:', req.method);
   
   if (req.method === 'OPTIONS') {
@@ -93,29 +94,31 @@ serve(async (req) => {
     });
     console.log('Clients initialized');
 
-    console.log('=== GETTING NEXT PRICE ===');
-    // Get next price using the simplified function
-    const { data: nextPriceData, error: priceError } = await supabase
-      .rpc('get_next_upload_price');
+    // Get upload count - single source of truth
+    const { count: uploadCount, error: uploadsError } = await supabase
+      .from('uploads')
+      .select('*', { count: 'exact', head: true });
     
-    console.log('Price query result:', { nextPriceData, priceError });
-    
-    if (priceError) {
-      console.error('Database error getting price:', priceError);
+    if (uploadsError) {
+      console.error('Database error getting upload count:', uploadsError);
       return new Response(
-        JSON.stringify({ error: 'Failed to get next price' }), 
+        JSON.stringify({ error: 'Failed to get upload count' }), 
         { status: 500, headers: corsHeaders }
       );
     }
     
-    const priceInCents = nextPriceData;
-    if (!priceInCents || typeof priceInCents !== 'number' || priceInCents < 1) {
-      console.error('Invalid price returned:', priceInCents);
-      return new Response(
-        JSON.stringify({ error: 'Invalid price from database' }), 
-        { status: 500, headers: corsHeaders }
-      );
-    }
+    // Single variable - everything based on this
+    const currentUploadCount = uploadCount || 0;
+    
+    // Price calculations - all based on currentUploadCount
+    const currentPrice = 100 + currentUploadCount; // $1.00 + upload count (current price)
+    const nextPrice = currentPrice + 1; // Next upload will be 1 cent more
+    
+    console.log('=== SIMPLIFIED PRICING ===');
+    console.log('uploadCount from DB:', uploadCount);
+    console.log('currentUploadCount (clean):', currentUploadCount);
+    console.log('currentPrice (100 + count):', currentPrice, '=', '$' + (currentPrice/100).toFixed(2));
+    console.log('nextPrice (current + 1):', nextPrice, '=', '$' + (nextPrice/100).toFixed(2));
 
     console.log('=== UPLOADING IMAGE TO STORAGE ===');
     // Upload the actual image to Supabase storage first
@@ -208,6 +211,8 @@ serve(async (req) => {
     console.log('Pending upload created:', pendingUpload.id);
 
     console.log('=== CREATING STRIPE SESSION ===');
+    console.log('Using currentPrice for Stripe:', currentPrice, '(', '$' + (currentPrice/100).toFixed(2), ')');
+    
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -215,10 +220,10 @@ serve(async (req) => {
           price_data: {
             currency: 'usd',
             product_data: {
-              name: `Upload #${priceInCents} - PixPeriment`,
-              description: `Upload your image for ${(priceInCents / 100).toFixed(2)} USD`,
+              name: `Upload #${currentUploadCount + 1} - PixPeriment`,
+              description: `Upload your image for ${(currentPrice / 100).toFixed(2)} USD`,
             },
-            unit_amount: priceInCents,
+            unit_amount: currentPrice,
           },
           quantity: 1,
         },
@@ -229,16 +234,23 @@ serve(async (req) => {
       customer_email: email,
       metadata: {
         pending_upload_id: pendingUpload.id,
+        price_paid: currentPrice.toString(),
       },
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     });
     
     console.log('Stripe session created successfully:', session.id);
+    console.log('Stripe session details:', {
+      sessionId: session.id,
+      unit_amount_sent: currentPrice,
+      metadata_price_paid: currentPrice.toString(),
+      session_amount_total: session.amount_total
+    });
 
     const responseData = { 
       sessionId: session.id,
       url: session.url,
-      priceInCents 
+      priceInCents: currentPrice
     };
     console.log('=== RETURNING SUCCESS RESPONSE ===');
     console.log('Response data:', responseData);

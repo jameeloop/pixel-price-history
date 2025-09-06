@@ -4,23 +4,18 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { TrendingUp, Users, DollarSign, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-
-interface PricingData {
-  current_price: number;
-  upload_count: number;
-}
+import { usePricing } from '@/hooks/usePricing';
 
 interface EnhancedPricingDisplayProps {
   onPriceUpdate: (price: number) => void;
 }
 
 const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPriceUpdate }) => {
-  const [pricingData, setPricingData] = useState<PricingData>({ current_price: 50, upload_count: 0 });
+  const { uploadCount, currentPrice, nextPrice, isLoading, formatPrice } = usePricing();
   const [totalSpent, setTotalSpent] = useState(0);
   const [lastUploadTime, setLastUploadTime] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const milestones = [100, 500, 1000, 2000, 5000];
+  const milestones = [100, 200, 500, 1000, 2000, 5000]; // $1.00, $2.00, $5.00, $10.00, $20.00, $50.00
   
   const getNextMilestone = (currentPrice: number) => {
     return milestones.find(milestone => milestone > currentPrice) || milestones[milestones.length - 1];
@@ -38,49 +33,41 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
     return Math.min(progress, 100);
   };
 
-  const fetchData = async () => {
+  const fetchAdditionalData = async () => {
     try {
-      // Get next price from the function
-      const { data: nextPrice, error: priceError } = await supabase
-        .rpc('get_next_upload_price');
-
-      if (priceError) throw priceError;
-
-      // Calculate total spent and get last upload time
+      // Get uploads data for total spent and last upload time
       const { data: uploads, error: uploadsError } = await supabase
-        .from('uploads_public')
+        .from('uploads')
         .select('price_paid, created_at')
         .order('created_at', { ascending: false });
 
       if (uploadsError) {
         console.error('Error fetching uploads:', uploadsError);
+        return;
       }
 
       const total = uploads?.reduce((sum, upload) => sum + (upload.price_paid || 0), 0) || 0;
       const lastUpload = uploads?.[0]?.created_at || null;
-      const uploadCount = uploads?.length || 0;
 
-      const currentPrice = nextPrice - 1; // Current price is one less than next price
-      setPricingData({ current_price: currentPrice, upload_count: uploadCount });
-      onPriceUpdate(currentPrice);
       setTotalSpent(total);
       setLastUploadTime(lastUpload);
     } catch (error) {
-      console.error('Error fetching enhanced pricing data:', error);
-    } finally {
-      setIsLoading(false);
+      console.error('Error fetching additional data:', error);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    onPriceUpdate(nextPrice); // Pass the next price (what user will pay) to the upload form
+  }, [nextPrice, onPriceUpdate]);
+
+  useEffect(() => {
+    fetchAdditionalData();
     
     // Refresh data every 30 seconds
-    const interval = setInterval(fetchData, 30000);
+    const interval = setInterval(fetchAdditionalData, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   const formatTimeAgo = (dateString: string | null) => {
     if (!dateString) return 'Never';
@@ -132,10 +119,10 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
         <div className="space-y-1">
           <p className="text-xs text-muted-foreground">Current Upload Price</p>
           <p className="text-3xl font-bold gradient-text price-ticker">
-            {formatPrice(pricingData.current_price)}
+            {formatPrice(currentPrice)}
           </p>
           <p className="text-xs text-muted-foreground">
-            Next victim pays {formatPrice(pricingData.current_price + 1)}
+            Next victim pays {formatPrice(nextPrice)}
           </p>
         </div>
         
@@ -156,7 +143,7 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
               <Users className="w-3 h-3" />
             </div>
             <p className="text-xs font-semibold">
-              {pricingData.upload_count}
+              {uploadCount}
             </p>
             <p className="text-[10px] text-muted-foreground">Participants</p>
           </div>
@@ -177,18 +164,18 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Progress to next milestone</span>
-              <span>${(pricingData.current_price / 100).toFixed(2)}</span>
+              <span>${(currentPrice / 100).toFixed(2)}</span>
             </div>
             <Progress 
-              value={getProgressToNextMilestone(pricingData.current_price)} 
+              value={getProgressToNextMilestone(currentPrice)} 
               className="h-2 bg-muted"
             />
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">
-                ${(getPreviousMilestone(pricingData.current_price) / 100).toFixed(2)}
+                ${(getPreviousMilestone(currentPrice) / 100).toFixed(2)}
               </span>
               <span className="text-primary font-medium">
-                ${(getNextMilestone(pricingData.current_price) / 100).toFixed(2)}
+                ${(getNextMilestone(currentPrice) / 100).toFixed(2)}
               </span>
             </div>
           </div>

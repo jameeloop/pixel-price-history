@@ -5,17 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { usePricing } from '@/hooks/usePricing';
 
 const PredictionPoll: React.FC = () => {
   const { toast } = useToast();
+  const { currentPrice, formatPrice } = usePricing();
   const [selectedPrediction, setSelectedPrediction] = useState<any>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [predictions, setPredictions] = useState<{[key: number]: number}>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [currentPrice, setCurrentPrice] = useState<number>(50);
   const [predictionOptions, setPredictionOptions] = useState<Array<{value: number, label: string}>>([]);
-  
-  const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
   const getNextSunday = () => {
     const today = new Date();
@@ -40,35 +39,16 @@ const PredictionPoll: React.FC = () => {
     }
   };
 
-  const fetchCurrentPrice = async () => {
-    try {
-      const { data: nextPrice, error } = await supabase
-        .rpc('get_next_upload_price');
-
-      if (error) throw error;
-      
-      const currentPrice = (nextPrice || 50) - 1; // Current price is one less than next price
-      setCurrentPrice(currentPrice);
-      
-      // Generate prediction options as price windows/ranges based on current price
-      const basePrice = currentPrice;
-      const options = [
-        { value: basePrice + 25, label: `${formatPrice(basePrice + 1)} - ${formatPrice(basePrice + 50)}` },
-        { value: basePrice + 75, label: `${formatPrice(basePrice + 51)} - ${formatPrice(basePrice + 100)}` },  
-        { value: basePrice + 150, label: `${formatPrice(basePrice + 101)} - ${formatPrice(basePrice + 200)}` },
-        { value: basePrice + 300, label: `${formatPrice(basePrice + 201)} - ${formatPrice(basePrice + 400)}` }
-      ];
-      setPredictionOptions(options);
-    } catch (error) {
-      console.error('Error fetching current price:', error);
-      // Fallback options if price fetch fails - using windows
-      setPredictionOptions([
-        { value: 75, label: '$0.01 - $0.50' },
-        { value: 125, label: '$0.51 - $1.00' },
-        { value: 225, label: '$1.01 - $2.00' },
-        { value: 450, label: '$2.01 - $4.00' }
-      ]);
-    }
+  const generatePredictionOptions = () => {
+    // Generate prediction options as price windows/ranges based on current price
+    const basePrice = currentPrice;
+    const options = [
+      { value: basePrice + 25, label: `${formatPrice(basePrice + 1)} - ${formatPrice(basePrice + 50)}` },
+      { value: basePrice + 75, label: `${formatPrice(basePrice + 51)} - ${formatPrice(basePrice + 100)}` },  
+      { value: basePrice + 150, label: `${formatPrice(basePrice + 101)} - ${formatPrice(basePrice + 200)}` },
+      { value: basePrice + 300, label: `${formatPrice(basePrice + 201)} - ${formatPrice(basePrice + 400)}` }
+    ];
+    setPredictionOptions(options);
   };
 
   const fetchPredictions = async () => {
@@ -122,8 +102,8 @@ const PredictionPoll: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchCurrentPrice();
-  }, []);
+    generatePredictionOptions();
+  }, [currentPrice]);
 
   useEffect(() => {
     if (predictionOptions.length > 0) {

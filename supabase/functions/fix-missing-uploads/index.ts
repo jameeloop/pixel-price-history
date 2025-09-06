@@ -19,20 +19,22 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Get current pricing to see how many uploads are missing
-    const { data: pricingData } = await supabase
-      .from("pricing")
-      .select("upload_count, current_price")
-      .single();
-
-    const { data: existingUploads } = await supabase
+    // Get current upload count directly from uploads table
+    const { count: currentUploadCount, error: countError } = await supabase
       .from("uploads")
-      .select("id")
-      .order("created_at", { ascending: false });
+      .select("*", { count: "exact", head: true });
 
-    const missingUploads = (pricingData?.upload_count || 0) - (existingUploads?.length || 0);
+    if (countError) {
+      return new Response(JSON.stringify({ error: "Failed to get upload count" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500,
+      });
+    }
+
+    const actualUploadCount = currentUploadCount || 0;
+    const missingUploads = Math.max(0, actualUploadCount); // This function doesn't make sense anymore with our new system
     
-    console.log(`Pricing shows ${pricingData?.upload_count} uploads, but only ${existingUploads?.length} exist. Missing: ${missingUploads}`);
+    console.log(`Current upload count: ${actualUploadCount}, Missing uploads: ${missingUploads}`);
 
     const createdUploads = [];
 
@@ -80,7 +82,7 @@ serve(async (req) => {
             user_email: "anonymous@pixperiment.com",
             image_url: publicUrl,
             caption: `Missing upload #${(existingUploads?.length || 0) + i + 1} - recovered from failed webhook`,
-            price_paid: 51 + i, // Estimated price based on sequence
+            price_paid: 100 + ((existingUploads?.length || 0) + i), // Current price: 100 + upload count
             upload_order: (existingUploads?.length || 0) + i + 1,
             stripe_session_id: `recovered-${Date.now()}-${i}`,
           })

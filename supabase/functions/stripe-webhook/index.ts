@@ -157,43 +157,45 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
       return;
     }
 
-    // Get the price paid from session metadata 
-    const pricePaid = parseInt(session.metadata?.price_paid || session.amount_total?.toString() || '51');
-    
-    console.log("Price paid for this upload:", pricePaid);
-
-    // Use the actual image URL from storage - no fallback to placeholder!
-    const finalImageUrl = imageStorageUrl;
-    
-    if (!finalImageUrl) {
-      throw new Error("No image URL found in pending upload - cannot create upload record");
-    }
-    
-    console.log("Final image URL:", finalImageUrl);
-
-    // Calculate chronological pricing - simple count + 50 cents
-    console.log("Calculating chronological pricing");
-    const { data: uploadCountData, error: countError } = await supabase
+    // Get upload count - single source of truth
+    const { count: uploadCount, error: countError } = await supabase
       .from('uploads')
-      .select('id', { count: 'exact' });
+      .select('*', { count: 'exact', head: true });
 
     if (countError) {
       console.error('Error getting upload count:', countError);
       throw new Error(`Failed to get upload count: ${countError.message}`);
     }
 
-    const currentUploadOrder = (uploadCountData?.length || 0) + 1;
-    const chronologicalPrice = currentUploadOrder + 49; // 50 cents for first, 51 for second, etc.
-    console.log("Upload order:", currentUploadOrder, "Chronological price:", chronologicalPrice);
+    // Single variable - everything based on this
+    const currentUploadCount = uploadCount || 0;
+    const currentUploadOrder = currentUploadCount + 1;
+    
+    // Get the price paid from session metadata (should match our calculation)
+    const pricePaid = parseInt(session.metadata?.price_paid || '100');
+    
+    console.log('=== SIMPLIFIED WEBHOOK PRICING ===');
+    console.log('uploadCount from DB:', uploadCount);
+    console.log('currentUploadCount:', currentUploadCount);
+    console.log('currentUploadOrder:', currentUploadOrder);
+    console.log('pricePaid from metadata:', pricePaid);
+    
+    // Use the actual image URL from storage
+    const finalImageUrl = imageStorageUrl;
+    if (!finalImageUrl) {
+      throw new Error("No image URL found in pending upload - cannot create upload record");
+    }
 
-    // Save upload record
+    // Save upload record using the price paid from Stripe
+    console.log('💰 SAVING UPLOAD WITH PRICE:', pricePaid);
+    
     const { data: uploadRecord, error: insertError } = await supabase
       .from("uploads")
       .insert({
         user_email: email,
         image_url: finalImageUrl,
         caption: caption,
-        price_paid: chronologicalPrice, // Use calculated chronological price
+        price_paid: pricePaid, // Use the ACTUAL price paid from Stripe, not recalculated
         upload_order: currentUploadOrder,
         stripe_session_id: session.id,
       })
@@ -212,7 +214,7 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
     
     console.log("Pending upload cleaned up");
 
-    // Send confirmation email
+    // Send confirmation email with ACTUAL price paid
     await sendConfirmationEmail(email, uploadRecord, pricePaid);
 
     console.log("Successfully processed payment for:", email);

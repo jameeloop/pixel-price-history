@@ -16,10 +16,11 @@ import PsychologyFactsBox from '@/components/PsychologyFactsBox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import ScrollIndicator from '@/components/ScrollIndicator';
+import { usePricing } from '@/hooks/usePricing';
 
 const Index = () => {
   const navigate = useNavigate();
-  const [currentPrice, setCurrentPrice] = useState(50);
+  const { nextPrice } = usePricing(); // Use the actual pricing hook instead of hardcoded value
   const [refreshGallery, setRefreshGallery] = useState(0);
 
   const handleUploadSuccess = () => {
@@ -126,7 +127,7 @@ const Index = () => {
             <CurrentUploadHero />
           </div>
           <div className="lg:order-2 space-y-4">
-            <EnhancedPricingDisplay onPriceUpdate={setCurrentPrice} />
+            <EnhancedPricingDisplay onPriceUpdate={() => {}} />
             {/* Psychology Facts Box - Only show on large screens below experiment status */}
             <div className="hidden lg:block">
               <PsychologyFactsBox />
@@ -194,7 +195,7 @@ const Index = () => {
                 <AccordionItem value="item-1">
                   <AccordionTrigger>How does the pricing experiment work? 🤔</AccordionTrigger>
                   <AccordionContent>
-                    PixPeriment starts at $0.50 for the first upload 💸. Each time someone uploads a photo, the price increases by $0.01 for the next person. This creates an escalating cost structure that tests social psychology and digital scarcity 📊.
+                    PixPeriment starts at $1.00 for the first upload 💸. Each time someone uploads a photo, the price increases by $0.01 for the next person. This creates an escalating cost structure that tests social psychology and digital scarcity 📊.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2">

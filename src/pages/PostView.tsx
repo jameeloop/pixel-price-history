@@ -36,7 +36,7 @@ const PostView: React.FC = () => {
   const fetchUpload = async () => {
     try {
       const { data, error } = await supabase
-        .from('uploads_public')
+        .from('uploads')
         .select('*')
         .eq('id', id)
         .single();
