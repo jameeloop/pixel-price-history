@@ -19,7 +19,10 @@ const validateInput = (input: string, maxLength: number = 500): boolean => {
   if (!input || input.length > maxLength || input.length === 0) return false;
   
   // Check for null bytes and control characters
-  if (input.includes('\0') || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(input)) return false;
+  if (input.includes('\0') || input.split('').some(char => {
+    const code = char.charCodeAt(0);
+    return (code >= 0 && code <= 8) || code === 11 || code === 12 || (code >= 14 && code <= 31) || code === 127;
+  })) return false;
   
   // Enhanced XSS prevention
   const dangerousPatterns = [

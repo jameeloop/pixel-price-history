@@ -1,69 +1,68 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PricingData {
   uploadCount: number;
-  currentPrice: number; // Price of the last upload (what was paid)
   nextPrice: number;    // Price for the next upload (what will be paid)
 }
 
 export const usePricing = () => {
   const [pricingData, setPricingData] = useState<PricingData>({
     uploadCount: 0,
-    currentPrice: 100, // $1.00 for first upload
     nextPrice: 100     // $1.00 for first upload
   });
-  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchPricing = async () => {
+  const fetchPricing = useCallback(async () => {
     try {
-      console.log('=== PRICING HOOK: Fetching upload count ===');
+      console.log('=== PRICING HOOK: Fetching pricing from endpoint ===');
       
-      // Get upload count - single source of truth
-      const { count: uploadCount, error } = await supabase
-        .from('uploads')
-        .select('*', { count: 'exact', head: true });
+      // Use the pricing endpoint to get consistent pricing
+      const { data, error } = await supabase.functions.invoke('get-pricing');
 
       if (error) {
-        console.error('Error fetching uploads:', error);
+        console.error('Error fetching pricing:', error);
+        // Set default values even on error
+        setPricingData({
+          uploadCount: 0,
+          nextPrice: 100
+        });
         return;
       }
 
-      // Single variable - everything based on this
-      const currentUploadCount = uploadCount || 0;
+      console.log('=== PRICING FROM ENDPOINT ===', { 
+        uploadCount: data.uploadCount,
+        nextPrice: data.nextPrice,
+        nextPriceDollars: data.nextPriceDollars
+      });
       
-      // Price calculations - all based on currentUploadCount
-      const currentPrice = 100 + currentUploadCount; // Current upload price
-      const nextPrice = currentPrice + 1; // Next upload will be 1 cent more
-      
-      console.log('=== SIMPLIFIED PRICING HOOK ===', { 
-        uploadCount,
-        currentUploadCount,
-        currentPrice,
-        nextPrice,
-        currentPriceDollars: (currentPrice / 100).toFixed(2),
-        nextPriceDollars: (nextPrice / 100).toFixed(2)
+      // Debug: Log to browser console for debugging
+      console.log('🔍 PRICING DEBUG:', {
+        uploadCount: data.uploadCount,
+        nextPrice: data.nextPrice,
+        nextPriceDollars: data.nextPriceDollars
       });
       
       setPricingData({
-        uploadCount: currentUploadCount,
-        currentPrice,
-        nextPrice
+        uploadCount: data.uploadCount,
+        nextPrice: data.nextPrice
       });
     } catch (error) {
       console.error('Error in pricing hook:', error);
-    } finally {
-      setIsLoading(false);
+      // Set default values on error
+      setPricingData({
+        uploadCount: 0,
+        nextPrice: 100
+      });
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchPricing();
     
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchPricing, 30000);
+    // Refresh every 60 seconds to reduce load
+    const interval = setInterval(fetchPricing, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchPricing]);
 
   const formatPrice = (cents: number) => {
     return `$${(cents / 100).toFixed(2)}`;
@@ -71,7 +70,6 @@ export const usePricing = () => {
 
   return {
     ...pricingData,
-    isLoading,
     formatPrice,
     refreshPricing: fetchPricing
   };

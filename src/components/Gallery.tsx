@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { Heart, MessageCircle, Calendar, Search, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Heart, MessageCircle, Calendar, Search, Eye, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import LikeButton from '@/components/LikeButton';
 import SearchBar from '@/components/SearchBar';
@@ -20,6 +21,7 @@ interface Upload {
   price_paid: number;
   upload_order: number;
   created_at: string;
+  upvotes?: number;
 }
 
 interface GalleryProps {
@@ -32,71 +34,46 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
   const navigate = useNavigate();
   const [uploads, setUploads] = useState<Upload[]>([]);
   const [filteredUploads, setFilteredUploads] = useState<Upload[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [selectedUpload, setSelectedUpload] = useState<Upload | null>(null);
+  const [sortBy, setSortBy] = useState<'date' | 'index' | 'votes'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const fetchUploads = async () => {
     try {
-      let query = supabase
-        .from('uploads')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (limitResults) {
-        query = query.limit(limitResults);
-      }
-
-      const { data, error } = await query;
+      // Use the get-uploads endpoint to fetch uploads
+      const { data, error } = await supabase.functions.invoke('get-uploads', {
+        body: {
+          limit: limitResults || undefined,
+          search: searchQuery || undefined,
+          sortBy: sortBy,
+          sortOrder: sortOrder
+        }
+      });
 
       if (error) {
         console.error('Error fetching uploads:', error);
         return;
       }
 
-      setUploads(data || []);
-      setFilteredUploads(data || []);
+      const uploadsData = data.uploads || [];
+      setUploads(uploadsData);
+      setFilteredUploads(uploadsData);
     } catch (error) {
       console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchUploads();
-  }, [refreshTrigger, limitResults]);
+  }, [refreshTrigger, limitResults, searchQuery, sortBy, sortOrder]);
 
-  const handleSearch = (query: string) => {
+  const handleSearch = async (query: string) => {
     setSearchQuery(query);
     
-    if (!query.trim()) {
-      setFilteredUploads(uploads);
-      return;
-    }
-
-    const filtered = uploads.filter(upload => {
-      const queryLower = query.toLowerCase();
-      
-      // Search by caption
-      if (upload.caption.toLowerCase().includes(queryLower)) return true;
-      
-      // Search by price (formatted)
-      const priceFormatted = formatPrice(upload.price_paid).toLowerCase();
-      if (priceFormatted.includes(queryLower)) return true;
-      
-      // Search by upload index (position in reverse chronological order)
-      const uploadIndex = uploads.findIndex(u => u.id === upload.id) + 1;
-      if (uploadIndex.toString().includes(queryLower)) return true;
-      
-      // Search by raw price value
-      if (upload.price_paid.toString().includes(queryLower)) return true;
-      
-      return false;
-    });
-    
-    setFilteredUploads(filtered);
+    // Call fetchUploads with the search query
+    await fetchUploads();
   };
 
   const formatPrice = (cents: number) => {
@@ -133,21 +110,6 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
     setLightboxOpen(true);
   };
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <Card key={i} className="glass-card">
-            <CardContent className="p-4">
-              <Skeleton className="w-full h-48 rounded-lg mb-4" />
-              <Skeleton className="h-4 w-3/4 mb-2" />
-              <Skeleton className="h-4 w-1/2" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
 
   if (uploads.length === 0) {
     return (
@@ -184,6 +146,42 @@ const Gallery: React.FC<GalleryProps> = ({ refreshTrigger, showSearch = false, l
           )}
         </div>
       )}
+      
+      {/* Sorting Controls */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-muted-foreground">Sort by:</label>
+            <Select value={sortBy} onValueChange={(value: 'date' | 'index' | 'votes') => setSortBy(value)}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date">Date</SelectItem>
+                <SelectItem value="index">Index</SelectItem>
+                <SelectItem value="votes">Votes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-muted-foreground">Order:</label>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+              className="flex items-center gap-2"
+            >
+              {sortOrder === 'asc' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+              {sortOrder === 'asc' ? 'Ascending' : 'Descending'}
+            </Button>
+          </div>
+        </div>
+        
+        <div className="text-sm text-muted-foreground">
+          {displayUploads.length} upload{displayUploads.length !== 1 ? 's' : ''}
+        </div>
+      </div>
       
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
         {displayUploads.map((upload, index) => (

@@ -9,28 +9,12 @@ interface PricingDisplayProps {
 }
 
 const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
-  const { uploadCount, currentPrice, nextPrice, isLoading, formatPrice } = usePricing();
+  const { uploadCount, nextPrice, formatPrice } = usePricing();
 
   useEffect(() => {
     onPriceUpdate(nextPrice); // Pass the next price (what user will pay) to the upload form
   }, [nextPrice, onPriceUpdate]);
 
-  if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="glass-card">
-            <CardContent className="p-6">
-              <div className="animate-pulse">
-                <div className="h-4 bg-muted rounded mb-2"></div>
-                <div className="h-8 bg-muted rounded"></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    );
-  }
 
   return (
     <Card className="glass-card experiment-glow text-center p-6">
@@ -39,16 +23,16 @@ const PricingDisplay: React.FC<PricingDisplayProps> = ({ onPriceUpdate }) => {
       
       <div className="space-y-4">
         <div>
-          <p className="text-sm text-muted-foreground">Current Price</p>
+          <p className="text-sm text-muted-foreground">Next Upload Price</p>
           <p className="text-4xl font-bold gradient-text price-ticker">
-            {formatPrice(currentPrice)}
+            {formatPrice(nextPrice)}
           </p>
           <p className="text-xs text-muted-foreground mt-1">and climbing...</p>
         </div>
         
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="glass-card p-3">
-            <p className="text-muted-foreground">Next Victim Pays</p>
+            <p className="text-muted-foreground">What You'll Pay</p>
             <p className="font-semibold text-accent">
               {formatPrice(nextPrice)}
             </p>

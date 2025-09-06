@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-async function verifyAdminSession(sessionToken: string, supabase: any): Promise<boolean> {
+async function verifyAdminSession(sessionToken: string, supabase: ReturnType<typeof createClient>): Promise<boolean> {
   if (!sessionToken) return false;
 
   const { data: session, error } = await supabase

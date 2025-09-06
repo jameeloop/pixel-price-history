@@ -1,38 +1,47 @@
-
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { History, Camera, TrendingUp, Instagram, Music, Mail, ArrowDownCircle } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import UploadForm from '@/components/UploadForm';
-import PricingDisplay from '@/components/PricingDisplay';
-import EnhancedPricingDisplay from '@/components/EnhancedPricingDisplay';
-import Gallery from '@/components/Gallery';
+import { Camera, Upload, TrendingUp, Users, DollarSign, Clock, Heart, MessageCircle, Share2, ArrowRight, BarChart3, Zap, Target, Brain, Eye, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
 import CurrentUploadHero from '@/components/CurrentUploadHero';
-
+import EnhancedPricingDisplay from '@/components/EnhancedPricingDisplay';
+import UploadForm from '@/components/UploadForm';
+import Gallery from '@/components/Gallery';
 import LiveFeed from '@/components/LiveFeed';
 import PredictionPoll from '@/components/PredictionPoll';
-import FloatingUploadCTA from '@/components/FloatingUploadCTA';
 import PsychologyFactsBox from '@/components/PsychologyFactsBox';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import ScrollIndicator from '@/components/ScrollIndicator';
 import { usePricing } from '@/hooks/usePricing';
 
 const Index = () => {
   const navigate = useNavigate();
-  const { nextPrice } = usePricing(); // Use the actual pricing hook instead of hardcoded value
+  const { nextPrice } = usePricing();
   const [refreshGallery, setRefreshGallery] = useState(0);
+
+  console.log('Index component rendering, nextPrice:', nextPrice);
 
   const handleUploadSuccess = () => {
     setRefreshGallery(prev => prev + 1);
   };
 
   const scrollToUpload = () => {
-    document.getElementById('upload-form')?.scrollIntoView({ 
-      behavior: 'smooth',
-      block: 'center'
-    });
+    const uploadSection = document.getElementById('upload-section');
+    if (uploadSection) {
+      uploadSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center'
+      });
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -54,47 +63,29 @@ const Index = () => {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={() => window.open('https://instagram.com/pixperiment', '_blank')}
-                  className="text-muted-foreground hover:text-primary"
-                >
-                  <Instagram className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => window.open('https://tiktok.com/@pixperiment', '_blank')}
-                  className="text-muted-foreground hover:text-primary"
-                >
-                  <Music className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => window.open('mailto:hello@pixperiment.com', '_blank')}
-                  className="text-muted-foreground hover:text-primary"
-                >
-                  <Mail className="w-4 h-4" />
-                </Button>
-              </div>
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
                   onClick={() => navigate('/history')}
-                  className="flex items-center gap-2 text-xs sm:text-sm"
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  <History className="w-4 h-4" />
-                  <span className="hidden sm:inline">Gallery</span>
-                  📸
+                  <BarChart3 className="w-4 h-4 mr-1" />
+                  History
                 </Button>
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
+                  size="sm"
                   onClick={() => navigate('/control')}
-                  className="flex items-center gap-2 text-xs sm:text-sm"
+                  className="text-muted-foreground hover:text-foreground"
                 >
-                  <span className="hidden sm:inline">Control</span>
-                  ⚙️
+                  <Target className="w-4 h-4 mr-1" />
+                  Control
                 </Button>
               </div>
+              <Button 
+                onClick={scrollToUpload}
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-primary/25"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Upload Now
+              </Button>
             </div>
           </div>
         </div>
@@ -124,10 +115,10 @@ const Index = () => {
         {/* Layout with Featured Upload left and Experiment Status right */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
           <div className="lg:col-span-2 lg:order-1">
-            <CurrentUploadHero />
+            <CurrentUploadHero refreshTrigger={refreshGallery} />
           </div>
           <div className="lg:order-2 space-y-4">
-            <EnhancedPricingDisplay onPriceUpdate={() => {}} />
+            <EnhancedPricingDisplay onPriceUpdate={() => {}} refreshTrigger={refreshGallery} />
             {/* Psychology Facts Box - Only show on large screens below experiment status */}
             <div className="hidden lg:block">
               <PsychologyFactsBox />
@@ -140,98 +131,112 @@ const Index = () => {
           <PsychologyFactsBox />
         </div>
 
-        {/* Upload Form */}
-        <div id="upload-section" className="mb-4">
-          <Card className="glass-card border-2 border-primary/20 bg-gradient-to-r from-purple-50/5 to-purple-100/5" id="upload-form">
-            <CardHeader className="pb-2 text-center">
-              <CardTitle className="text-lg gradient-text">🎨 Join the Experiment</CardTitle>
-              <p className="text-xs text-muted-foreground">Upload your photo to participate in the social experiment! ✨</p>
+        {/* Upload Section */}
+        <div id="upload-section" className="mb-8">
+          <Card className="glass-card border-primary/20">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl gradient-text flex items-center justify-center gap-2">
+                <Upload className="w-6 h-6" />
+                Join the Experiment
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Upload your photo and become part of the pricing history
+              </p>
             </CardHeader>
-            <CardContent className="pt-0">
-              <UploadForm 
-                currentPrice={currentPrice} 
-                onUploadSuccess={handleUploadSuccess}
-              />
+            <CardContent>
+              <UploadForm currentPrice={nextPrice} onUploadSuccess={handleUploadSuccess} />
             </CardContent>
           </Card>
         </div>
 
-        {/* Experiment Archive */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-lg font-bold gradient-text">Experiment Archive 📚</h3>
+        {/* Gallery Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold gradient-text flex items-center gap-2">
+              <Eye className="w-6 h-6" />
+              Recent Uploads
+            </h2>
             <Button 
-              variant="ghost" 
-              size="sm"
+              variant="outline" 
               onClick={() => navigate('/history')}
-              className="text-primary hover:text-primary/80"
+              className="border-primary/30 text-primary hover:bg-primary/10"
             >
-              View All →
+              View All
+              <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
           </div>
-          <Gallery refreshTrigger={refreshGallery} limitResults={5} />
+          <Gallery 
+            refreshTrigger={refreshGallery}
+            limitResults={6}
+          />
         </div>
 
-
-        {/* Live Feed and Prediction Poll - Made smaller */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-4">
-          <div className="lg:col-span-1">
-            <LiveFeed />
-          </div>
-          <div className="lg:col-span-1">
-            <PredictionPoll />
-          </div>
+        {/* Live Feed Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold gradient-text flex items-center gap-2 mb-6">
+            <Zap className="w-6 h-6" />
+            Live Activity
+          </h2>
+          <LiveFeed />
         </div>
 
+        {/* Prediction Poll Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold gradient-text flex items-center gap-2 mb-6">
+            <Target className="w-6 h-6" />
+            Predict the Next Price
+          </h2>
+          <PredictionPoll />
+        </div>
 
-        {/* FAQ Section - Made more compact */}
-        <div className="mt-4 mb-4">
+        {/* Psychology Facts Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold gradient-text flex items-center gap-2 mb-6">
+            <Brain className="w-6 h-6" />
+            The Psychology Behind It
+          </h2>
+          <PsychologyFactsBox />
+        </div>
+
+        {/* FAQ Section */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold gradient-text flex items-center gap-2 mb-6">
+            <MessageCircle className="w-6 h-6" />
+            Frequently Asked Questions
+          </h2>
           <Card className="glass-card">
-            <CardHeader className="text-center pb-3">
-              <CardTitle className="text-lg gradient-text">FAQ 💭</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible>
+            <CardContent className="p-6">
+              <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="item-1">
-                  <AccordionTrigger>How does the pricing experiment work? 🤔</AccordionTrigger>
+                  <AccordionTrigger className="text-left">
+                    How does the pricing work?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    PixPeriment starts at $1.00 for the first upload 💸. Each time someone uploads a photo, the price increases by $0.01 for the next person. This creates an escalating cost structure that tests social psychology and digital scarcity 📊.
+                    Each upload costs more than the previous one. The price increases by a fixed amount with every upload, creating a sense of scarcity and urgency.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2">
-                  <AccordionTrigger>What happens after I upload a photo? 📤</AccordionTrigger>
+                  <AccordionTrigger className="text-left">
+                    What happens to my photos?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    Your photo will be processed and added to the public gallery 🖼️. You'll receive an email confirmation and a unique link to share your contribution 📧. The price automatically increases for the next participant 📈.
+                    Your photos are stored securely and displayed in the gallery. You can view them anytime and see how they contribute to the experiment's pricing history.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-3">
-                  <AccordionTrigger>Is my email address kept private? 🔒</AccordionTrigger>
+                  <AccordionTrigger className="text-left">
+                    Can I delete my uploads?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    Yes! Your email is only used for confirmation and processing 📧. In the gallery, we show only the first two letters followed by asterisks to maintain privacy while ensuring transparency 🛡️.
+                    Currently, uploads cannot be deleted to maintain the integrity of the pricing experiment. This ensures the pricing history remains accurate.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-4">
-                  <AccordionTrigger>Can I upload multiple photos? 📸📸</AccordionTrigger>
+                  <AccordionTrigger className="text-left">
+                    Is this a real experiment?
+                  </AccordionTrigger>
                   <AccordionContent>
-                    Absolutely! You can upload as many photos as you want, but each upload will cost the current price at that moment 💰. The more you participate, the higher the price goes for everyone 📈.
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-5">
-                  <AccordionTrigger className="text-left">What's the psychology behind this experiment? 🧠</AccordionTrigger>
-                  <AccordionContent className="text-left">
-                    This experiment explores digital scarcity, social proof, and FOMO (fear of missing out) 😰. Early adopters get "cheaper" participation, while later participants pay more but join a more exclusive group 👑. It's fascinating to see how high the community will push the price! 🚀
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-6">
-                  <AccordionTrigger>Can I upload anything I want? 🎨</AccordionTrigger>
-                  <AccordionContent>
-                    Yes! Whether it's art, memes, personal photos, social media content, or business promotions - all posts are welcome as long as they follow our content guidelines 📋. Express yourself however you'd like! ✨
-                  </AccordionContent>
-                </AccordionItem>
-                <AccordionItem value="item-7">
-                  <AccordionTrigger>Is NSFW content allowed? 🚫</AccordionTrigger>
-                  <AccordionContent>
-                    No, NSFW (Not Safe For Work) content is strictly prohibited 🚫. All uploads are public and should be appropriate for all audiences 👨‍👩‍👧‍👦. Any inappropriate content will be removed and may result in account restrictions ⚠️.
+                    Yes! This is a real psychological experiment studying how people respond to increasing prices and scarcity. Your participation helps researchers understand human behavior.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
@@ -239,16 +244,6 @@ const Index = () => {
           </Card>
         </div>
 
-        {/* Footer - Compact */}
-        <footer className="mt-4 pt-3 border-t border-border/50">
-          <div className="text-center text-sm text-muted-foreground space-y-1">
-            <p className="text-xs opacity-75">The experiment continues... Will you push the price higher? 🚀</p>
-          </div>
-        </footer>
-
-        {/* Floating Upload CTA */}
-        <FloatingUploadCTA onClick={scrollToUpload} />
-        
         {/* Scroll Indicator */}
         <ScrollIndicator />
       </div>

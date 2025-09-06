@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -31,18 +31,27 @@ const PostView: React.FC = () => {
       fetchUpload();
       generateQrCode();
     }
-  }, [id]);
+  }, [id, fetchUpload]);
 
-  const fetchUpload = async () => {
+  const fetchUpload = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('uploads')
-        .select('*')
-        .eq('id', id)
-        .single();
+      // Use the get-uploads endpoint to fetch all uploads and find the specific one
+      const { data, error } = await supabase.functions.invoke('get-uploads', {
+        body: {}
+      });
 
       if (error) throw error;
-      setUpload(data);
+
+      const uploads = data.uploads || [];
+      const foundUpload = uploads.find((upload: Upload) => upload.id === id);
+
+      if (!foundUpload) {
+        toast.error('Post not found');
+        navigate('/');
+        return;
+      }
+
+      setUpload(foundUpload);
     } catch (error) {
       console.error('Error fetching upload:', error);
       toast.error('Post not found');
@@ -50,7 +59,7 @@ const PostView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, navigate]);
 
   const generateQrCode = () => {
     const url = window.location.href;

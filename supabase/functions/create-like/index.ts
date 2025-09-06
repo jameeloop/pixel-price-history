@@ -1,4 +1,3 @@
-
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { DatabaseRateLimiter } from '../shared/rate-limiter.ts';
@@ -81,7 +80,7 @@ serve(async (req) => {
       );
     }
 
-    const { uploadId, likeType } = await req.json();
+    const { uploadId, userIP } = await req.json();
     
     // Enhanced input validation
     if (!InputValidator.validateUploadId(uploadId)) {
@@ -91,17 +90,10 @@ serve(async (req) => {
       );
     }
 
-    if (!['like', 'dislike'].includes(likeType)) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid like type' }), 
-        { status: 400, headers: corsHeaders }
-      );
-    }
-
     // Check if upload exists
     const { data: uploadExists, error: uploadError } = await supabase
       .from('uploads')
-      .select('id')
+      .select('id, upvotes')
       .eq('id', uploadId)
       .single();
 
@@ -112,70 +104,57 @@ serve(async (req) => {
       );
     }
 
-    // Security logging - fixed the .catch() issue
-    try {
-      await supabase.rpc('log_security_event', {
-        event_type: 'LIKE_ATTEMPT',
-        table_name: 'likes',
-        record_id: uploadId,
-        ip_address: clientIP,
-        user_agent: userAgent,
-        additional_data: { like_type: likeType }
-      });
-    } catch (logError) {
-      console.error('Security logging failed:', logError);
-    }
-
-    // Check for existing like from this IP
-    const { data: existingLike } = await supabase
-      .from('likes')
+    // Check for existing vote from this user
+    const { data: existingVote } = await supabase
+      .from('user_votes')
       .select('*')
       .eq('upload_id', uploadId)
-      .eq('ip_address', clientIP)
+      .eq('user_ip', userIP)
       .single();
 
-    if (existingLike) {
-      if (existingLike.like_type === likeType) {
-        // Remove like if same type
-        const { error } = await supabase
-          .from('likes')
-          .delete()
-          .eq('id', existingLike.id);
+    if (existingVote) {
+      // User already voted, remove their vote
+      const { error: deleteError } = await supabase
+        .from('user_votes')
+        .delete()
+        .eq('id', existingVote.id);
 
-        if (error) throw error;
-        
-        return new Response(
-          JSON.stringify({ success: true, action: 'removed', likeType }), 
-          { headers: corsHeaders }
-        );
-      } else {
-        // Update like type if different
-        const { error } = await supabase
-          .from('likes')
-          .update({ like_type: likeType })
-          .eq('id', existingLike.id);
+      if (deleteError) throw deleteError;
 
-        if (error) throw error;
-        
-        return new Response(
-          JSON.stringify({ success: true, action: 'updated', likeType }), 
-          { headers: corsHeaders }
-        );
-      }
-    } else {
-      // Create new like
-      const { error } = await supabase
-        .from('likes')
-        .insert({
-          upload_id: uploadId,
-          like_type: likeType,
-          ip_address: clientIP
-        });
+      // Decrement upvotes
+      const { error: updateError } = await supabase
+        .from('uploads')
+        .update({ upvotes: Math.max(0, (uploadExists.upvotes || 0) - 1) })
+        .eq('id', uploadId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
       
       return new Response(
-        JSON.stringify({ success: true, action: 'created', likeType }), 
+        JSON.stringify({ success: true, action: 'removed' }), 
+        { headers: corsHeaders }
+      );
+    } else {
+      // User hasn't voted, add their vote
+      const { error: insertError } = await supabase
+        .from('user_votes')
+        .insert({
+          upload_id: uploadId,
+          user_ip: userIP,
+          voted: true
+        });
+
+      if (insertError) throw insertError;
+
+      // Increment upvotes
+      const { error: updateError } = await supabase
+        .from('uploads')
+        .update({ upvotes: (uploadExists.upvotes || 0) + 1 })
+        .eq('id', uploadId);
+
+      if (updateError) throw updateError;
+      
+      return new Response(
+        JSON.stringify({ success: true, action: 'created' }), 
         { headers: corsHeaders }
       );
     }

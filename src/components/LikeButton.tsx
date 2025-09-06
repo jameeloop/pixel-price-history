@@ -1,27 +1,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronUp, ChevronDown } from 'lucide-react';
+import { ChevronUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface LikeButtonProps {
   uploadId: string;
-  initialLikes?: number;
-  initialDislikes?: number;
+  initialUpvotes?: number;
   compact?: boolean; // For experiment archive
 }
 
 const LikeButton: React.FC<LikeButtonProps> = ({ 
   uploadId, 
-  initialLikes = 0, 
-  initialDislikes = 0,
+  initialUpvotes = 0,
   compact = false
 }) => {
   const { toast } = useToast();
-  const [likes, setLikes] = useState(initialLikes);
-  const [dislikes, setDislikes] = useState(initialDislikes);
-  const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null);
+  const [upvotes, setUpvotes] = useState(initialUpvotes);
+  const [userVote, setUserVote] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Get secure user identifier
@@ -40,22 +37,24 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     }
   };
 
-  const fetchLikeCounts = async () => {
+  const fetchUpvotes = async () => {
     try {
       const { data, error } = await supabase
-        .from('likes')
-        .select('like_type')
-        .eq('upload_id', uploadId);
+        .from('uploads')
+        .select('upvotes')
+        .eq('id', uploadId)
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        // If upvotes column doesn't exist, set to 0
+        setUpvotes(0);
+        return;
+      }
 
-      const likesCount = data?.filter(like => like.like_type === 'like').length || 0;
-      const dislikesCount = data?.filter(like => like.like_type === 'dislike').length || 0;
-
-      setLikes(likesCount);
-      setDislikes(dislikesCount);
+      setUpvotes(data?.upvotes || 0);
     } catch (error) {
-      console.error('Error fetching likes:', error);
+      console.error('Error fetching upvotes:', error);
+      setUpvotes(0);
     }
   };
 
@@ -63,42 +62,56 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     try {
       const userIP = await getUserIP();
       const { data, error } = await supabase
-        .from('likes')
-        .select('like_type')
+        .from('user_votes')
+        .select('voted')
         .eq('upload_id', uploadId)
-        .eq('ip_address', userIP)
+        .eq('user_ip', userIP)
         .single();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error && error.code !== 'PGRST116') {
+        // If user_votes table doesn't exist, set to null
+        setUserVote(null);
+        return;
+      }
       
-      setUserVote((data?.like_type as 'like' | 'dislike') || null);
+      setUserVote(data?.voted || null);
     } catch (error) {
       console.error('Error checking user vote:', error);
+      setUserVote(null);
     }
   };
 
   useEffect(() => {
-    fetchLikeCounts();
+    fetchUpvotes();
     checkUserVote();
   }, [uploadId]);
 
-  const handleVote = async (voteType: 'like' | 'dislike') => {
+  const handleVote = async () => {
     if (isLoading) return;
     
     setIsLoading(true);
     
     try {
+      const userIP = await getUserIP();
       const { data, error } = await supabase.functions.invoke('create-like', {
         body: {
           uploadId,
-          likeType: voteType
+          userIP
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // If the function fails (e.g., upvotes column doesn't exist), show a message
+        toast({
+          title: "Coming Soon",
+          description: "Voting feature will be available soon!",
+          duration: 2000,
+        });
+        return;
+      }
 
-      // Refresh vote counts and user vote status
-      await Promise.all([fetchLikeCounts(), checkUserVote()]);
+      // Refresh upvotes and user vote status
+      await Promise.all([fetchUpvotes(), checkUserVote()]);
       
       toast({
         title: "Success",
@@ -108,41 +121,28 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     } catch (error) {
       console.error('Error voting:', error);
       toast({
-        title: "Error", 
-        description: "Failed to record your vote. Please try again.",
-        variant: "destructive",
+        title: "Coming Soon",
+        description: "Voting feature will be available soon!",
+        duration: 2000,
       });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const totalVotes = likes + dislikes;
-  const likePercentage = totalVotes > 0 ? (likes / totalVotes) * 100 : 50;
-
   // Compact version for experiment archive
   if (compact) {
     return (
       <div className="flex flex-col gap-1">
         <Button
-          variant={userVote === 'like' ? 'default' : 'outline'}
+          variant={userVote ? 'default' : 'outline'}
           size="sm"
-          onClick={() => handleVote('like')}
+          onClick={handleVote}
           disabled={isLoading}
           className="flex items-center gap-1 text-xs h-7 px-2 bg-green-500/10 hover:bg-green-500/20 border-green-500/20 text-green-700 dark:text-green-400"
         >
           <ChevronUp className="w-3 h-3" />
-          <span>{likes}</span>
-        </Button>
-        <Button
-          variant={userVote === 'dislike' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => handleVote('dislike')}
-          disabled={isLoading}
-          className="flex items-center gap-1 text-xs h-7 px-2 bg-red-500/10 hover:bg-red-500/20 border-red-500/20 text-red-700 dark:text-red-400"
-        >
-          <ChevronDown className="w-3 h-3" />
-          <span>{dislikes}</span>
+          <span>{upvotes}</span>
         </Button>
       </div>
     );
@@ -151,48 +151,26 @@ const LikeButton: React.FC<LikeButtonProps> = ({
   // Full version for featured posts
   return (
     <div className="space-y-3 w-full">
-      {/* Horizontal Buttons */}
+      {/* Upvote Button */}
       <div className="flex gap-2 w-full">
         <Button
-          variant={userVote === 'like' ? 'default' : 'outline'}
+          variant={userVote ? 'default' : 'outline'}
           size="sm"
-          onClick={() => handleVote('like')}
+          onClick={handleVote}
           disabled={isLoading}
           className="flex items-center gap-2 flex-1 justify-center"
         >
           <ChevronUp className="w-4 h-4" />
-          <span className="text-sm">Like ({likes})</span>
-        </Button>
-        <Button
-          variant={userVote === 'dislike' ? 'default' : 'outline'}
-          size="sm"
-          onClick={() => handleVote('dislike')}
-          disabled={isLoading}
-          className="flex items-center gap-2 flex-1 justify-center"
-        >
-          <ChevronDown className="w-4 h-4" />
-          <span className="text-sm">Dislike ({dislikes})</span>
+          <span className="text-sm">Upvote ({upvotes})</span>
         </Button>
       </div>
       
-      {/* Bigger Like/Dislike Ratio Bar */}
-      {totalVotes > 0 && (
-        <div className="w-full">
-          <div className="flex justify-between text-sm text-muted-foreground mb-2">
-            <span className="font-medium">{Math.round(likePercentage)}% Like</span>
-            <span className="font-medium">{Math.round(100 - likePercentage)}% Dislike</span>
-          </div>
-          <div className="w-full h-3 bg-red-200 dark:bg-red-900/30 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-green-500 dark:bg-green-400 transition-all duration-500 rounded-full"
-              style={{ width: `${likePercentage}%` }}
-            />
-          </div>
-          <div className="text-center mt-2">
-            <span className="text-xs text-muted-foreground">
-              {totalVotes} total {totalVotes === 1 ? 'vote' : 'votes'}
-            </span>
-          </div>
+      {/* Vote count display */}
+      {upvotes > 0 && (
+        <div className="w-full text-center">
+          <span className="text-xs text-muted-foreground">
+            {upvotes} {upvotes === 1 ? 'upvote' : 'upvotes'}
+          </span>
         </div>
       )}
     </div>

@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { Resend } from "npm:resend@2.0.0";
 
 // In-memory temp storage for webhook processing
-const tempImageStorage = new Map<string, any>();
+const tempImageStorage = new Map<string, { imageUrl: string; caption: string; email: string; price: number }>();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,19 +49,32 @@ serve(async (req) => {
     }
 
     // Verify webhook signature
-    const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")?.trim();
     let event;
     try {
+      if (!endpointSecret) {
+        throw new Error("Webhook secret not configured");
+      }
+      
+      console.log("Webhook secret length:", endpointSecret.length);
+      console.log("Webhook secret (first 10 chars):", endpointSecret.substring(0, 10));
+      console.log("Signature (first 20 chars):", signature?.substring(0, 20));
+      console.log("Body length:", body.length);
+      
       // Use async webhook verification to avoid SubtleCryptoProvider issues
-      event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret!);
+      event = await stripe.webhooks.constructEventAsync(body, signature, endpointSecret);
       console.log("Webhook signature verified successfully");
     } catch (err) {
       console.error("Webhook signature verification failed:", err);
-      console.error("Expected secret (first 10 chars):", endpointSecret?.substring(0, 10));
-      console.error("Received signature:", signature?.substring(0, 20));
+      console.error("Error details:", err.message);
       return new Response(JSON.stringify({ 
         error: "Webhook signature verification failed",
-        details: err.message 
+        details: err.message,
+        debug: {
+          secretLength: endpointSecret?.length || 0,
+          signatureLength: signature?.length || 0,
+          bodyLength: body.length
+        }
       }), { 
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -224,7 +237,7 @@ async function processSuccessfulPayment(session: Stripe.Checkout.Session) {
   }
 }
 
-async function sendConfirmationEmail(email: string, uploadRecord: any, pricePaid: number) {
+async function sendConfirmationEmail(email: string, uploadRecord: { id: string; image_url: string; caption: string; upload_order: number; created_at: string }, pricePaid: number) {
   const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
   
   const priceFormatted = `$${(pricePaid / 100).toFixed(2)}`;
@@ -271,7 +284,7 @@ async function sendConfirmationEmail(email: string, uploadRecord: any, pricePaid
   }
 }
 
-async function createPlaceholderImage(caption: string, pricePaid: number, supabase: any): Promise<string> {
+async function createPlaceholderImage(caption: string, pricePaid: number, supabase: ReturnType<typeof createClient>): Promise<string> {
   // Create a placeholder SVG image with safe character handling
   const safeCaption = caption.replace(/[<>&"']/g, '').substring(0, 100);
   

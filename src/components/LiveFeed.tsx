@@ -11,9 +11,13 @@ interface RecentUpload {
   caption: string;
 }
 
-const LiveFeed: React.FC = () => {
+interface LiveFeedProps {
+  refreshTrigger?: number;
+}
+
+const LiveFeed: React.FC<LiveFeedProps> = ({ refreshTrigger }) => {
   const [recentUploads, setRecentUploads] = useState<RecentUpload[]>([]);
-  const { currentPrice, formatPrice } = usePricing();
+  const { nextPrice, formatPrice } = usePricing();
   
   const formatEmail = (email: string) => {
     const [username] = email.split('@');
@@ -36,16 +40,15 @@ const LiveFeed: React.FC = () => {
 
   const fetchRecentData = async () => {
     try {
-      // Fetch recent uploads
-      const { data: uploads, error: uploadsError } = await supabase
-        .from('uploads')
-        .select('user_email, price_paid, created_at, caption')
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // Use the get-uploads endpoint to fetch recent uploads
+      const { data, error } = await supabase.functions.invoke('get-uploads', {
+        body: { limit: 5 }
+      });
 
-      if (uploadsError) throw uploadsError;
+      if (error) throw error;
 
-      setRecentUploads(uploads || []);
+      const uploads = data.uploads || [];
+      setRecentUploads(uploads);
     } catch (error) {
       console.error('Error fetching live feed data:', error);
     }
@@ -78,7 +81,7 @@ const LiveFeed: React.FC = () => {
       supabase.removeChannel(uploadsChannel);
       clearInterval(interval);
     };
-  }, []);
+  }, [refreshTrigger]);
 
   const generateTickerMessage = (upload: RecentUpload) => {
     const timeAgo = formatTimeAgo(upload.created_at);
@@ -107,7 +110,7 @@ const LiveFeed: React.FC = () => {
         <div className="space-y-3">
           <div className="text-center p-3 bg-primary/10 rounded-lg border border-primary/20">
             <p className="text-sm font-medium">
-              Current Price: <span className="text-primary font-bold">{formatPrice(currentPrice)}</span>
+              Current Price: <span className="text-primary font-bold">{formatPrice(nextPrice)}</span>
             </p>
           </div>
           

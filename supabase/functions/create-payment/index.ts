@@ -94,7 +94,7 @@ serve(async (req) => {
     });
     console.log('Clients initialized');
 
-    // Get upload count - single source of truth
+    // Get upload count - ONLY count completed uploads (uploads table)
     const { count: uploadCount, error: uploadsError } = await supabase
       .from('uploads')
       .select('*', { count: 'exact', head: true });
@@ -107,18 +107,20 @@ serve(async (req) => {
       );
     }
     
-    // Single variable - everything based on this
+    // Only count completed uploads for pricing
     const currentUploadCount = uploadCount || 0;
     
-    // Price calculations - all based on currentUploadCount
-    const currentPrice = 100 + currentUploadCount; // $1.00 + upload count (current price)
-    const nextPrice = currentPrice + 1; // Next upload will be 1 cent more
+    // Price calculation - simple and clear
+    // With 0 uploads: first person pays $1.00 (100 cents)
+    // With 1 upload: second person pays $1.01 (101 cents)
+    // Formula: 100 + uploadCount
+    const nextPrice = 100 + currentUploadCount;
     
-    console.log('=== SIMPLIFIED PRICING ===');
-    console.log('uploadCount from DB:', uploadCount);
-    console.log('currentUploadCount (clean):', currentUploadCount);
-    console.log('currentPrice (100 + count):', currentPrice, '=', '$' + (currentPrice/100).toFixed(2));
-    console.log('nextPrice (current + 1):', nextPrice, '=', '$' + (nextPrice/100).toFixed(2));
+    console.log('=== UPLOAD COUNTING ===');
+    console.log('Completed uploads:', uploadCount);
+    console.log('Current upload count:', currentUploadCount);
+    console.log('Next price calculation: 100 +', currentUploadCount, '=', nextPrice);
+    console.log('Next price in dollars: $', (nextPrice / 100).toFixed(2));
 
     console.log('=== UPLOADING IMAGE TO STORAGE ===');
     // Upload the actual image to Supabase storage first
@@ -211,7 +213,7 @@ serve(async (req) => {
     console.log('Pending upload created:', pendingUpload.id);
 
     console.log('=== CREATING STRIPE SESSION ===');
-    console.log('Using currentPrice for Stripe:', currentPrice, '(', '$' + (currentPrice/100).toFixed(2), ')');
+    console.log('Using nextPrice for Stripe:', nextPrice, '(', '$' + (nextPrice/100).toFixed(2), ')');
     
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
@@ -221,9 +223,9 @@ serve(async (req) => {
             currency: 'usd',
             product_data: {
               name: `Upload #${currentUploadCount + 1} - PixPeriment`,
-              description: `Upload your image for ${(currentPrice / 100).toFixed(2)} USD`,
+              description: `Upload your image for ${(nextPrice / 100).toFixed(2)} USD`,
             },
-            unit_amount: currentPrice,
+            unit_amount: nextPrice,
           },
           quantity: 1,
         },
@@ -234,7 +236,7 @@ serve(async (req) => {
       customer_email: email,
       metadata: {
         pending_upload_id: pendingUpload.id,
-        price_paid: currentPrice.toString(),
+        price_paid: nextPrice.toString(),
       },
       expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // 30 minutes
     });
@@ -242,15 +244,15 @@ serve(async (req) => {
     console.log('Stripe session created successfully:', session.id);
     console.log('Stripe session details:', {
       sessionId: session.id,
-      unit_amount_sent: currentPrice,
-      metadata_price_paid: currentPrice.toString(),
+      unit_amount_sent: nextPrice,
+      metadata_price_paid: nextPrice.toString(),
       session_amount_total: session.amount_total
     });
 
     const responseData = { 
       sessionId: session.id,
       url: session.url,
-      priceInCents: currentPrice
+      priceInCents: nextPrice
     };
     console.log('=== RETURNING SUCCESS RESPONSE ===');
     console.log('Response data:', responseData);

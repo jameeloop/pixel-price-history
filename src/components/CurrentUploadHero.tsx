@@ -16,61 +16,45 @@ interface Upload {
   price_paid: number;
   upload_order: number;
   created_at: string;
+  upvotes?: number;
 }
 
-const CurrentUploadHero: React.FC = () => {
+interface CurrentUploadHeroProps {
+  refreshTrigger?: number;
+}
+
+const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger }) => {
   const navigate = useNavigate();
   const [currentUpload, setCurrentUpload] = useState<Upload | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [likeCount, setLikeCount] = useState(0);
 
   useEffect(() => {
     fetchCurrentUpload();
-  }, []);
+  }, [refreshTrigger]);
 
-  useEffect(() => {
-    if (currentUpload) {
-      fetchLikeCount();
-    }
-  }, [currentUpload]);
 
   const fetchCurrentUpload = async () => {
     try {
-      const { data, error } = await supabase
-        .from('uploads')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+      // Use the get-uploads endpoint to fetch the most recent upload
+      const { data, error } = await supabase.functions.invoke('get-uploads', {
+        body: { limit: 1, sortBy: 'date', sortOrder: 'desc' }
+      });
 
-      if (error && error.code !== 'PGRST116') {
+      if (error) {
         console.error('Error fetching current upload:', error);
         return;
       }
 
-      setCurrentUpload(data);
+      const uploads = data.uploads || [];
+      if (uploads.length > 0) {
+        setCurrentUpload(uploads[0]);
+      } else {
+        setCurrentUpload(null);
+      }
     } catch (error) {
       console.error('Error:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  const fetchLikeCount = async () => {
-    if (!currentUpload) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('likes')
-        .select('like_type')
-        .eq('upload_id', currentUpload.id);
-
-      if (error) throw error;
-      setLikeCount(data?.length || 0);
-    } catch (error) {
-      console.error('Error fetching like count:', error);
-    }
-  };
 
   const formatPrice = (cents: number) => {
     return `$${(cents / 100).toFixed(2)}`;
@@ -101,19 +85,6 @@ const CurrentUploadHero: React.FC = () => {
     toast.success('Link copied to clipboard!');
   };
 
-  if (isLoading) {
-    return (
-      <Card className="glass-card experiment-glow mb-8">
-        <CardContent className="p-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-muted rounded mb-4"></div>
-            <div className="aspect-video bg-muted rounded-lg mb-4"></div>
-            <div className="h-4 bg-muted rounded w-3/4"></div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   if (!currentUpload) {
     return (
@@ -148,7 +119,7 @@ const CurrentUploadHero: React.FC = () => {
           {/* Image */}
           <div className="md:col-span-2 space-y-3">
             <div className="relative">
-              <div className="aspect-video rounded-lg overflow-hidden bg-muted">
+              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                 <img
                   src={currentUpload.image_url}
                   alt={currentUpload.caption}

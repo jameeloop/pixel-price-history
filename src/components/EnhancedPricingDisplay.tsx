@@ -8,46 +8,47 @@ import { usePricing } from '@/hooks/usePricing';
 
 interface EnhancedPricingDisplayProps {
   onPriceUpdate: (price: number) => void;
+  refreshTrigger?: number;
 }
 
-const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPriceUpdate }) => {
-  const { uploadCount, currentPrice, nextPrice, isLoading, formatPrice } = usePricing();
+const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPriceUpdate, refreshTrigger }) => {
+  const { uploadCount, nextPrice, formatPrice } = usePricing();
   const [totalSpent, setTotalSpent] = useState(0);
   const [lastUploadTime, setLastUploadTime] = useState<string | null>(null);
 
   const milestones = [100, 200, 500, 1000, 2000, 5000]; // $1.00, $2.00, $5.00, $10.00, $20.00, $50.00
   
-  const getNextMilestone = (currentPrice: number) => {
-    return milestones.find(milestone => milestone > currentPrice) || milestones[milestones.length - 1];
+  const getNextMilestone = (price: number) => {
+    return milestones.find(milestone => milestone > price) || milestones[milestones.length - 1];
   };
   
-  const getPreviousMilestone = (currentPrice: number) => {
-    const reachedMilestones = milestones.filter(milestone => milestone <= currentPrice);
+  const getPreviousMilestone = (price: number) => {
+    const reachedMilestones = milestones.filter(milestone => milestone <= price);
     return reachedMilestones.length > 0 ? reachedMilestones[reachedMilestones.length - 1] : 0;
   };
   
-  const getProgressToNextMilestone = (currentPrice: number) => {
-    const nextMilestone = getNextMilestone(currentPrice);
-    const prevMilestone = getPreviousMilestone(currentPrice);
-    const progress = ((currentPrice - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
+  const getProgressToNextMilestone = (price: number) => {
+    const nextMilestone = getNextMilestone(price);
+    const prevMilestone = getPreviousMilestone(price);
+    const progress = ((price - prevMilestone) / (nextMilestone - prevMilestone)) * 100;
     return Math.min(progress, 100);
   };
 
   const fetchAdditionalData = async () => {
     try {
-      // Get uploads data for total spent and last upload time
-      const { data: uploads, error: uploadsError } = await supabase
-        .from('uploads')
-        .select('price_paid, created_at')
-        .order('created_at', { ascending: false });
+      // Use the get-uploads endpoint to fetch uploads data
+      const { data, error } = await supabase.functions.invoke('get-uploads', {
+        body: {}
+      });
 
-      if (uploadsError) {
-        console.error('Error fetching uploads:', uploadsError);
+      if (error) {
+        console.error('Error fetching uploads:', error);
         return;
       }
 
-      const total = uploads?.reduce((sum, upload) => sum + (upload.price_paid || 0), 0) || 0;
-      const lastUpload = uploads?.[0]?.created_at || null;
+      const uploads = data.uploads || [];
+      const total = uploads.reduce((sum: number, upload: { price_paid?: number }) => sum + (upload.price_paid || 0), 0);
+      const lastUpload = uploads[0]?.created_at || null;
 
       setTotalSpent(total);
       setLastUploadTime(lastUpload);
@@ -66,7 +67,7 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
     // Refresh data every 30 seconds
     const interval = setInterval(fetchAdditionalData, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [refreshTrigger]);
 
 
   const formatTimeAgo = (dateString: string | null) => {
@@ -84,23 +85,6 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
     return `${days}d ago`;
   };
 
-  if (isLoading) {
-    return (
-      <Card className="glass-card experiment-glow">
-        <CardContent className="p-6">
-          <div className="animate-pulse space-y-4">
-            <div className="h-6 bg-muted rounded w-1/2 mx-auto"></div>
-            <div className="h-12 bg-muted rounded w-3/4 mx-auto"></div>
-            <div className="grid grid-cols-3 gap-4">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="h-16 bg-muted rounded"></div>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className="glass-card experiment-glow text-center">
@@ -115,14 +99,14 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
       </CardHeader>
       
       <CardContent className="space-y-4">
-        {/* Current Price - Smaller Display */}
+        {/* Next Upload Price - Smaller Display */}
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Current Upload Price</p>
+          <p className="text-xs text-muted-foreground">Next Upload Price</p>
           <p className="text-3xl font-bold gradient-text price-ticker">
-            {formatPrice(currentPrice)}
+            {formatPrice(nextPrice || 100)}
           </p>
           <p className="text-xs text-muted-foreground">
-            Next victim pays {formatPrice(nextPrice)}
+            This is what you'll pay
           </p>
         </div>
         
@@ -164,18 +148,18 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-muted-foreground">
               <span>Progress to next milestone</span>
-              <span>${(currentPrice / 100).toFixed(2)}</span>
+              <span>${(nextPrice / 100).toFixed(2)}</span>
             </div>
             <Progress 
-              value={getProgressToNextMilestone(currentPrice)} 
+              value={getProgressToNextMilestone(nextPrice)} 
               className="h-2 bg-muted"
             />
             <div className="flex justify-between text-xs">
               <span className="text-muted-foreground">
-                ${(getPreviousMilestone(currentPrice) / 100).toFixed(2)}
+                ${(getPreviousMilestone(nextPrice) / 100).toFixed(2)}
               </span>
               <span className="text-primary font-medium">
-                ${(getNextMilestone(currentPrice) / 100).toFixed(2)}
+                ${(getNextMilestone(nextPrice) / 100).toFixed(2)}
               </span>
             </div>
           </div>

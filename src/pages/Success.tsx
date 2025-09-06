@@ -13,7 +13,15 @@ const Success: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(true);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string>('');
-  const [uploadData, setUploadData] = useState<any>(null);
+  const [uploadData, setUploadData] = useState<{
+    id: string;
+    user_email: string;
+    image_url: string;
+    caption: string;
+    price_paid: number;
+    upload_order: number;
+    created_at: string;
+  } | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [copied, setCopied] = useState(false);
 
@@ -26,29 +34,102 @@ const Success: React.FC = () => {
       return;
     }
 
-    const fetchUploadData = async () => {
+    const processPaymentAndFetchUpload = async () => {
       try {
-        // Fetch upload data using session ID
-        const { data, error } = await supabase
-          .from('uploads')
-          .select('*')
-          .eq('stripe_session_id', sessionId)
-          .maybeSingle();
+        console.log('Processing payment for session:', sessionId);
+        
+        // First, check if upload already exists using get-uploads endpoint
+        const { data: uploadsData, error: uploadsError } = await supabase.functions.invoke('get-uploads', {
+          body: {}
+        });
+        
+        if (uploadsError) {
+          console.error('Error fetching uploads:', uploadsError);
+        } else {
+          const uploads = uploadsData.uploads || [];
+          const existingUpload = uploads.find((upload: { stripe_session_id?: string }) => upload.stripe_session_id === sessionId);
+          
+          if (existingUpload) {
+            console.log('Upload already exists:', existingUpload);
+            setUploadData(existingUpload);
+            // Generate QR code for the post URL
+            const postUrl = `${window.location.origin}/post/${existingUpload.id}`;
+            const qrCode = await QRCode.toDataURL(postUrl);
+            setQrCodeUrl(qrCode);
+            // Set flag to refresh gallery when user returns to main page
+            localStorage.setItem('refreshGallery', 'true');
+            return;
+          }
+        }
 
-        if (data) {
-          setUploadData(data);
+        // If upload doesn't exist, try to process the payment
+        console.log('No existing upload found, processing payment...');
+        const { data: processResult, error: processError } = await supabase.functions.invoke('process-payment', {
+          body: { session_id: sessionId }
+        });
+
+        if (processError) {
+          console.error('Error processing payment:', processError);
+          console.error('Process error details:', JSON.stringify(processError, null, 2));
+          setError(`Failed to process payment: ${processError.message || 'Unknown error'}`);
+          return;
+        }
+
+        console.log('Payment processed successfully:', processResult);
+
+        // Handle different response types from process-payment
+        if (processResult.upload) {
+          // New upload was created
+          console.log('Upload data received:', processResult.upload);
+          setUploadData(processResult.upload);
           // Generate QR code for the post URL
-          const postUrl = `${window.location.origin}/post/${data.id}`;
+          const postUrl = `${window.location.origin}/post/${processResult.upload.id}`;
           const qrCode = await QRCode.toDataURL(postUrl);
           setQrCodeUrl(qrCode);
+          // Set flag to refresh gallery when user returns to main page
+          localStorage.setItem('refreshGallery', 'true');
+        } else if (processResult.upload_id) {
+          // Upload already exists, fetch the upload data
+          console.log('Upload already processed, fetching data for ID:', processResult.upload_id);
+          const { data: uploadsData, error: fetchError } = await supabase.functions.invoke('get-uploads', {
+            body: {}
+          });
+          
+          if (fetchError) {
+            console.error('Error fetching existing upload:', fetchError);
+            setError('Failed to fetch upload data. Please contact support if this persists.');
+            return;
+          }
+          
+          const uploads = uploadsData.uploads || [];
+          const existingUpload = uploads.find((upload: { id: string }) => upload.id === processResult.upload_id);
+          
+          if (existingUpload) {
+            console.log('Found existing upload:', existingUpload);
+            setUploadData(existingUpload);
+            // Generate QR code for the post URL
+            const postUrl = `${window.location.origin}/post/${existingUpload.id}`;
+            const qrCode = await QRCode.toDataURL(postUrl);
+            setQrCodeUrl(qrCode);
+            // Set flag to refresh gallery when user returns to main page
+            localStorage.setItem('refreshGallery', 'true');
+          } else {
+            console.error('Could not find existing upload with ID:', processResult.upload_id);
+            setError('Upload not found. Please contact support if this persists.');
+          }
+        } else {
+          console.error('No upload data returned from process-payment:', processResult);
+          setError('Upload not found. Please contact support if this persists.');
         }
       } catch (error) {
-        console.error('Error fetching upload data:', error);
+        console.error('Error processing payment or fetching upload data:', error);
+        console.error('Error details:', JSON.stringify(error, null, 2));
+        setError(`Failed to process payment: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     };
 
     setTimeout(async () => {
-      await fetchUploadData();
+      await processPaymentAndFetchUpload();
       setIsProcessing(false);
       setIsSuccess(true);
       toast.success("You're part of the experiment! Payment successful.");

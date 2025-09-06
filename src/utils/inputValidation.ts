@@ -28,7 +28,10 @@ export const validateCaption = (caption: string): { isValid: boolean; error?: st
   }
 
   // Check for null bytes and control characters
-  if (caption.includes('\0') || /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/.test(caption)) {
+  if (caption.includes('\0') || caption.split('').some(char => {
+    const code = char.charCodeAt(0);
+    return (code >= 0 && code <= 8) || code === 11 || code === 12 || (code >= 14 && code <= 31) || code === 127;
+  })) {
     return { isValid: false, error: 'Caption contains invalid characters' };
   }
 

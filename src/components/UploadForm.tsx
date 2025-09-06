@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -31,7 +31,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
-  const processFile = (file: File) => {
+  const processFile = useCallback((file: File) => {
     const fileValidation = validateFileUpload(file);
     if (!fileValidation.isValid) {
       toast({
@@ -54,7 +54,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
       setImagePreview(result);
     };
     reader.readAsDataURL(file);
-  };
+  }, [toast]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -83,7 +83,7 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
     }
   };
 
-  const handlePaste = (e: ClipboardEvent) => {
+  const handlePaste = useCallback((e: ClipboardEvent) => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -97,14 +97,14 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
         break;
       }
     }
-  };
+  }, [processFile]);
 
   useEffect(() => {
     document.addEventListener('paste', handlePaste);
     return () => {
       document.removeEventListener('paste', handlePaste);
     };
-  }, []);
+  }, [handlePaste]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,16 +191,16 @@ const UploadForm: React.FC<UploadFormProps> = ({ currentPrice, onUploadSuccess }
         console.log('Full response data:', data);
         throw new Error('No checkout URL received');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('=== FRONTEND: Payment error caught ===');
       console.error('Payment error:', error);
       console.error('Error type:', typeof error);
-      console.error('Error name:', error?.name);
-      console.error('Error message:', error?.message);
-      console.error('Error stack:', error?.stack);
+      console.error('Error name:', (error as Error)?.name);
+      console.error('Error message:', (error as Error)?.message);
+      console.error('Error stack:', (error as Error)?.stack);
       toast({
         title: "Payment failed",
-        description: error.message || "Failed to create payment session",
+        description: (error as Error)?.message || "Failed to create payment session",
         variant: "destructive",
       });
     } finally {

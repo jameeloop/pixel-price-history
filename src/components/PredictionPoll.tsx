@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,8 +9,8 @@ import { usePricing } from '@/hooks/usePricing';
 
 const PredictionPoll: React.FC = () => {
   const { toast } = useToast();
-  const { currentPrice, formatPrice } = usePricing();
-  const [selectedPrediction, setSelectedPrediction] = useState<any>(null);
+  const { nextPrice, formatPrice } = usePricing();
+  const [selectedPrediction, setSelectedPrediction] = useState<{value: number, label: string} | null>(null);
   const [hasVoted, setHasVoted] = useState(false);
   const [predictions, setPredictions] = useState<{[key: number]: number}>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -39,9 +39,9 @@ const PredictionPoll: React.FC = () => {
     }
   };
 
-  const generatePredictionOptions = () => {
+  const generatePredictionOptions = useCallback(() => {
     // Generate prediction options as price windows/ranges based on current price
-    const basePrice = currentPrice;
+    const basePrice = nextPrice;
     const options = [
       { value: basePrice + 25, label: `${formatPrice(basePrice + 1)} - ${formatPrice(basePrice + 50)}` },
       { value: basePrice + 75, label: `${formatPrice(basePrice + 51)} - ${formatPrice(basePrice + 100)}` },  
@@ -49,9 +49,9 @@ const PredictionPoll: React.FC = () => {
       { value: basePrice + 300, label: `${formatPrice(basePrice + 201)} - ${formatPrice(basePrice + 400)}` }
     ];
     setPredictionOptions(options);
-  };
+  }, [nextPrice, formatPrice]);
 
-  const fetchPredictions = async () => {
+  const fetchPredictions = useCallback(async () => {
     try {
       const weekEnding = getNextSunday();
       const { data, error } = await supabase
@@ -74,9 +74,9 @@ const PredictionPoll: React.FC = () => {
     } catch (error) {
       console.error('Error fetching predictions:', error);
     }
-  };
+  }, [predictionOptions]);
 
-  const checkUserVote = async () => {
+  const checkUserVote = useCallback(async () => {
     try {
       const userIP = await getUserIP();
       const weekEnding = getNextSunday();
@@ -99,18 +99,18 @@ const PredictionPoll: React.FC = () => {
     } catch (error) {
       console.error('Error checking user vote:', error);
     }
-  };
+  }, [predictionOptions]);
 
   useEffect(() => {
     generatePredictionOptions();
-  }, [currentPrice]);
+  }, [generatePredictionOptions]);
 
   useEffect(() => {
     if (predictionOptions.length > 0) {
       fetchPredictions();
       checkUserVote();
     }
-  }, [predictionOptions]);
+  }, [predictionOptions, fetchPredictions, checkUserVote]);
 
   const handleVote = async (option: {value: number, label: string}) => {
     if (isLoading) return;
@@ -158,7 +158,7 @@ const PredictionPoll: React.FC = () => {
           🔮 Weekly Prediction Poll
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Where will the price be by Sunday? (Current: {formatPrice(currentPrice)})
+          Where will the price be by Sunday? (Current: {formatPrice(nextPrice)})
         </p>
       </CardHeader>
       <CardContent>
