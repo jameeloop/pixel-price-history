@@ -13,33 +13,27 @@ const AnimatedFAQ: React.FC = () => {
     <Accordion type="single" collapsible className="w-full" onValueChange={handleValueChange}>
       <AccordionItem value="item-1">
         <AccordionTrigger className="text-left">
-          💰 How does the pricing work?
+          How does the pricing experiment work? 🤔
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
             <DecryptedText 
-              text="Each upload costs more than the previous one! The price increases by 1 cent with every upload, creating a sense of scarcity and urgency."
+              text="Each upload costs 1¢ more than the previous one, creating scarcity and urgency."
               delay={openItem === "item-1" ? 0 : 0}
-              speed={25}
+              speed={15}
             />
             <div className="bg-primary/10 p-3 rounded-lg">
               <DecryptedText 
-                text="📈 Price Formula:"
-                delay={openItem === "item-1" ? 500 : 0}
-                speed={30}
+                text="📈 Formula: $1.00 + (Previous Uploads × $0.01)"
+                delay={openItem === "item-1" ? 400 : 0}
+                speed={12}
                 className="text-sm font-medium"
-              />
-              <DecryptedText 
-                text="$1.00 + (Number of Previous Uploads × $0.01)"
-                delay={openItem === "item-1" ? 800 : 0}
-                speed={20}
-                className="text-sm"
               />
             </div>
             <DecryptedText 
-              text="This means the first upload costs $1.00, the second costs $1.01, the third costs $1.02, and so on!"
-              delay={openItem === "item-1" ? 1200 : 0}
-              speed={25}
+              text="First upload: $1.00, second: $1.01, third: $1.02, and so on!"
+              delay={openItem === "item-1" ? 700 : 0}
+              speed={15}
               className="text-sm text-muted-foreground"
             />
           </div>
@@ -48,49 +42,49 @@ const AnimatedFAQ: React.FC = () => {
 
       <AccordionItem value="item-2">
         <AccordionTrigger className="text-left">
-          🖼️ What happens to my photos?
+          What happens after I upload a photo? 📤
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
             <DecryptedText 
-              text="Your photos are stored securely and displayed in our gallery for everyone to see! Here's what happens:"
+              text="Your photos are stored securely and displayed publicly:"
               delay={openItem === "item-2" ? 0 : 0}
-              speed={25}
+              speed={15}
             />
             <ul className="space-y-2 text-sm">
               <li>
                 <DecryptedText 
-                  text="✅ Secure Storage: Your images are stored safely in our cloud database"
+                  text="✅ Secure cloud storage"
+                  delay={openItem === "item-2" ? 200 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="🎨 Public gallery display"
                   delay={openItem === "item-2" ? 300 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
               <li>
                 <DecryptedText 
-                  text="🎨 Public Gallery: They appear in the experiment gallery for all visitors"
+                  text="📊 Permanent pricing history"
+                  delay={openItem === "item-2" ? 400 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="🔗 Unique shareable link"
                   delay={openItem === "item-2" ? 500 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
               <li>
                 <DecryptedText 
-                  text="📊 Pricing History: Your upload becomes part of the permanent pricing history"
-                  delay={openItem === "item-2" ? 700 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="🔗 Shareable Links: You get a unique link to share your upload"
-                  delay={openItem === "item-2" ? 900 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="📱 QR Code: Generate a QR code to easily share your contribution"
-                  delay={openItem === "item-2" ? 1100 : 0}
-                  speed={20}
+                  text="📱 QR code generation"
+                  delay={openItem === "item-2" ? 600 : 0}
+                  speed={12}
                 />
               </li>
             </ul>
@@ -100,49 +94,49 @@ const AnimatedFAQ: React.FC = () => {
 
       <AccordionItem value="item-3">
         <AccordionTrigger className="text-left">
-          🗑️ Can I delete my uploads?
+          Is my email address kept private? 🔒
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
             <DecryptedText 
-              text="Currently, uploads cannot be deleted to maintain the integrity of the pricing experiment. Here's why:"
+              text="Yes! Your email is completely private and secure:"
               delay={openItem === "item-3" ? 0 : 0}
-              speed={25}
+              speed={15}
             />
             <ul className="space-y-2 text-sm">
               <li>
                 <DecryptedText 
-                  text="🔒 Data Integrity: Deleting uploads would break the pricing sequence"
+                  text="🔐 Never displayed publicly"
+                  delay={openItem === "item-3" ? 200 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="🛡️ Encrypted storage"
                   delay={openItem === "item-3" ? 300 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
               <li>
                 <DecryptedText 
-                  text="📈 Accurate History: The experiment needs a complete, unmodified record"
+                  text="📧 No spam or sharing"
+                  delay={openItem === "item-3" ? 400 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="🎯 Only for payments & identification"
                   delay={openItem === "item-3" ? 500 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="🔬 Research Value: Each upload is valuable data for the psychological study"
-                  delay={openItem === "item-3" ? 700 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="⚖️ Fairness: Prevents manipulation of the pricing system"
-                  delay={openItem === "item-3" ? 900 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
             </ul>
             <DecryptedText 
-              text="Think carefully before uploading - your contribution is permanent!"
-              delay={openItem === "item-3" ? 1200 : 0}
-              speed={25}
+              text="Privacy first - we only collect what's necessary!"
+              delay={openItem === "item-3" ? 700 : 0}
+              speed={15}
               className="text-sm text-muted-foreground"
             />
           </div>
@@ -151,57 +145,50 @@ const AnimatedFAQ: React.FC = () => {
 
       <AccordionItem value="item-4">
         <AccordionTrigger className="text-left">
-          🧪 Is this a real experiment?
+          Can I upload multiple photos? 📸📸
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
             <DecryptedText 
-              text="Yes! This is a legitimate psychological experiment studying human behavior. Here's what we're researching:"
+              text="Yes! Upload as many as you want, but each costs more:"
               delay={openItem === "item-4" ? 0 : 0}
-              speed={25}
+              speed={15}
             />
             <ul className="space-y-2 text-sm">
               <li>
                 <DecryptedText 
-                  text="🎯 Scarcity Effect: How do people respond to increasing prices?"
+                  text="💰 Each upload increases price by 1¢"
+                  delay={openItem === "item-4" ? 200 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="🔄 Same email can upload multiple times"
                   delay={openItem === "item-4" ? 300 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
               <li>
                 <DecryptedText 
-                  text="⏰ Urgency Behavior: Does time pressure affect decision-making?"
+                  text="📈 Later uploads cost more"
+                  delay={openItem === "item-4" ? 400 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="⚡ Real-time price updates"
                   delay={openItem === "item-4" ? 500 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="💰 Value Perception: How do people assign value to digital content?"
-                  delay={openItem === "item-4" ? 700 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="👥 Social Influence: How do others' actions affect our choices?"
-                  delay={openItem === "item-4" ? 900 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="🧠 Cognitive Bias: What mental shortcuts do we use when making decisions?"
-                  delay={openItem === "item-4" ? 1100 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
             </ul>
-            <div className="bg-yellow-500/10 p-3 rounded-lg">
+            <div className="bg-blue-500/10 p-3 rounded-lg">
               <DecryptedText 
-                text="🔬 Your participation helps advance psychological research!"
-                delay={openItem === "item-4" ? 1400 : 0}
-                speed={30}
+                text="💡 Upload quickly for better prices!"
+                delay={openItem === "item-4" ? 700 : 0}
+                speed={12}
                 className="text-sm font-medium"
               />
             </div>
@@ -211,116 +198,177 @@ const AnimatedFAQ: React.FC = () => {
 
       <AccordionItem value="item-5">
         <AccordionTrigger className="text-left">
-          🔒 Is my data safe?
+          What's the psychology behind this experiment? 🧠
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
             <DecryptedText 
-              text="Absolutely! We take your privacy and data security very seriously:"
+              text="Studies human behavior and decision-making:"
               delay={openItem === "item-5" ? 0 : 0}
-              speed={25}
+              speed={15}
             />
             <ul className="space-y-2 text-sm">
               <li>
                 <DecryptedText 
-                  text="🛡️ Encrypted Storage: All data is encrypted both in transit and at rest"
+                  text="💰 Scarcity psychology"
+                  delay={openItem === "item-5" ? 200 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="⏰ FOMO and urgency effects"
                   delay={openItem === "item-5" ? 300 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
               <li>
                 <DecryptedText 
-                  text="🔐 Secure Payments: We use Stripe for all payment processing"
+                  text="📈 Loss aversion behavior"
+                  delay={openItem === "item-5" ? 400 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="👥 Social proof influence"
                   delay={openItem === "item-5" ? 500 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
               <li>
                 <DecryptedText 
-                  text="📧 Email Privacy: Your email is only used for upload identification"
-                  delay={openItem === "item-5" ? 700 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="🚫 No Personal Data: We don't collect names, addresses, or other personal info"
-                  delay={openItem === "item-5" ? 900 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="🔍 Transparent Research: All data is used only for the stated research purposes"
-                  delay={openItem === "item-5" ? 1100 : 0}
-                  speed={20}
+                  text="🧠 Cognitive biases"
+                  delay={openItem === "item-5" ? 600 : 0}
+                  speed={12}
                 />
               </li>
             </ul>
+            <div className="bg-purple-500/10 p-3 rounded-lg">
+              <DecryptedText 
+                text="🔬 Real psychological research data!"
+                delay={openItem === "item-5" ? 800 : 0}
+                speed={12}
+                className="text-sm font-medium"
+              />
+            </div>
           </div>
         </AccordionContent>
       </AccordionItem>
 
       <AccordionItem value="item-6">
         <AccordionTrigger className="text-left">
-          🎁 What do I get for participating?
+          Can I upload anything I want? 🎨
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-3">
             <DecryptedText 
-              text="Great question! Here's what you get for being part of this experiment:"
+              text="Almost! Most content is welcome with guidelines:"
               delay={openItem === "item-6" ? 0 : 0}
-              speed={25}
+              speed={15}
             />
             <ul className="space-y-2 text-sm">
               <li>
                 <DecryptedText 
-                  text="🏆 Permanent Record: Your upload becomes part of internet history"
+                  text="✅ Photos, artwork, memes, screenshots"
+                  delay={openItem === "item-6" ? 200 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="✅ Digital art and creative content"
                   delay={openItem === "item-6" ? 300 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
               <li>
                 <DecryptedText 
-                  text="🔗 Shareable Content: Get a unique link and QR code to share"
+                  text="✅ Fun and interesting images"
+                  delay={openItem === "item-6" ? 400 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="🔄 PNG, JPG, GIF - cropped to square"
                   delay={openItem === "item-6" ? 500 : 0}
-                  speed={20}
+                  speed={12}
                 />
               </li>
               <li>
                 <DecryptedText 
-                  text="📊 Pricing Impact: You directly influence the price for future uploaders"
-                  delay={openItem === "item-6" ? 700 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="🧠 Learning Experience: Understand psychological pricing dynamics"
-                  delay={openItem === "item-6" ? 900 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="🌟 Exclusive Access: Be part of a unique social experiment"
-                  delay={openItem === "item-6" ? 1100 : 0}
-                  speed={20}
-                />
-              </li>
-              <li>
-                <DecryptedText 
-                  text="📈 Real-time Updates: See how your upload affects the experiment"
-                  delay={openItem === "item-6" ? 1300 : 0}
-                  speed={20}
+                  text="⚖️ Must own rights to the image"
+                  delay={openItem === "item-6" ? 600 : 0}
+                  speed={12}
                 />
               </li>
             </ul>
-            <div className="bg-green-500/10 p-3 rounded-lg">
+            <div className="bg-orange-500/10 p-3 rounded-lg">
               <DecryptedText 
-                text="💡 Plus, you're contributing to scientific research!"
-                delay={openItem === "item-6" ? 1600 : 0}
-                speed={30}
+                text="🎨 Be creative - add to internet history!"
+                delay={openItem === "item-6" ? 800 : 0}
+                speed={12}
+                className="text-sm font-medium"
+              />
+            </div>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+
+      <AccordionItem value="item-7">
+        <AccordionTrigger className="text-left">
+          Is NSFW content allowed? 🚫
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-3">
+            <DecryptedText 
+              text="No, NSFW content is prohibited - keep it family-friendly:"
+              delay={openItem === "item-7" ? 0 : 0}
+              speed={15}
+            />
+            <ul className="space-y-2 text-sm">
+              <li>
+                <DecryptedText 
+                  text="🚫 No adult or explicit content"
+                  delay={openItem === "item-7" ? 200 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="👨‍👩‍👧‍👦 Family-friendly only"
+                  delay={openItem === "item-7" ? 300 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="🏢 Workplace appropriate"
+                  delay={openItem === "item-7" ? 400 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="⚡ Auto-moderation active"
+                  delay={openItem === "item-7" ? 500 : 0}
+                  speed={12}
+                />
+              </li>
+              <li>
+                <DecryptedText 
+                  text="📝 Clean and respectful content"
+                  delay={openItem === "item-7" ? 600 : 0}
+                  speed={12}
+                />
+              </li>
+            </ul>
+            <div className="bg-red-500/10 p-3 rounded-lg">
+              <DecryptedText 
+                text="⚠️ Violations = removal without refund"
+                delay={openItem === "item-7" ? 800 : 0}
+                speed={12}
                 className="text-sm font-medium"
               />
             </div>

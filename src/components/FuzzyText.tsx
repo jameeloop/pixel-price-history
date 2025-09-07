@@ -7,8 +7,8 @@ const FuzzyText = ({
   fontFamily = 'inherit',
   color = '#fff',
   enableHover = true,
-  baseIntensity = 0.18,
-  hoverIntensity = 0.5
+  baseIntensity = 0.08,
+  hoverIntensity = 0.25
 }) => {
   const canvasRef = useRef(null);
 
@@ -70,6 +70,14 @@ const FuzzyText = ({
       const xOffset = extraWidthBuffer / 2;
       offCtx.font = `${fontWeight} ${fontSizeStr} ${computedFontFamily}`;
       offCtx.textBaseline = 'alphabetic';
+      
+      // Draw white stroke first
+      offCtx.strokeStyle = 'white';
+      offCtx.lineWidth = 4;
+      offCtx.lineJoin = 'round';
+      offCtx.strokeText(text, xOffset - actualLeft, actualAscent);
+      
+      // Draw colored fill on top
       offCtx.fillStyle = color;
       offCtx.fillText(text, xOffset - actualLeft, actualAscent);
 
@@ -85,7 +93,7 @@ const FuzzyText = ({
       const interactiveBottom = interactiveTop + tightHeight;
 
       let isHovering = false;
-      const fuzzRange = 30;
+      const fuzzRange = 15;
 
       const run = () => {
         if (isCancelled) return;

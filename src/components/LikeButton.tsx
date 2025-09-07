@@ -86,11 +86,13 @@ const LikeButton: React.FC<LikeButtonProps> = ({
       });
 
       if (error) {
-        // If the function fails (e.g., upvotes column doesn't exist), show a message
+        // If the function fails, show the actual error for debugging
+        console.error('Vote function error:', error);
         toast({
-          title: "Coming Soon",
-          description: "Voting feature will be available soon!",
-          duration: 2000,
+          title: "Vote Error",
+          description: error.message || "Failed to process vote. Please try again.",
+          variant: "destructive",
+          duration: 4000,
         });
         return;
       }
@@ -113,9 +115,10 @@ const LikeButton: React.FC<LikeButtonProps> = ({
     } catch (error) {
       console.error('Error voting:', error);
       toast({
-        title: "Coming Soon",
-        description: "Voting feature will be available soon!",
-        duration: 2000,
+        title: "Vote Error",
+        description: error instanceof Error ? error.message : "Failed to process vote. Please try again.",
+        variant: "destructive",
+        duration: 4000,
       });
     } finally {
       setIsLoading(false);
@@ -150,7 +153,7 @@ const LikeButton: React.FC<LikeButtonProps> = ({
           size="sm"
           onClick={handleVote}
           disabled={isLoading}
-          className="flex items-center gap-2 flex-1 justify-center"
+          className="flex items-center gap-2 flex-1 justify-center bg-green-500/10 hover:bg-green-500/20 border-green-500/20 text-green-700 dark:text-green-400"
         >
           <ChevronUp className="w-4 h-4" />
           <span className="text-sm">Upvote ({upvotes})</span>

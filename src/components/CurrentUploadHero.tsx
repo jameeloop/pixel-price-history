@@ -79,6 +79,7 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
     return `${username.substring(0, 2)}${'*'.repeat(Math.max(username.length - 2, 3))}`;
   };
 
+
   const handlePostClick = () => {
     if (!currentUpload) return;
     navigate(`/post/${currentUpload.id}`);
@@ -109,56 +110,115 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
   }
 
   return (
-    <Card className="glass-card experiment-glow border-primary/20 mb-8">
-      <CardContent className="p-6">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Crown className="w-5 h-5 text-yellow-500" />
-            <h2 className="text-xl font-bold gradient-text">Featured Upload</h2>
+    <Card className="glass-card experiment-glow border-primary/20 mb-4 sm:mb-8">
+      <CardContent className="p-2 sm:p-3 md:p-6">
+        <div className="mb-2 sm:mb-3 md:mb-4 flex items-center justify-between">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <Crown className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-500" />
+            <h2 className="text-base sm:text-lg md:text-xl font-bold gradient-text">Featured Upload</h2>
           </div>
           <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 text-xs">
             Latest Upload
           </Badge>
         </div>
 
-        <div className="grid md:grid-cols-5 gap-6">
-          {/* Image */}
-          <div className="md:col-span-3 space-y-3">
-            <div className="relative">
-              <div className="aspect-[4/3] rounded-2xl overflow-hidden relative">
-                <img
-                  src={currentUpload.image_url}
-                  alt={currentUpload.caption}
-                  className="w-full h-full object-cover rounded-2xl"
-                  onError={(e) => {
-                    e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
-                      <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="400" height="300" fill="#f3f4f6"/>
-                        <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">
-                          Featured Upload
-                        </text>
-                      </svg>
-                    `);
-                  }}
-                />
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 sm:gap-6">
+          {/* Image and Mobile Content */}
+          <div className="md:col-span-3 space-y-2 sm:space-y-3">
+            {/* Image with mobile upvote button */}
+            <div className="flex gap-3 items-start">
+              <div className="relative inline-block flex-1 max-w-sm sm:max-w-md mx-auto md:mx-0">
+                <div className="w-full h-64 sm:h-80 md:h-96 rounded-xl overflow-hidden">
+                  <img
+                    src={currentUpload.image_url}
+                    alt={currentUpload.caption}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = 'data:image/svg+xml;base64,' + btoa(`
+                        <svg width="400" height="300" xmlns="http://www.w3.org/2000/svg">
+                          <rect width="400" height="300" fill="#f3f4f6"/>
+                          <text x="200" y="150" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b7280">
+                            Featured Upload
+                          </text>
+                        </svg>
+                      `);
+                    }}
+                  />
+                </div>
                 <div className="absolute top-0 left-0 z-20">
                   <Badge variant="secondary" className="font-semibold bg-yellow-500/95 text-yellow-900 border-yellow-500/60 shadow-xl backdrop-blur-sm rounded-tl-2xl rounded-br-lg">
                     #{currentUpload.upload_order}
                   </Badge>
                 </div>
               </div>
+              
+              {/* Mobile upvote button and action buttons - right of image */}
+              <div className="md:hidden flex-shrink-0 flex flex-col gap-3 mt-4">
+                <LikeButton uploadId={currentUpload.id} compact={true} />
+                <div className="flex flex-col gap-2">
+                  <Button
+                    onClick={handlePostClick}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <ExternalLink className="w-3 h-3 mr-1" />
+                    View Post
+                  </Button>
+                  <Button
+                    onClick={shareCurrentUpload}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    <Share2 className="w-3 h-3 mr-1" />
+                    Share
+                  </Button>
+                </div>
+              </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-2">
+            {/* Mobile metadata buttons - horizontal row */}
+            <div className="md:hidden flex gap-1 justify-between text-xs">
+              <div className="flex-1 bg-primary/5 border border-primary/10 rounded-lg px-2 py-1.5 text-center">
+                <div className="font-medium text-primary">
+                  <CountUp 
+                    end={currentUpload.price_paid / 100} 
+                    duration={1500}
+                    prefix="$"
+                    decimals={2}
+                    className="font-bold"
+                  />
+                </div>
+                <div className="text-xs text-muted-foreground">Paid</div>
+              </div>
+              <div className="flex-1 bg-primary/5 border border-primary/10 rounded-lg px-2 py-1.5 text-center">
+                <div className="font-medium text-primary">
+                  {new Date(currentUpload.created_at).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric' 
+                  })}
+                </div>
+                <div className="text-xs text-muted-foreground">Date</div>
+              </div>
+              <div className="flex-1 bg-primary/5 border border-primary/10 rounded-lg px-2 py-1.5 text-center">
+                <div className="font-medium text-primary truncate">
+                  {currentUpload.user_email.split('@')[0]}
+                </div>
+                <div className="text-xs text-muted-foreground">User</div>
+              </div>
+            </div>
+
+            {/* Action Buttons - Desktop only */}
+            <div className="hidden md:flex gap-2">
               <Button
                 onClick={handlePostClick}
                 variant="outline"
                 size="sm"
                 className="flex-1"
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                View Post
+                <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">View Post</span>
               </Button>
               <Button
                 onClick={shareCurrentUpload}
@@ -166,24 +226,24 @@ const CurrentUploadHero: React.FC<CurrentUploadHeroProps> = ({ refreshTrigger })
                 size="sm"
                 className="flex-1"
               >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
+                <Share2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="text-xs sm:text-sm">Share</span>
               </Button>
             </div>
 
             {/* Content */}
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div>
-                <p className="text-base font-medium break-words leading-relaxed">
+                <p className="text-sm sm:text-base font-medium break-words leading-relaxed">
                   "{currentUpload.caption}"
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Voting Section and Details */}
-          <div className="md:col-span-2 space-y-4">
-            <div className="glass-card p-4">
+          {/* Desktop Voting Section and Details */}
+          <div className="hidden md:block md:col-span-2 space-y-3 sm:space-y-4">
+            <div className="glass-card p-3 sm:p-4">
               <h3 className="text-sm font-medium mb-3 text-center">Community Rating</h3>
               <LikeButton uploadId={currentUpload.id} />
               

@@ -105,12 +105,18 @@ serve(async (req) => {
     }
 
     // Check for existing vote from this user
-    const { data: existingVote } = await supabase
+    console.log('Checking for existing vote:', { uploadId, userIP });
+    const { data: existingVote, error: voteCheckError } = await supabase
       .from('user_votes')
       .select('*')
       .eq('upload_id', uploadId)
       .eq('user_ip', userIP)
       .single();
+    
+    if (voteCheckError && voteCheckError.code !== 'PGRST116') {
+      console.error('Error checking existing vote:', voteCheckError);
+      throw new Error(`Vote check failed: ${voteCheckError.message}`);
+    }
 
     if (existingVote) {
       // User already voted, remove their vote
@@ -146,12 +152,16 @@ serve(async (req) => {
       if (insertError) throw insertError;
 
       // Increment upvotes
+      console.log('Attempting to increment upvotes for upload:', uploadId);
       const { error: updateError } = await supabase
         .from('uploads')
         .update({ upvotes: (uploadExists.upvotes || 0) + 1 })
         .eq('id', uploadId);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating upvotes:', updateError);
+        throw new Error(`Upvote update failed: ${updateError.message}`);
+      }
       
       return new Response(
         JSON.stringify({ success: true, action: 'created' }), 

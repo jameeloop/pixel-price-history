@@ -89,37 +89,37 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
 
   return (
     <Card className="glass-card experiment-glow text-center">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg gradient-text flex items-center justify-center gap-2">
-          <TrendingUp className="w-4 h-4" />
+      <CardHeader className="pb-2 px-3 pt-3">
+        <CardTitle className="text-sm sm:text-base gradient-text flex items-center justify-center gap-1">
+          <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4" />
           Experiment Status
         </CardTitle>
         <Badge variant="outline" className="mx-auto w-fit animate-pulse border-primary/50 text-xs">
-          🧪 LIVE EXPERIMENT
+          🧪 LIVE
         </Badge>
       </CardHeader>
       
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 px-3 pb-3">
         {/* Next Upload Price - Smaller Display */}
         <div className="space-y-1">
-          <p className="text-xs text-muted-foreground">Next Upload Price</p>
-          <p className="text-3xl font-bold gradient-text price-ticker">
+          <p className="text-xs text-muted-foreground">Next Price</p>
+          <p className="text-xl sm:text-2xl font-bold gradient-text price-ticker">
             <CountUp 
               end={(nextPrice || 100) / 100} 
               duration={1500}
               prefix="$"
               decimals={2}
-              className="text-2xl font-bold text-green-500"
+              className="text-lg sm:text-xl font-bold text-green-500"
             />
           </p>
           <p className="text-xs text-muted-foreground">
-            This is what you'll pay
+            What you'll pay
           </p>
         </div>
         
         {/* Stats Grid - Smaller */}
-        <div className="grid grid-cols-3 gap-2">
-          <div className="glass-card p-2 space-y-1">
+        <div className="grid grid-cols-3 gap-1.5">
+          <div className="glass-card p-1.5 space-y-0.5">
             <div className="flex items-center justify-center gap-1 text-primary">
               <DollarSign className="w-3 h-3" />
             </div>
@@ -132,27 +132,27 @@ const EnhancedPricingDisplay: React.FC<EnhancedPricingDisplayProps> = ({ onPrice
                 className="text-green-500 font-bold"
               />
             </p>
-            <p className="text-[10px] text-muted-foreground">Total Spent</p>
+            <p className="text-[10px] text-muted-foreground">Spent</p>
           </div>
           
-          <div className="glass-card p-2 space-y-1">
+          <div className="glass-card p-1.5 space-y-0.5">
             <div className="flex items-center justify-center gap-1 text-accent">
               <Users className="w-3 h-3" />
             </div>
             <p className="text-xs font-semibold">
               {uploadCount}
             </p>
-            <p className="text-[10px] text-muted-foreground">Participants</p>
+            <p className="text-[10px] text-muted-foreground">Posts</p>
           </div>
           
-          <div className="glass-card p-2 space-y-1">
+          <div className="glass-card p-1.5 space-y-0.5">
             <div className="flex items-center justify-center gap-1 text-muted-foreground">
               <Clock className="w-3 h-3" />
             </div>
             <p className="text-xs font-semibold">
               {formatTimeAgo(lastUploadTime)}
             </p>
-            <p className="text-[10px] text-muted-foreground">Last Upload</p>
+            <p className="text-[10px] text-muted-foreground">Last</p>
           </div>
         </div>
         
